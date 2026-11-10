@@ -5235,7 +5235,7 @@ function showOfflineModal(r) {
 </script>
 <script>
 /* FIREBASE CONFIGURATION: paste your Firebase Web API key and Realtime Database URL here. */
-window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'AIzaSyAyZEn3I5E3GPK_6VoPKb4GQNV4jYYrdwM', dbUrl: 'https://save-523f5-default-rtdb.firebaseio.com/' };
+window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'PASTE_FIREBASE_WEB_API_KEY_HERE', dbUrl: 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' };
 </script>
 <script>
 /* =====================================================================
@@ -5401,7 +5401,6 @@ step('news', () => {
     'Titles now come in sizes: small, medium and "please stop clicking".',
     'Leaderboard update: every Kumar is now ranked at everything, including naps.',
     'Daily Gift arrives on time. Daily Gift is very proud of itself.',
-    'Zara Kumar rebirths for fun. Zara Kumar calls it "cardio".',
     'Time Loop opens a second Time Loop. Time Loop was already there.'
   );
 });
@@ -5419,7 +5418,6 @@ const PATTERNS = {
 
 const INK = '#17133b';
 const ACC = {
-  zara() { return '<ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="' + INK + '" stroke-width="14"/><ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="#ffd43b" stroke-width="7"/>'; },
   dev() { return '<path d="M92 76 Q150 -10 208 76 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><rect x="82" y="70" width="136" height="16" rx="8" fill="#ffd43b" stroke="' + INK + '" stroke-width="6"/>'; },
   nova() { return '<path d="' + STAR_PATH + '" transform="translate(150 20) scale(2.3)" fill="#ffd43b" stroke="' + INK + '" stroke-width="2.6" stroke-linejoin="round"/>'; },
   sage() { return '<circle cx="150" cy="12" r="22" fill="' + INK + '"/><circle cx="150" cy="12" r="12" fill="#ff8fb8"/>'; },
@@ -5434,9 +5432,6 @@ const ACC = {
 };
 
 const NEW_KUMARS = [
-  { id: 'zara', icon: '♻️', name: 'Zara Kumar', egg: 'Zara Kumar Egg', title: 'The Reborn', shell: '#ff5c9d', spot: '#fff3a6', pattern: 'rings', aura: 'rgba(255,92,157,0.28)',
-    boost: 'Production x2.5 and offline earnings +25%.', mission: { fk: 1.4, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +40%.',
-    hint: 'Rebirth once.', unlock: () => S.rebirths >= 1, prog: () => [Math.min(S.rebirths, 1), 1] },
   { id: 'ralph', icon: '🦁', name: 'Ralph Kumar', egg: 'Ralph Kumar Egg', title: 'The Fearless', shell: '#ff9a3c', spot: '#ffd43b', pattern: 'zig', aura: 'rgba(255,154,60,0.32)',
     boost: 'Production x3.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
     hint: 'Earn 1 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e6, prog: () => [Math.min(S.lifeEarned, 1e6), 1e6] },
@@ -5486,7 +5481,6 @@ step('kumars', () => {
     const e = orig();
     const sc = 1 + 0.1 * rl('rgym');
     switch (S.kumar) {
-      case 'zara':  e.prod = 2.5 * sc; e.offline += 0.25 * sc; break;
       case 'ralph': e.prod = 3 * sc; break;
       case 'mitch': e.rp = 2 * sc; break;
       case 'hugh': e.prod = 2 * sc; e.offline += 0.2 * sc; break;
@@ -5500,7 +5494,7 @@ step('kumars', () => {
           leo: { goldFreq: 1 + 0.5 * sc, goldVal: 1 + 0.5 * sc, pet: 1 + 0.25 * sc },
           madhav: { rp: 1 + 0.5 * sc, cost: Math.max(0.5, 1 - 0.1 * sc), offline: 0.25 * sc },
           secret: { prod: 10 * sc, click: 10 * sc, goldFreq: 2 * sc, rp: 2 * sc, pet: 2 * sc },
-          zara: { prod: 2.5 * sc, offline: 0.25 * sc }, ralph: { prod: 3 * sc },
+          ralph: { prod: 3 * sc },
           mitch: { rp: 2 * sc }, hugh: { prod: 2 * sc, offline: 0.2 * sc },
           sam: { click: 4 * sc }, adam: { prod: 5 * sc, click: 3 * sc, rp: 1.5 * sc },
           zander: { prod: 4 * sc, goldFreq: 2 * sc, offline: 0.3 * sc },

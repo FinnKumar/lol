@@ -5233,5 +5233,1081 @@ function showOfflineModal(r) {
 })();
 
 </script>
+<script>
+/* FIREBASE CONFIGURATION: paste your Firebase Web API key and Realtime Database URL here. */
+window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'PASTE_FIREBASE_WEB_API_KEY_HERE', dbUrl: 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' };
+</script>
+<script>
+/* =====================================================================
+   FINN KUMAR INCREMENTAL - add-on patch (already merged into index.html)
+
+   Optional real-player leaderboard: set window.FK_CONFIG = { dbUrl: '...' }
+   to your Firebase Realtime Database URL before this code runs, or edit
+   dbUrl in the CFG line below.
+   ===================================================================== */
+(function () {
+'use strict';
+
+const CFG = Object.assign({ apiKey: '', dbUrl: '', submitEvery: 15, refreshEvery: 20 }, window.FK_CONFIG || {});
+const DB = /^https:\/\/[^\s]+$/.test(String(CFG.dbUrl || '')) ? String(CFG.dbUrl).replace(/\/+$/, '') : '';
+
+/* ---------- helpers ---------- */
+function step(name, fn) { try { fn(); } catch (err) { console.error('[finn-patch:' + name + ']', err); } }
+
+function wrap(name, make) {
+  const orig = window[name];
+  if (typeof orig !== 'function') { console.warn('[finn-patch] missing function ' + name); return null; }
+  window[name] = make(orig);
+  return orig;
+}
+
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function safeNum(x) { return typeof x === 'number' && isFinite(x) ? x : 0; }
+function cleanName(s) { return String(s || '').replace(/[\u0000-\u001f<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
+function maxGen() { return Math.max.apply(null, GENS.map(g => S.gens[g.id] || 0)); }
+
+function getPid() {
+  let id = '';
+  try { id = localStorage.getItem('fk-player-id') || ''; } catch (e) { /* ignore */ }
+  if (!/^[A-Za-z0-9_-]{8,40}$/.test(id)) {
+    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    id = id.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+    try { localStorage.setItem('fk-player-id', id); } catch (e) { /* ignore */ }
+  }
+  return id;
+}
+
+function ensureFields(st) {
+  GENS.forEach(g => { if (typeof st.gens[g.id] !== 'number' || st.gens[g.id] < 0) st.gens[g.id] = 0; });
+  if (!isPlainObject(st.titlesOwned)) st.titlesOwned = {};
+  if (typeof st.titleSel !== 'string') st.titleSel = '';
+  if (!isPlainObject(st.daily)) st.daily = { last: 0, streak: 0 };
+  st.daily.last = safeNum(st.daily.last);
+  st.daily.streak = safeNum(st.daily.streak);
+  if (typeof st.pid !== 'string' || !/^[A-Za-z0-9_-]{8,40}$/.test(st.pid)) st.pid = getPid();
+}
+
+/* =====================================================================
+   1. BUG FIXES
+   ===================================================================== */
+step('fixes', () => {
+  /* Importing a hand-edited save could poison Object.prototype through "__proto__". */
+  window.mergeState = function safeMerge(base, saved) {
+    for (const key in saved) {
+      if (!hasOwn(saved, key) || key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+      const sv = saved[key];
+      if (isPlainObject(sv) && hasOwn(base, key) && isPlainObject(base[key])) window.mergeState(base[key], sv);
+      else if (sv !== undefined && sv !== null) base[key] = sv;
+    }
+    return base;
+  };
+
+  /* Typing "constructor" or "toString" used to count as a redeemed code. */
+  window.redeemCode = function (raw) {
+    const code = String(raw || '').trim().toLowerCase();
+    if (!code) return { ok: false, msg: 'Type a code first.' };
+    if (!hasOwn(CODES, code)) return { ok: false, msg: 'That code is not valid.' };
+    if (hasOwn(S.codes, code)) return { ok: false, msg: 'You already used that code.' };
+    const def = CODES[code];
+    S.codes[code] = Date.now();
+    recalc();
+    def.apply();
+    recalc();
+    saveGame();
+    return { ok: true, title: def.title, msg: def.msg };
+  };
+
+  /* Corrupt or edited saves could leave NaN in counters and break the UI. */
+  wrap('stateFromSaved', orig => function (obj) {
+    const st = orig(obj);
+    ['counters', 'stats'].forEach(k => {
+      for (const key in st[k]) if (typeof st[k][key] !== 'number' || !isFinite(st[k][key])) st[k][key] = 0;
+    });
+    const now = Date.now();
+    if (!(st.playtime >= 0) || !isFinite(st.playtime)) st.playtime = 0;
+    ['created', 'lastSave', 'runStart'].forEach(k => { if (typeof st[k] !== 'number' || !isFinite(st[k]) || st[k] > now) st[k] = now; });
+    ['wheelNext', 'catcherNext'].forEach(k => { if (typeof st[k] !== 'number' || !isFinite(st[k])) st[k] = 0; });
+    ensureFields(st);
+    try { localStorage.setItem('fk-player-id', st.pid); } catch (e) { /* ignore */ }
+    return st;
+  });
+
+  wrap('defaultState', orig => function () { const st = orig(); ensureFields(st); return st; });
+
+  /* "Save Now" used to save three times. */
+  ACTIONS.savenow = () => {
+    const ok = saveGame();
+    toast(ok ? 'Game saved' : 'Could not save', ok ? 'Stored in this browser.' : 'Browser storage is blocked here. Use Export to keep your progress.', ok ? 'good' : 'bad');
+    if (typeof submitScore === 'function') submitScore();
+  };
+});
+
+/* =====================================================================
+   2. NEW CONTENT: generators, eggs, pets, missions, news
+   ===================================================================== */
+step('generators', () => {
+  const add = [
+    { id: 'timeloop',  name: 'Finn Time Loop',  plural: 'Finn Time Loops',  icon: '⏳', cost: 4e18,  cps: 1.1e12, desc: 'Yesterday is also Finn. So is tomorrow.' },
+    { id: 'akashic',   name: 'Akashic Kumar',   plural: 'Akashic Kumars',   icon: '📜', cost: 5.5e19, cps: 8e12,  desc: 'Reads the cosmic record. It only says Finn.' },
+    { id: 'omegaverse', name: 'Omega Finnverse', plural: 'Omega Finnverses', icon: '🌠', cost: 7e20,  cps: 6e13,  desc: 'The Finnverse, but it got a sequel.' }
+  ];
+  add.forEach(g => {
+    if (GEN_INDEX[g.id] !== undefined) return;
+    g.index = GENS.length;
+    GENS.push(g);
+    GEN_INDEX[g.id] = g.index;
+    if (typeof S.gens[g.id] !== 'number') S.gens[g.id] = 0;
+    GEN_UP_TIERS.forEach((t, i) => addUpgrade({
+      id: 'gen_' + g.id + '_' + i, group: 'building', icon: g.icon, name: t.prefix + ' ' + g.plural,
+      desc: g.plural + ' are ' + t.mult + 'x as productive.', cost: g.cost * t.costMul,
+      unlock: { gen: [g.id, t.req] }, effect: { type: 'gen', gen: g.id, mult: t.mult }
+    }));
+    [[1, 'Rookie'], [25, 'Pro'], [100, 'Master']].forEach(t => {
+      addAch('gen_' + g.id + '_' + t[0], g.name + ' ' + t[1], 'Own ' + t[0] + ' ' + (t[0] > 1 ? g.plural : g.name) + '.', g.icon, () => S.gens[g.id] >= t[0]);
+    });
+  });
+});
+
+step('pets', () => {
+  const pets = [
+    { id: 'sprite',    name: 'Star Sprite',    emoji: '🧚', rarity: 'rare',      kind: 'cps',      power: 400 },
+    { id: 'flamingo',  name: 'Aurora Flamingo', emoji: '🦩', rarity: 'rare',     kind: 'golden',   power: 1.5 },
+    { id: 'phoenix',   name: 'Ember Phoenix',  emoji: '🔥', rarity: 'epic',      kind: 'cps',      power: 1500 },
+    { id: 'hydra',     name: 'Hydra Hatchling', emoji: '🐍', rarity: 'epic',     kind: 'click',    power: 400 },
+    { id: 'scorpion',  name: 'Doom Scorpion',  emoji: '🦂', rarity: 'legendary', kind: 'cps',      power: 12000 },
+    { id: 'seraph',    name: 'Tiny Seraph',    emoji: '👼', rarity: 'legendary', kind: 'discount', power: 0.12 },
+    { id: 'astrafinn', name: 'Astra Finn',     emoji: '🌈', rarity: 'mythic',    kind: 'cps',      power: 80000 },
+    { id: 'finnprime', name: 'Finn Prime',     emoji: '💠', rarity: 'secret',    kind: 'cps',      power: 800000 }
+  ];
+  pets.forEach(p => { if (!PET_BY_ID[p.id]) { PETS.push(p); PET_BY_ID[p.id] = p; } });
+  if (!PET_BY_ID.kasipet) PET_BY_ID.kasipet = { id: 'kasipet', name: 'Kasi Spirit', emoji: '🧿', rarity: 'divine', kind: 'cps', power: 5e7 };
+  if (!EGG_BY_ID.divine) {
+    const egg = { id: 'divine', name: 'Divine Egg', emoji: '🔱', cost: 1e22, currency: 'fk', pool: pets.map(p => p.id) };
+    EGGS.push(egg);
+    EGG_BY_ID[egg.id] = egg;
+  }
+});
+
+step('missions', () => {
+  [
+    { id: 'moon', icon: '🌙', name: 'Moon Base Run', mins: 720,  fkSec: 240000, rp: 60,  egg: 1, rt: 5,  needRebirths: 15, desc: 'Lunar Finn deposits. Bring a jacket.' },
+    { id: 'rift', icon: '🌀', name: 'Rift Raid',     mins: 1440, fkSec: 600000, rp: 150, egg: 1, rt: 12, needRebirths: 40, desc: 'A full day inside a Finn rift.' }
+  ].forEach(m => { if (!MISSION_BY_ID[m.id]) { MISSIONS.push(m); MISSION_BY_ID[m.id] = m; } });
+});
+
+step('news', () => {
+  NEWS.push(
+    'Kasi Kumar has been spotted. Witnesses say the numbers got nervous.',
+    'Titles now come in sizes: small, medium and "please stop clicking".',
+    'Leaderboard update: every Kumar is now ranked at everything, including naps.',
+    'Daily Gift arrives on time. Daily Gift is very proud of itself.',
+    'Zara Kumar rebirths for fun. Zara Kumar calls it "cardio".',
+    'Time Loop opens a second Time Loop. Time Loop was already there.'
+  );
+});
+
+/* =====================================================================
+   3. NEW KUMARS (eggs) AND THEIR LOOKS
+   ===================================================================== */
+const PATTERNS = {
+  waves(c) { let s = ''; [92, 138, 184, 230, 276].forEach(y => { s += '<path d="M10 ' + y + ' q22 -16 44 0 t44 0 t44 0 t44 0 t44 0 t44 0 t44 0" fill="none" stroke="' + c + '" stroke-width="9" stroke-linecap="round"/>'; }); return s; },
+  diamonds(c) { let s = ''; [[96, 86], [204, 92], [150, 142], [70, 190], [230, 196], [110, 246], [196, 250]].forEach(d => { s += '<path d="M0 -15 L12 0 L0 15 L-12 0 Z" transform="translate(' + d[0] + ' ' + d[1] + ')" fill="' + c + '"/>'; }); return s; },
+  rings(c) { let s = ''; [[92, 84, 16], [208, 100, 12], [64, 170, 10], [232, 184, 16], [112, 246, 14], [194, 254, 10]].forEach(d => { s += '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="' + d[2] + '" fill="none" stroke="' + c + '" stroke-width="7"/>'; }); return s; },
+  bolts(c) { let s = ''; [[100, 92, 1], [204, 102, 0.8], [70, 186, 0.9], [232, 196, 1.1], [120, 246, 1], [190, 252, 0.8]].forEach(d => { s += '<path d="M0 -16 L-9 3 L-1 3 L-5 17 L10 -4 L2 -4 Z" transform="translate(' + d[0] + ' ' + d[1] + ') scale(' + d[2] + ')" fill="' + c + '"/>'; }); return s; },
+  rays(c) { let s = ''; for (let a = 0; a < 360; a += 24) { const r = a * Math.PI / 180; s += '<path d="M150 176 L' + (150 + 260 * Math.cos(r)).toFixed(1) + ' ' + (176 + 260 * Math.sin(r)).toFixed(1) + '" stroke="' + c + '" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round"/>'; } return s; }
+};
+
+const INK = '#17133b';
+const ACC = {
+  zara() { return '<ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="' + INK + '" stroke-width="14"/><ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="#ffd43b" stroke-width="7"/>'; },
+  dev() { return '<path d="M92 76 Q150 -10 208 76 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><rect x="82" y="70" width="136" height="16" rx="8" fill="#ffd43b" stroke="' + INK + '" stroke-width="6"/>'; },
+  nova() { return '<path d="' + STAR_PATH + '" transform="translate(150 20) scale(2.3)" fill="#ffd43b" stroke="' + INK + '" stroke-width="2.6" stroke-linejoin="round"/>'; },
+  sage() { return '<circle cx="150" cy="12" r="22" fill="' + INK + '"/><circle cx="150" cy="12" r="12" fill="#ff8fb8"/>'; },
+  blaze() { return '<path d="M104 52 Q120 0 136 36 Q150 -14 164 36 Q180 0 196 52 Z" fill="#ff9a3c" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/>'; },
+  ivy() { return '<path d="M150 30 C118 -8 84 10 96 38 C120 38 138 36 150 30Z" fill="#25d9a2" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M150 30 C182 -8 216 10 204 38 C180 38 162 36 150 30Z" fill="#7ad94c" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/>'; },
+  omni() { return '<path d="M96 56 L88 6 L122 32 L150 0 L178 32 L212 6 L204 56 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><circle cx="150" cy="38" r="7" fill="#ff5c9d" stroke="' + INK + '" stroke-width="3"/>'; },
+  kasi() {
+    return '<path d="M80 60 L64 -6 L114 28 L150 -18 L186 28 L236 -6 L220 60 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="7" stroke-linejoin="round"/>'
+      + '<circle cx="150" cy="36" r="9" fill="#ff2fa0" stroke="' + INK + '" stroke-width="3"/><circle cx="104" cy="44" r="6" fill="#4cc9ff" stroke="' + INK + '" stroke-width="3"/><circle cx="196" cy="44" r="6" fill="#25d9a2" stroke="' + INK + '" stroke-width="3"/>'
+      + '<ellipse cx="150" cy="96" rx="11" ry="7" fill="#fff" stroke="' + INK + '" stroke-width="4"/><circle cx="150" cy="96" r="4" fill="#ff2fa0"/>';
+  }
+};
+
+const NEW_KUMARS = [
+  { id: 'zara', icon: '♻️', name: 'Zara Kumar', egg: 'Zara Kumar Egg', title: 'The Reborn', shell: '#ff5c9d', spot: '#fff3a6', pattern: 'rings', aura: 'rgba(255,92,157,0.28)',
+    boost: 'Production x2.5 and offline earnings +25%.', mission: { fk: 1.4, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +40%.',
+    hint: 'Rebirth once.', unlock: () => S.rebirths >= 1, prog: () => [Math.min(S.rebirths, 1), 1] },
+  { id: 'ralph', icon: '🦁', name: 'Ralph Kumar', egg: 'Ralph Kumar Egg', title: 'The Fearless', shell: '#ff9a3c', spot: '#ffd43b', pattern: 'zig', aura: 'rgba(255,154,60,0.32)',
+    boost: 'Production x3.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
+    hint: 'Earn 1 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e6, prog: () => [Math.min(S.lifeEarned, 1e6), 1e6] },
+  { id: 'mitch', icon: '🧠', name: 'Mitch Kumar', egg: 'Mitch Kumar Egg', title: 'The Strategist', shell: '#4cc9ff', spot: '#ffffff', pattern: 'grid', aura: 'rgba(76,201,255,0.32)',
+    boost: 'Research x2.', mission: { fk: 1, rp: 2, egg: 1 }, missionNote: 'Research rewards x2.',
+    hint: 'Earn 25 research points.', unlock: () => S.rpTotal >= 25, prog: () => [Math.min(S.rpTotal, 25), 25] },
+  { id: 'hugh', icon: '🛡️', name: 'Hugh Kumar', egg: 'Hugh Kumar Egg', title: 'The Guardian', shell: '#25d9a2', spot: '#ffffff', pattern: 'diamonds', aura: 'rgba(37,217,162,0.32)',
+    boost: 'Production x2 and offline earnings +20%.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
+    hint: 'Own 50 generators in total.', unlock: () => GENS.reduce((n, g) => n + (S.gens[g.id] || 0), 0) >= 50, prog: () => [Math.min(GENS.reduce((n, g) => n + (S.gens[g.id] || 0), 0), 50), 50] },
+  { id: 'sam', icon: '⚡', name: 'Sam Kumar', egg: 'Sam Kumar Egg', title: 'The Swift', shell: '#b05cff', spot: '#ffd43b', pattern: 'bolts', aura: 'rgba(176,92,255,0.32)',
+    boost: 'Click power x4.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
+    hint: 'Click Finn 5,000 times.', unlock: () => S.counters.clicks >= 5000, prog: () => [Math.min(S.counters.clicks, 5000), 5000] },
+  { id: 'adam', icon: '👑', name: 'Adam Kumar', egg: 'Adam Kumar Egg', title: 'The Supreme', shell: '#ffd43b', spot: '#ff5c9d', pattern: 'rays', aura: 'rgba(255,212,59,0.4)',
+    boost: 'Production x5, click power x3 and research x1.5.', mission: { fk: 2, rp: 1.5, egg: 1.5 }, missionNote: 'Finn Kumar rewards x2.',
+    hint: 'Reach 5 rebirths.', unlock: () => S.rebirths >= 5, prog: () => [Math.min(S.rebirths, 5), 5] },
+  { id: 'zander', icon: '🪽', name: 'Zander Kumar', egg: 'Zander Kumar Egg', title: 'The Skybound', shell: '#70d6ff', spot: '#ffffff', pattern: 'waves', aura: 'rgba(112,214,255,0.38)',
+    boost: 'Production x4, Golden Finns x2 as often and offline earnings +30%.', mission: { fk: 1.8, rp: 1.2, egg: 1.2 }, missionNote: 'Finn Kumar rewards x80%.',
+    hint: 'Earn 100 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e8, prog: () => [Math.min(S.lifeEarned, 1e8), 1e8] },
+  { id: 'custom', icon: '🌟', name: 'Custom Kumar', egg: 'Custom Kumar Egg', title: 'Your Best', shell: '#8d7bff', spot: '#fff3a6', pattern: 'rays', aura: 'rgba(141,123,255,0.4)',
+    boost: 'Free! Automatically copies the strongest boost from your best unlocked Kumar.', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Your custom Kumar mirrors your best Kumar.',
+    hint: 'Free — unlocked automatically.', unlock: () => true, prog: () => [1, 1] }
+];
+
+const KASI = {
+  id: 'kasi', icon: '🧿', name: 'Kasi Kumar', egg: 'Kasi Kumar Egg', title: 'The Chosen One', hidden: true,
+  shell: '#ffd43b', spot: '#ff2fa0', pattern: 'rays', aura: 'rgba(255,212,59,0.5)',
+  boost: 'Production x1,000, click power x1,000, Golden Finns 3x as often and 3x bigger, research 5x faster, pets x5, generators half price, +25% crit, offline +50%.',
+  mission: { fk: 5, rp: 5, egg: 3 }, missionNote: 'Every mission reward x5.',
+  hint: 'A secret code wakes this egg.', unlock: () => false, prog: () => [0, 1]
+};
+
+step('kumars', () => {
+  const at = KUMARS.findIndex(k => k.id === 'secret');
+  NEW_KUMARS.forEach((k, i) => { if (!KUMAR_BY_ID[k.id]) { KUMARS.splice(at < 0 ? KUMARS.length : at + i, 0, k); KUMAR_BY_ID[k.id] = k; } });
+  if (!KUMAR_BY_ID.kasi) { KUMARS.push(KASI); KUMAR_BY_ID.kasi = KASI; }
+  if (S.kumarsUnlocked && S.kumarsUnlocked.adamzander) {
+    S.kumarsUnlocked.adam = S.kumarsUnlocked.adam || S.kumarsUnlocked.adamzander;
+    delete S.kumarsUnlocked.adamzander;
+    if (S.kumar === 'adamzander') S.kumar = 'adam';
+  }
+  if (!S.kumarsUnlocked.custom) unlockKumar('custom');
+
+  wrap('eggPattern', orig => (kind, col) => (hasOwn(PATTERNS, kind) ? PATTERNS[kind](col) : orig(kind, col)));
+  wrap('eggAccessory', orig => (kid, shell) => (hasOwn(ACC, kid) ? ACC[kid](shell) : orig(kid, shell)));
+
+  wrap('kumarEffects', orig => function () {
+    const e = orig();
+    const sc = 1 + 0.1 * rl('rgym');
+    switch (S.kumar) {
+      case 'zara':  e.prod = 2.5 * sc; e.offline += 0.25 * sc; break;
+      case 'ralph': e.prod = 3 * sc; break;
+      case 'mitch': e.rp = 2 * sc; break;
+      case 'hugh': e.prod = 2 * sc; e.offline += 0.2 * sc; break;
+      case 'sam': e.click = 4 * sc; break;
+      case 'adam': e.prod = 5 * sc; e.click = 3 * sc; e.rp = 1.5 * sc; break;
+      case 'zander': e.prod = 4 * sc; e.goldFreq = 2 * sc; e.offline += 0.3 * sc; break;
+      case 'custom': {
+        const profiles = {
+          finn: { prod: 1 + 0.25 * sc, click: 1 + 0.25 * sc },
+          julian: { click: 3 * sc, crit: 0.08 * sc, combo: 0.5 * sc },
+          leo: { goldFreq: 1 + 0.5 * sc, goldVal: 1 + 0.5 * sc, pet: 1 + 0.25 * sc },
+          madhav: { rp: 1 + 0.5 * sc, cost: Math.max(0.5, 1 - 0.1 * sc), offline: 0.25 * sc },
+          secret: { prod: 10 * sc, click: 10 * sc, goldFreq: 2 * sc, rp: 2 * sc, pet: 2 * sc },
+          zara: { prod: 2.5 * sc, offline: 0.25 * sc }, ralph: { prod: 3 * sc },
+          mitch: { rp: 2 * sc }, hugh: { prod: 2 * sc, offline: 0.2 * sc },
+          sam: { click: 4 * sc }, adam: { prod: 5 * sc, click: 3 * sc, rp: 1.5 * sc },
+          zander: { prod: 4 * sc, goldFreq: 2 * sc, offline: 0.3 * sc },
+          kasi: { prod: 1000 * sc, click: 1000 * sc, goldFreq: 3 * sc, goldVal: 3 * sc, rp: 5 * sc, pet: 5 * sc, cost: 0.5, crit: 0.25, combo: 2, offline: 0.5 }
+        };
+        const score = p => (p.prod || 1) * (p.click || 1) * (p.goldFreq || 1) * (p.goldVal || 1) * (p.rp || 1) * (p.pet || 1);
+        const bestId = Object.keys(S.kumarsUnlocked || {}).filter(id => id !== 'custom' && profiles[id]).sort((a,b) => score(profiles[b]) - score(profiles[a]))[0];
+        if (bestId) Object.assign(e, profiles[bestId]);
+        break;
+      }
+      case 'kasi':
+        e.prod = 1000 * sc; e.click = 1000 * sc; e.goldFreq = 3 * sc; e.goldVal = 3 * sc;
+        e.rp = 5 * sc; e.pet = 5 * sc; e.cost = 0.5; e.crit += 0.25; e.combo += 2; e.offline += 0.5;
+        break;
+      default: break;
+    }
+    const t = titleFx();
+    e.prod *= t.prod; e.click *= t.click; e.goldFreq *= t.gold; e.pet *= t.pet; e.rp *= t.rp;
+    return e;
+  });
+
+  [[6, 'Half Dozen'], [11, 'Every Egg']].forEach(e => {
+    addAch('kumars_x' + e[0], e[1], 'Unlock ' + e[0] + ' Kumars.', '🥚', () => Object.keys(S.kumarsUnlocked).length >= e[0]);
+  });
+  addAch('kumar_kasi', 'The Chosen One', 'Awaken Kasi Kumar.', '🧿', () => !!S.kumarsUnlocked.kasi);
+});
+
+/* =====================================================================
+   4. TITLES (with boosts)
+   ===================================================================== */
+const MY_TITLES = [
+  { id: 'rookie',   name: 'Rookie Finn',      hint: 'Always unlocked.',               boost: {},                 check: () => true },
+  { id: 'tapper',   name: 'Tapper',           hint: 'Click 1,000 times.',             boost: { click: 1.1 },     check: () => S.counters.clicks >= 1e3 },
+  { id: 'clickgod', name: 'Click God',        hint: 'Click 100,000 times.',           boost: { click: 2 },       check: () => S.counters.clicks >= 1e5 },
+  { id: 'million',  name: 'Finnillionaire',   hint: 'Earn 1M Finn Kumar in total.',   boost: { prod: 1.05 },     check: () => S.lifeEarned >= 1e6 },
+  { id: 'billion',  name: 'Finn Baron',       hint: 'Earn 1B Finn Kumar in total.',   boost: { prod: 1.1 },      check: () => S.lifeEarned >= 1e9 },
+  { id: 'trillion', name: 'Finn Mogul',       hint: 'Earn 1T Finn Kumar in total.',   boost: { prod: 1.15 },     check: () => S.lifeEarned >= 1e12 },
+  { id: 'quint',    name: 'Quintillion King', hint: 'Earn 1Qi Finn Kumar in total.',  boost: { prod: 1.3 },      check: () => S.lifeEarned >= 1e18 },
+  { id: 'googol',   name: 'Googol Gazer',     hint: 'Earn 1e50 Finn Kumar in total.', boost: { prod: 2 },        check: () => S.lifeEarned >= 1e50 },
+  { id: 'reborn',   name: 'Reborn',           hint: 'Rebirth 10 times.',              boost: { prod: 1.1 },      check: () => S.rebirths >= 10 },
+  { id: 'cycle',    name: 'Cycle Breaker',    hint: 'Rebirth 100 times.',             boost: { prod: 1.5 },      check: () => S.rebirths >= 100 },
+  { id: 'shardwalk', name: 'Shard Walker',    hint: 'Transcend once.',                boost: { prod: 1.25 },     check: () => S.transcends >= 1 },
+  { id: 'shardlord', name: 'Shardlord',       hint: 'Transcend 10 times.',            boost: { prod: 2 },        check: () => S.transcends >= 10 },
+  { id: 'crowned',  name: 'Crowned',          hint: 'Ascend once.',                   boost: { prod: 1.5 },      check: () => S.ascensions >= 1 },
+  { id: 'monarch',  name: 'Eternal Monarch',  hint: 'Ascend 5 times.',                boost: { prod: 3 },        check: () => S.ascensions >= 5 },
+  { id: 'goldhunt', name: 'Gold Hunter',      hint: 'Click 100 Golden Finns.',        boost: { gold: 1.25 },     check: () => S.counters.goldens >= 100 },
+  { id: 'goldking', name: 'Golden Overlord',  hint: 'Click 1,000 Golden Finns.',      boost: { gold: 1.5, prod: 1.1 }, check: () => S.counters.goldens >= 1000 },
+  { id: 'tamer',    name: 'Beast Tamer',      hint: 'Own a Legendary pet.',           boost: { pet: 1.25 },      check: () => ownsRarity('legendary') },
+  { id: 'mythkeep', name: 'Myth Keeper',      hint: 'Own a Mythic pet.',              boost: { pet: 1.5 },       check: () => ownsRarity('mythic') },
+  { id: 'secretk',  name: 'Secret Keeper',    hint: 'Own a Secret pet.',              boost: { pet: 2 },         check: () => ownsRarity('secret') },
+  { id: 'eggboss',  name: 'Egg Boss',         hint: 'Hatch 500 eggs.',                boost: { pet: 1.25 },      check: () => S.counters.hatches >= 500 },
+  { id: 'labrat',   name: 'Lab Legend',       hint: 'Earn 100 research points.',      boost: { rp: 1.25 },       check: () => S.rpTotal >= 100 },
+  { id: 'scientist', name: 'Grand Scientist', hint: 'Earn 500 research points.',      boost: { rp: 1.5 },        check: () => S.rpTotal >= 500 },
+  { id: 'traveler', name: 'Globetrotter',     hint: 'Complete 25 missions.',          boost: { prod: 1.1 },      check: () => S.missionsDone >= 25 },
+  { id: 'collector', name: 'Egg Collector',   hint: 'Unlock every normal Kumar.',     boost: { prod: 1.5 },      check: () => KUMARS.every(k => k.hidden || S.kumarsUnlocked[k.id]) },
+  { id: 'topfive',  name: 'Board Climber',    hint: 'Reach the top 5 on the Lifetime board.', boost: { prod: 1.1 }, check: () => T.rank > 0 && T.rank <= 5 },
+  { id: 'champion', name: 'Board Champion',   hint: 'Reach #1 on the Lifetime board.', boost: { prod: 1.25 },    check: () => T.rank === 1 },
+  { id: 'trophy',   name: 'Trophy Hunter',    hint: 'Earn 50 achievements.',          boost: { prod: 1.15 },     check: () => achievementCount() >= 50 },
+  { id: 'complete', name: 'Completionist',    hint: 'Earn 100 achievements.',         boost: { prod: 1.5 },      check: () => achievementCount() >= 100 },
+  { id: 'devoted',  name: 'Devoted',          hint: 'Play for 10 hours.',             boost: { prod: 1.1 },      check: () => S.playtime >= 36000 },
+  { id: 'highroll', name: 'High Roller',      hint: 'Hit the slot jackpot.',          boost: { gold: 1.2 },      check: () => S.stats.slotJackpots >= 1 },
+  { id: 'sharp',    name: 'Sharpshooter',     hint: 'Score 60 in Finn Catcher.',      boost: { click: 1.2 },     check: () => S.stats.bestCatch >= 60 },
+  { id: 'questy',   name: 'Quest Veteran',    hint: 'Complete 50 quests.',            boost: { prod: 1.1 },      check: () => S.questsDone >= 50 },
+  { id: 'streak7',  name: 'Weekly Regular',   hint: 'Reach a 7 day gift streak.',     boost: { prod: 1.1 },      check: () => S.daily.streak >= 7 },
+  { id: 'code666',  name: 'Mark of 666',      hint: 'Redeem a secret code.', secret: true, boost: { prod: 3, click: 3 }, check: () => false },
+  { id: 'code123',  name: "Kasi's Chosen",    hint: 'Redeem a secret code.', secret: true, boost: { prod: 25, click: 25, gold: 2, pet: 2, rp: 2 }, check: () => false }
+];
+const TITLE_BY_ID = {};
+MY_TITLES.forEach(t => { TITLE_BY_ID[t.id] = t; });
+
+function boostText(b) {
+  const parts = [];
+  if (b.prod) parts.push('Production x' + fmt(b.prod));
+  if (b.click) parts.push('Click power x' + fmt(b.click));
+  if (b.gold) parts.push('Golden Finns x' + fmt(b.gold) + ' more often');
+  if (b.pet) parts.push('Pets x' + fmt(b.pet));
+  if (b.rp) parts.push('Research x' + fmt(b.rp) + ' faster');
+  return parts.length ? parts.join(', ') : 'No boost, just a name.';
+}
+
+function titleFx() {
+  const out = { prod: 1, click: 1, gold: 1, pet: 1, rp: 1 };
+  if (!S || !S.titlesOwned) return out;
+  const n = Object.keys(S.titlesOwned).length;
+  out.prod *= 1 + 0.01 * Math.max(0, n - 1);
+  const t = TITLE_BY_ID[S.titleSel];
+  if (t && S.titlesOwned[t.id]) for (const k in t.boost) out[k] *= t.boost[k];
+  return out;
+}
+
+function grantTitle(id, equip) {
+  if (!TITLE_BY_ID[id]) return;
+  if (!S.titlesOwned[id]) S.titlesOwned[id] = Date.now();
+  if (equip) S.titleSel = id;
+  recalc();
+  ui.dirty = true;
+}
+
+let titleFirst = true;
+function checkTitles() {
+  const fresh = [];
+  MY_TITLES.forEach(t => {
+    if (S.titlesOwned[t.id]) return;
+    let ok = false;
+    try { ok = !!t.check(); } catch (e) { ok = false; }
+    if (ok) { S.titlesOwned[t.id] = Date.now(); fresh.push(t); }
+  });
+  if (!fresh.length) return;
+  recalc();
+  ui.dirty = ui.dirty || ui.tab === 'profile';
+  if (titleFirst) return;
+  if (fresh.length <= 2) fresh.forEach(t => toast('New title: ' + t.name, boostText(t.boost), 'gold'));
+  else toast(fresh.length + ' new titles!', 'Open the Profile tab to equip one.', 'gold');
+  sfx.achievement();
+}
+
+step('titles', () => {
+  wrap('currentTitle', orig => function () {
+    const t = TITLE_BY_ID[S.titleSel];
+    if (t && S.titlesOwned && S.titlesOwned[t.id]) return t.name;
+    return orig();
+  });
+  [[5, 'Title Hunter'], [15, 'Title Collector'], [30, 'Title Master']].forEach(e => {
+    addAch('titles_' + e[0], e[1], 'Own ' + e[0] + ' titles.', '🎖️', () => Object.keys(S.titlesOwned).length >= e[0]);
+  });
+  [[7, 'Gift Regular'], [30, 'Gift Legend']].forEach(e => {
+    addAch('daily_' + e[0], e[1], 'Reach a ' + e[0] + ' day gift streak.', '🎁', () => S.daily.streak >= e[0]);
+  });
+  let acc = 0;
+  bus.on('tick', dt => { acc += dt; if (acc >= 1) { acc = 0; checkTitles(); } });
+});
+
+/* =====================================================================
+   5. CODES: 123 (Kasi Kumar) and titles for 666
+   ===================================================================== */
+function equipDivine(pet) {
+  if (S.equipped.length >= calc.slots) {
+    for (let i = S.equipped.length - 1; i >= 0; i--) {
+      const p = findPet(S.equipped[i]);
+      if (p && PET_BY_ID[p.id].rarity !== 'divine') { S.equipped.splice(i, 1); break; }
+    }
+  }
+  if (S.equipped.length < calc.slots) S.equipped.push(pet.u);
+}
+
+step('codes', () => {
+  CODES['666'].apply = function () {
+    const pet = { u: S.petUid++, id: CODE_PET.id, lvl: 0 };
+    S.pets.push(pet);
+    equipDivine(pet);
+    if (!S.kumarsUnlocked.secret) S.kumarsUnlocked.secret = Date.now();
+    S.kumar = 'secret';
+    addFk(1e9, 'code');
+    addBuff({ id: 'code666', name: '666 Boost', kind: 'cps', mult: 100, tone: 'pink' }, 1800);
+    addBuff({ id: 'code666click', name: '666 Click Boost', kind: 'click', mult: 100, tone: 'sunny' }, 1800);
+    grantTitle('code666', true);
+  };
+  CODES['666'].msg = 'Shadow Kumar (secret egg) is now your leader. Super Finn Kumar joined you (production x1,000,001), plus 1B Finn Kumar, a 30 minute x100 boost and the "Mark of 666" title.';
+
+  CODES['123'] = {
+    title: 'Code 123 redeemed!',
+    msg: "Kasi Kumar awakens and leads you (production x1,000, clicks x1,000 and more). The Kasi Spirit pet joined you, you got 5B Finn Kumar, a 30 minute x50 boost and the \"Kasi's Chosen\" title.",
+    apply: function () {
+      if (!S.kumarsUnlocked.kasi) unlockKumar('kasi');
+      S.kumarsUnlocked.kasi = S.kumarsUnlocked.kasi || Date.now();
+      const away = missionOf('kasi');
+      if (away) S.missions = S.missions.filter(m => m !== away);
+      S.kumar = 'kasi';
+      const pet = { u: S.petUid++, id: 'kasipet', lvl: 0 };
+      S.pets.push(pet);
+      equipDivine(pet);
+      addFk(5e9, 'code');
+      addBuff({ id: 'code123', name: '123 Boost', kind: 'cps', mult: 50, tone: 'pink' }, 1800);
+      addBuff({ id: 'code123click', name: '123 Click Boost', kind: 'click', mult: 50, tone: 'sunny' }, 1800);
+      grantTitle('code123', true);
+      ui.skinSig = '';
+    }
+  };
+});
+
+/* =====================================================================
+   6. RESTORE THINGS THE ORIGINAL LOADER DROPPED, THEN BACKFILL
+   (the game booted before this file ran, so new Kumars/pets in an
+   existing save were filtered out as "unknown")
+   ===================================================================== */
+step('restore', () => {
+  ensureFields(S);
+  const raw = readSave();
+  if (raw) {
+    if (isPlainObject(raw.kumarsUnlocked)) {
+      Object.keys(raw.kumarsUnlocked).forEach(id => { if (KUMAR_BY_ID[id] && !S.kumarsUnlocked[id]) S.kumarsUnlocked[id] = raw.kumarsUnlocked[id]; });
+    }
+    if (typeof raw.kumar === 'string' && KUMAR_BY_ID[raw.kumar] && S.kumarsUnlocked[raw.kumar]) S.kumar = raw.kumar;
+    if (Array.isArray(raw.pets)) {
+      raw.pets.forEach(p => {
+        if (p && PET_BY_ID[p.id] && typeof p.u === 'number' && !findPet(p.u)) S.pets.push({ u: p.u, id: p.id, lvl: clamp(p.lvl | 0, 0, PET_MAX_LEVEL) });
+      });
+      S.pets.forEach(p => { S.petDex[p.id] = S.petDex[p.id] || 1; });
+    }
+    if (Array.isArray(raw.equipped)) {
+      raw.equipped.forEach(u => { if (findPet(u) && S.equipped.indexOf(u) < 0 && S.equipped.length < calc.slots + 4) S.equipped.push(u); });
+    }
+    if (raw.titlesOwned && isPlainObject(raw.titlesOwned)) {
+      Object.keys(raw.titlesOwned).forEach(id => { if (TITLE_BY_ID[id]) S.titlesOwned[id] = raw.titlesOwned[id]; });
+    }
+  }
+  /* codes redeemed in earlier versions */
+  if (hasOwn(S.codes, '666')) S.titlesOwned.code666 = S.titlesOwned.code666 || Date.now();
+  if (hasOwn(S.codes, '123')) {
+    S.titlesOwned.code123 = S.titlesOwned.code123 || Date.now();
+    S.kumarsUnlocked.kasi = S.kumarsUnlocked.kasi || Date.now();
+  }
+  if (S.titleSel && !S.titlesOwned[S.titleSel]) S.titleSel = '';
+  checkTitles();
+  titleFirst = false;
+  recalc();
+});
+
+/* =====================================================================
+   7. LEADERBOARDS FOR EVERYTHING (+ optional real players)
+   ===================================================================== */
+const EXTRA_BOARDS = [
+  { id: 'rebirths',   name: 'Rebirths',        get: () => S.rebirths,        rival: (i, h) => Math.floor(i * h * 0.5) },
+  { id: 'transcends', name: 'Transcensions',   get: () => S.transcends,      rival: (i, h) => Math.floor(i * h * 0.04) },
+  { id: 'ascensions', name: 'Ascensions',      get: () => S.ascensions,      rival: (i, h) => Math.floor(i * h * 0.004) },
+  { id: 'tokens',     name: 'Rebirth Tokens',  get: () => S.rtTotal,         rival: (i, h) => Math.floor(i * h * 8) },
+  { id: 'goldens',    name: 'Golden Finns',    get: () => S.counters.goldens, rival: (i, h) => Math.floor(i * h * 6) },
+  { id: 'research',   name: 'Research',        get: () => S.rpTotal,         rival: (i, h) => Math.floor(i * h * 1.5) },
+  { id: 'ach',        name: 'Achievements',    get: () => achievementCount(), rival: (i, h) => Math.min(ACHIEVEMENTS.length, Math.floor(4 + i * 2 + h * 0.4)) },
+  { id: 'missions',   name: 'Missions',        get: () => S.missionsDone,    rival: (i, h) => Math.floor(i * h * 0.8) }
+];
+const EXTRA_BY_ID = {};
+EXTRA_BOARDS.forEach(b => { EXTRA_BY_ID[b.id] = b; });
+
+const net = { rows: [], loaded: false, err: '', at: 0, cache: null, cacheAt: 0 };
+let origGetBoard = null;
+
+function online() { return !!DB; }
+
+function myRecord() {
+  const rec = { name: cleanName(S.playerName) || 'You', title: currentTitle(), kumar: S.kumar, t: Date.now() };
+  const cap = x => Math.min(1e300, safeNum(x));
+  rec.life = cap(S.lifeEarned);
+  rec.cps = cap(S.stats.bestCps);
+  rec.clicks = cap(S.counters.clicks);
+  EXTRA_BOARDS.forEach(b => { rec[b.id] = cap(b.get()); });
+  return rec;
+}
+
+function submitScore() {
+  if (!online() || !S) return Promise.resolve();
+  return fetch(DB + '/scores/' + encodeURIComponent(S.pid) + '.json', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(myRecord())
+  }).then(r => { net.err = r.ok ? '' : 'HTTP ' + r.status; }).catch(() => { net.err = 'offline'; });
+}
+
+function refreshBoard() {
+  if (!online()) return Promise.resolve();
+  return fetch(DB + '/scores.json').then(r => r.json()).then(data => {
+    const rows = [];
+    const now = Date.now();
+    if (data && typeof data === 'object') {
+      Object.keys(data).forEach(id => {
+        const d = data[id];
+        if (!d || typeof d !== 'object' || id === S.pid || typeof d.life !== 'number') return;
+        if (now - safeNum(d.t) > 30 * 864e5) return;
+        const vals = { life: safeNum(d.life), cps: safeNum(d.cps), clicks: safeNum(d.clicks) };
+        EXTRA_BOARDS.forEach(b => { vals[b.id] = safeNum(d[b.id]); });
+        const kum = KUMAR_BY_ID[d.kumar];
+        rows.push({ id: 'p' + id.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24), name: cleanName(d.name) || 'Player', title: String(d.title || '').slice(0, 30), icon: kum ? kum.icon : '🥚', vals: vals });
+      });
+    }
+    rows.sort((a, b) => b.vals.life - a.vals.life);
+    net.rows = rows.slice(0, 300);
+    net.loaded = true;
+    net.err = '';
+    net.at = now;
+    net.cache = null;
+    ui.dirty = ui.dirty || ui.tab === 'board';
+  }).catch(() => { net.err = 'offline'; });
+}
+
+step('boards', () => {
+  EXTRA_BOARDS.forEach(b => { if (!BOARDS.some(x => x.id === b.id)) BOARDS.push({ id: b.id, name: b.name }); });
+
+  wrap('playerValue', orig => board => (hasOwn(EXTRA_BY_ID, board) ? EXTRA_BY_ID[board].get() : orig(board)));
+  wrap('rivalValue', orig => (r, board) => (hasOwn(EXTRA_BY_ID, board) ? EXTRA_BY_ID[board].rival(RIVALS.indexOf(r) + 1, rivalHours()) : orig(r, board)));
+
+  origGetBoard = wrap('getBoard', orig => function (board) {
+    const k = KUMAR_BY_ID[S.kumar] || KUMARS[0];
+    if (!online() || !net.loaded) {
+      const rows = orig(board);
+      rows.forEach(r => { if (r.you) r.title = currentTitle(); });
+      return rows;
+    }
+    const now = Date.now();
+    if (net.cache && net.cache.board === board && now - net.cacheAt < 500) return net.cache.rows;
+    const rows = net.rows.map(r => ({ id: r.id, name: r.name, icon: r.icon, title: r.title, value: safeNum(r.vals[board]), you: false }));
+    rows.push({ id: 'you', name: S.playerName || 'You', icon: k.icon, title: currentTitle(), value: playerValue(board), you: true });
+    rows.sort((a, b) => b.value - a.value);
+    rows.forEach((r, i) => { r.rank = i + 1; });
+    net.cache = { board: board, rows: rows };
+    net.cacheAt = now;
+    return rows;
+  });
+
+  /* The rank production bonus always uses the local computer rivals, so an empty real board cannot hand out #1 for free. */
+  window.updateRank = function () {
+    T.boardCache = {};
+    const rows = origGetBoard('life');
+    const me = rows.find(r => r.you);
+    const rank = me ? me.rank : RIVALS.length + 1;
+    const bonus = 1 + rankBonusFor(rank);
+    const changed = bonus !== T.rankMult;
+    if (T.lastRank && rank < T.lastRank) bus.emit('rankUp', rank, rows[rank] ? rows[rank].name : '');
+    T.lastRank = rank;
+    T.rank = rank;
+    T.rankMult = bonus;
+    if (changed) recalc();
+  };
+
+  wrap('liveText', orig => function (key) {
+    const p = key.split(':');
+    if (p[0] === 'rankinfo') {
+      const rows = origGetBoard('life');
+      const me = rows.find(r => r.you);
+      const b = rankBonusFor(me.rank);
+      return 'Rank bonus (vs the computer Kumars): #' + me.rank + ' of ' + rows.length + '. ' + (b > 0 ? '+' + Math.round(b * 100) + '% production.' : 'None yet (reach the top 8).');
+    }
+    if (p[0] === 'daily') {
+      const left = 20 * 3600 - (Date.now() - S.daily.last) / 1000;
+      return left <= 0 ? 'Claim gift' : 'Ready in ' + fmtTime(left);
+    }
+    return orig(key);
+  });
+  wrap('liveAff', orig => function (key) {
+    if (key.indexOf('daily:') === 0) return dailyReady();
+    return orig(key);
+  });
+
+  const t = TAB_BY_ID.board;
+  const origSig = t.sig;
+  t.sig = () => origSig() + '|' + currentTitle() + '|' + net.at + '|' + net.loaded;
+  t.render = renderBoard;
+});
+
+function renderBoard() {
+  const live = online() && net.loaded;
+  let h = '<div class="panel"><div class="row"><span class="panel-title" style="margin:0">Leaderboard</span><span class="grow"></span>'
+    + '<span class="pill ' + (live ? 'mint' : '') + '">' + (live ? (net.rows.length + 1) + ' real players' : online() ? 'Connecting...' : 'Computer rivals') + '</span></div>'
+    + '<div class="row" style="margin-top:10px">';
+  BOARDS.forEach(b => {
+    h += '<button class="mode-btn' + (ui.board === b.id ? ' active' : '') + '" type="button" data-act="board" data-id="' + b.id + '">' + esc(b.name) + '</button>';
+  });
+  h += '</div><p class="panel-sub" style="margin:8px 0 0">'
+    + (live ? 'Real players from this game, updated every ' + CFG.refreshEvery + ' seconds. Change your name and title in the Profile tab.'
+      : online() ? 'Trying to reach the online leaderboard' + (net.err ? ' (' + esc(net.err) + ')' : '') + '. Showing computer Kumars for now.'
+        : 'Racing the computer Kumars (they grow with real time since you started). Connect a database to see real players.')
+    + '</p><div class="progress-text" style="margin-top:8px" data-live="rankinfo:x"></div></div>';
+
+  const rows = getBoard(ui.board);
+  const shown = rows.slice(0, 50);
+  const me = rows.find(r => r.you);
+  if (me && shown.indexOf(me) < 0) shown.push(me);
+  h += '<div class="panel"><div class="lb">';
+  shown.forEach(r => {
+    h += '<div class="lb-row' + (r.you ? ' you' : '') + (r.rank <= 3 ? ' top' + r.rank : '') + '">'
+      + '<span class="lb-rank">' + (r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '#' + r.rank) + '</span>'
+      + '<span class="lb-name"><span class="lb-icon">' + esc(r.icon) + '</span>' + esc(r.name) + (r.you ? ' (you)' : '')
+      + (r.title ? '<span class="hint-line" style="display:block;font-weight:700">' + esc(r.title) + '</span>' : '') + '</span>'
+      + '<span class="lb-val mono" data-live="lbv:' + r.id + '"></span></div>';
+  });
+  h += '</div></div>';
+
+  h += '<div class="panel"><h3 class="panel-title">Rank Bonuses</h3><p class="panel-sub">Based on your Lifetime rank against the computer Kumars.</p><div class="owned-list">';
+  RANK_BONUSES.forEach(b => {
+    const reached = T.rank > 0 && T.rank <= b.max;
+    h += '<span class="owned-chip" style="' + (reached ? 'background:var(--mint)' : '') + '">' + b.label + ': +' + Math.round(b.bonus * 100) + '% production</span>';
+  });
+  h += '</div></div>';
+
+  h += '<div class="panel"><h3 class="panel-title">Your Records</h3><div class="stats-scroll"><table class="stats-table"><tbody>'
+    + statRow('Biggest click', fmt(S.stats.biggestClick))
+    + statRow('Best production', fmt(S.stats.bestCps) + ' / s')
+    + statRow('Best combo', S.counters.maxCombo + '%')
+    + statRow('Best Finn Catcher score', String(S.stats.bestCatch))
+    + statRow('Fastest rebirth', S.stats.fastestRebirth ? fmtTime(S.stats.fastestRebirth) : 'None yet')
+    + statRow('Missions completed', String(S.missionsDone))
+    + '</tbody></table></div></div>';
+  return h;
+}
+
+/* =====================================================================
+   8. PROFILE TAB: account, name, daily gift, titles
+   ===================================================================== */
+function dailyReady() {
+  if (S.daily.last > Date.now()) S.daily.last = 0;
+  return Date.now() - S.daily.last >= 20 * 3600 * 1000;
+}
+
+function claimDaily() {
+  if (!dailyReady()) return null;
+  const now = Date.now();
+  const gap = now - S.daily.last;
+  S.daily.streak = (S.daily.last && gap < 48 * 3600 * 1000) ? S.daily.streak + 1 : 1;
+  S.daily.last = now;
+  const s = S.daily.streak;
+  const fk = calc.cps * 1800 * (1 + 0.25 * Math.min(s, 20)) + 5000 * s;
+  addFk(fk, 'daily');
+  const rp = Math.min(s, 10);
+  addResearch(rp);
+  addBuff({ id: 'frenzy', name: 'Finn Frenzy', kind: 'cps', mult: 7, tone: 'sunny' }, 60);
+  const parts = ['+' + fmt(fk) + ' Finn Kumar', '+' + rp + ' RP', 'a 60 second Frenzy'];
+  if (s % 7 === 0 && S.rebirths >= 1) { S.rt += 1; S.rtTotal += 1; S.rtRun += 1; parts.push('+1 Rebirth Token'); }
+  recalc();
+  return 'Day ' + s + ': ' + parts.join(', ');
+}
+
+function renderProfile() {
+  const owned = Object.keys(S.titlesOwned).length;
+  const live = online() && net.loaded;
+  let h = '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Your Account</h3><span class="grow"></span>'
+    + '<span class="pill ' + (live ? 'mint' : '') + '">' + (live ? 'Online' : online() ? 'Connecting...' : 'Offline') + '</span></div>'
+    + '<p class="pcard-desc">Your account was created automatically for this browser. A web page cannot read your hardware ID, so the account follows the browser. Use Export and Import in Settings to move it to another device.</p>'
+    + '<div class="row"><span class="pill sky">ID ' + esc(S.pid.slice(0, 8)) + '</span><button class="btn btn-sm" type="button" data-act="copypid">Copy full ID</button>'
+    + '<span class="pill pink">' + esc(currentTitle()) + '</span></div>'
+    + '<div class="row"><span class="setting-name">Name</span><input class="input grow" type="text" id="nameInput" data-name="1" maxlength="16" value="' + esc(S.playerName === 'You' ? '' : S.playerName) + '" placeholder="Pick a name" autocomplete="off" spellcheck="false"></div></div>';
+
+  h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Daily Gift</h3><span class="grow"></span><span class="pill sun">Streak ' + S.daily.streak + '</span></div>'
+    + '<p class="pcard-desc">Come back every day for Finn Kumar, research points and a Frenzy. Every 7th day also gives a Rebirth Token. Missing more than a day resets the streak.</p>'
+    + '<button class="btn btn-sun btn-block" type="button" data-btn="1" data-act="daily" data-aff="daily:x"><span data-live="daily:x"></span></button></div>';
+
+  h += '<div class="panel"><div class="row"><h3 class="panel-title" style="margin:0">Titles</h3><span class="grow"></span>'
+    + '<span class="pill sun">' + owned + ' / ' + MY_TITLES.length + '</span><span class="pill mint">Collection +' + Math.max(0, owned - 1) + '% production</span></div>'
+    + '<p class="panel-sub" style="margin:8px 0 12px">Equip one title for its boost. Every extra title you own adds +1% production.</p><div class="shop-grid">';
+  MY_TITLES.forEach(t => {
+    const has = !!S.titlesOwned[t.id];
+    const cur = S.titleSel === t.id;
+    const hidden = t.secret && !has;
+    h += '<button class="shop-item' + (cur ? ' maxed' : has ? ' afford' : '') + '" type="button" data-act="settitle" data-id="' + t.id + '"' + (has ? '' : ' disabled') + '>'
+      + '<div class="shop-top"><span class="shop-name">' + esc(hidden ? '???' : t.name) + '</span><span class="shop-lvl">' + (cur ? 'Equipped' : has ? 'Equip' : 'Locked') + '</span></div>'
+      + '<div class="shop-desc">' + esc(hidden ? 'A secret code unlocks this title.' : boostText(t.boost)) + '</div>'
+      + '<div class="shop-cost">' + esc(hidden ? '' : t.hint) + '</div></button>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+step('profile', () => {
+  const tab = {
+    id: 'profile', label: 'Profile', render: renderProfile,
+    sig: () => [Object.keys(S.titlesOwned).length, S.titleSel, S.daily.streak, S.pid, net.loaded ? 1 : 0].join('|'),
+    badge: () => (dailyReady() ? 1 : 0)
+  };
+  const idx = TABS.findIndex(t => t.id === 'stats');
+  TABS.splice(idx < 0 ? TABS.length : idx, 0, tab);
+  TAB_BY_ID.profile = tab;
+  ui.navSig = '';
+
+  ACTIONS.settitle = d => {
+    const t = TITLE_BY_ID[d.id];
+    if (!t || !S.titlesOwned[t.id]) return;
+    S.titleSel = S.titleSel === t.id ? '' : t.id;
+    recalc();
+    ui.skinSig = '';
+    ui.dirty = true;
+    submitScore();
+  };
+  ACTIONS.daily = () => {
+    const r = claimDaily();
+    if (r) { toast('Daily Gift', r, 'gold'); sfx.win(); fx.burstCenter(30); }
+    ui.dirty = true;
+  };
+  ACTIONS.copypid = () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(S.pid).then(() => toast('Copied', 'Your account ID is on the clipboard.', 'good'), () => toast('Your ID', S.pid, ''));
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    toast('Your ID', S.pid, '');
+  };
+
+  /* runs after the game's own handler: clean the name, then push it online */
+  $('tabBody').addEventListener('change', ev => {
+    if (!ev.target.closest || !ev.target.closest('[data-name]')) return;
+    S.playerName = cleanName(S.playerName) || 'You';
+    T.boardCache = {};
+    net.cache = null;
+    submitScore();
+  });
+
+  bus.on('prestige', () => setTimeout(submitScore, 600));
+  if (online()) {
+    setTimeout(() => { submitScore().then(refreshBoard); }, 2500);
+    setInterval(submitScore, Math.max(15, CFG.submitEvery) * 1000);
+    setInterval(refreshBoard, Math.max(10, CFG.refreshEvery) * 1000);
+  }
+});
+
+/* =====================================================================
+   8. REAL ACCOUNTS: Firebase email/password auth + cloud saves
+   Configure window.FK_CONFIG with your Firebase Web API key and RTDB URL.
+   Username is used as a private synthetic email; passwords are handled by
+   Firebase Authentication and are never stored in this HTML/localStorage.
+   ===================================================================== */
+const AUTH_KEY = 'fk-auth-session-v1';
+const USER_EMAIL_DOMAIN = '@kumar.game';
+let authUser = null;
+let authBusy = false;
+let authMessage = '';
+let authMode = 'login';
+let cloudSaveBusy = false;
+let lastCloudSave = 0;
+let profileOpen = false;
+const FRAME_STYLES = [
+  ['Gold', 'linear-gradient(135deg,#ffe27a,#b87918,#fff0a8)'],
+  ['Neon', 'linear-gradient(135deg,#50eaff,#8d4dff,#ff4cba)'],
+  ['Emerald', 'linear-gradient(135deg,#9dffca,#079b70,#d7ffe9)'],
+  ['Crimson', 'linear-gradient(135deg,#ff9b9b,#a41438,#ffd0d0)']
+];
+
+function authConfigured() { return !!(CFG.apiKey && !String(CFG.apiKey).includes('PASTE_') && DB && !DB.includes('YOUR-PROJECT')); }
+function authEmail(username) { return cleanName(username).toLowerCase() + USER_EMAIL_DOMAIN; }
+function authErrorMessage(raw) {
+  const code = String(raw || 'UNKNOWN');
+  const map = {
+    EMAIL_EXISTS: 'That username is already taken.',
+    EMAIL_NOT_FOUND: 'Username or password is incorrect.',
+    INVALID_PASSWORD: 'Username or password is incorrect.',
+    INVALID_LOGIN_CREDENTIALS: 'Username or password is incorrect.',
+    WEAK_PASSWORD: 'Password must be at least 6 characters.',
+    TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many attempts. Try again later.',
+    OPERATION_NOT_ALLOWED: 'Enable Email/Password sign-in in Firebase Authentication.',
+    API_KEY_INVALID: 'Firebase API key is incorrect.',
+    USER_DISABLED: 'This account has been disabled.'
+  };
+  return map[code] || ('Account error: ' + code.replace(/_/g, ' ').toLowerCase());
+}
+async function authRequest(method, payload) {
+  const url = 'https://identitytoolkit.googleapis.com/v1/accounts:' + method + '?key=' + encodeURIComponent(CFG.apiKey);
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(authErrorMessage(data.error && data.error.message));
+  return data;
+}
+function persistAuth(data, username) {
+  authUser = { uid: data.localId, username: username, idToken: data.idToken, refreshToken: data.refreshToken, expiresAt: Date.now() + Math.max(60, Number(data.expiresIn || 3600) - 60) * 1000 };
+  try { localStorage.setItem(AUTH_KEY, JSON.stringify({ uid: authUser.uid, username: username, refreshToken: authUser.refreshToken })); } catch (e) {}
+}
+async function refreshAuth() {
+  if (!authUser || !authUser.refreshToken) throw new Error('Please log in again.');
+  const res = await fetch('https://securetoken.googleapis.com/v1/token?key=' + encodeURIComponent(CFG.apiKey), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(authUser.refreshToken)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { authUser = null; try { localStorage.removeItem(AUTH_KEY); } catch (e) {} throw new Error('Your session expired. Please log in again.'); }
+  authUser.idToken = data.id_token;
+  authUser.refreshToken = data.refresh_token;
+  authUser.expiresAt = Date.now() + Math.max(60, Number(data.expires_in || 3600) - 60) * 1000;
+  try { localStorage.setItem(AUTH_KEY, JSON.stringify({ uid: authUser.uid, username: authUser.username, refreshToken: authUser.refreshToken })); } catch (e) {}
+}
+async function token() { if (!authUser) throw new Error('Not logged in.'); if (Date.now() >= authUser.expiresAt) await refreshAuth(); return authUser.idToken; }
+async function dbRequest(path, options) {
+  const idToken = await token();
+  const opts = Object.assign({}, options || {});
+  opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+  let url = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(idToken);
+  let res = await fetch(url, opts);
+  if (res.status === 401 || res.status === 403) {
+    await refreshAuth();
+    url = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(authUser.idToken);
+    res = await fetch(url, opts);
+  }
+  if (!res.ok) throw new Error('Database request failed (' + res.status + '). Check Firebase Realtime Database rules.');
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+function profileFrameIndex() { return Math.max(0, Math.min(FRAME_STYLES.length - 1, Number(S.profileFrame || 0) | 0)); }
+function profileAvatar() { const k = KUMAR_BY_ID[S.kumar] || KUMARS[0]; return k.icon || '🥚'; }
+function profileName() { return authUser ? authUser.username : 'Guest'; }
+function authOverlayHtml() {
+  const configured = authConfigured();
+  return '<div id="fkAuthGate" class="fk-auth-gate"><div class="fk-auth-card">'
+    + '<div class="fk-auth-logo">🥚</div><h1>' + (authMode === 'signup' ? 'Create your account' : 'Welcome back') + '</h1>'
+    + '<p class="fk-auth-sub">' + (authMode === 'signup' ? 'Choose a username and password. Your progress will be saved online.' : 'Log in to load your account and continue your progress.') + '</p>'
+    + (!configured ? '<div class="fk-auth-warning"><b>Firebase setup required</b><br>Open the HTML file and add your Firebase Web API key and Realtime Database URL in <code>window.FK_CONFIG</code>. Follow the setup steps below the download link.</div>' : '')
+    + '<form id="fkAuthForm"><label>Username</label><input id="fkAuthUsername" autocomplete="username" maxlength="16" minlength="3" required placeholder="3–16 characters">'
+    + '<label>Password</label><input id="fkAuthPassword" type="password" autocomplete="' + (authMode === 'signup' ? 'new-password' : 'current-password') + '" minlength="6" required placeholder="At least 6 characters">'
+    + (authMode === 'signup' ? '<label>Confirm password</label><input id="fkAuthConfirm" type="password" autocomplete="new-password" minlength="6" required placeholder="Enter password again">' : '')
+    + '<div class="fk-auth-error" id="fkAuthError">' + esc(authMessage) + '</div>'
+    + '<button class="fk-auth-submit" type="submit" ' + (!configured || authBusy ? 'disabled' : '') + '>' + (authBusy ? 'Please wait…' : authMode === 'signup' ? 'Sign up' : 'Log in') + '</button></form>'
+    + '<button class="fk-auth-switch" id="fkAuthSwitch" type="button">' + (authMode === 'signup' ? 'Already have an account? Log in' : 'New here? Create an account') + '</button>'
+    + '<p class="fk-auth-note">Same browser: automatic login. Different devices: log in with the same username and password.</p>'
+    + '</div></div>';
+}
+function ensureAuthUI() {
+  if (!document.getElementById('fkAuthGate')) document.body.insertAdjacentHTML('beforeend', authOverlayHtml());
+  if (!document.getElementById('fkTopProfile')) document.body.insertAdjacentHTML('beforeend', '<div id="fkTopProfile" class="fk-top-profile" style="display:none"></div>');
+  renderAuthUI();
+}
+function renderAuthUI() {
+  const gate = document.getElementById('fkAuthGate');
+  const top = document.getElementById('fkTopProfile');
+  if (gate) {
+    if (authUser) gate.remove();
+    else if (!document.getElementById('fkAuthForm')) gate.outerHTML = authOverlayHtml();
+  }
+  if (top) {
+    if (!authUser) { top.style.display = 'none'; top.innerHTML = ''; }
+    else {
+      const fi = profileFrameIndex();
+      top.style.display = 'block';
+      top.innerHTML = '<button class="fk-profile-trigger" id="fkProfileToggle" type="button"><span class="fk-avatar-frame" style="background:' + FRAME_STYLES[fi][1] + '"><span>' + esc(profileAvatar()) + '</span></span><span class="fk-profile-name">' + esc(profileName()) + '</span><span class="fk-profile-caret">⌄</span></button>'
+        + (profileOpen ? '<div class="fk-profile-menu"><div class="fk-profile-menu-head"><span class="fk-avatar-frame big" style="background:' + FRAME_STYLES[fi][1] + '"><span>' + esc(profileAvatar()) + '</span></span><span><b>' + esc(profileName()) + '</b><small>Real player account</small></span></div>'
+          + '<label class="fk-frame-label">Profile frame</label><select id="fkFrameSelect">' + FRAME_STYLES.map((f,i) => '<option value="' + i + '" ' + (fi === i ? 'selected' : '') + '>' + f[0] + '</option>').join('') + '</select>'
+          + '<div class="fk-profile-meta">Progress sync: ' + (authUser ? 'Online account' : 'Offline') + '</div><button id="fkLogout" class="fk-logout" type="button">Log out</button></div>' : '');
+    }
+  }
+}
+function showAuthGate(message) {
+  authMessage = message || '';
+  profileOpen = false;
+  const old = document.getElementById('fkAuthGate');
+  if (old) old.remove();
+  document.body.insertAdjacentHTML('beforeend', authOverlayHtml());
+  renderAuthUI();
+}
+async function loadCloudSave() {
+  const cloud = await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/save.json', { method: 'GET' });
+  if (cloud && typeof cloud === 'object' && cloud.v) {
+    S = stateFromSaved(cloud);
+    recalc(); updateRank(); updateStage(); ui.dirty = true;
+    toast('Progress loaded', 'Your cloud save has been restored.', 'good');
+  } else {
+    /* First login on this account: migrate this browser's existing progress. */
+    S.playerName = S.playerName && S.playerName !== 'You' ? S.playerName : authUser.username;
+    saveGame();
+    await cloudSave(true);
+  }
+}
+async function cloudSave(force) {
+  if (!authUser || cloudSaveBusy || !S) return;
+  if (!force && Date.now() - lastCloudSave < 12000) return;
+  cloudSaveBusy = true;
+  try {
+    const snapshot = JSON.parse(JSON.stringify(S));
+    await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/save.json', { method: 'PUT', body: JSON.stringify(snapshot) });
+    lastCloudSave = Date.now();
+    await submitScore();
+  } catch (e) { console.warn('[account] cloud save failed', e); }
+  finally { cloudSaveBusy = false; }
+}
+async function doAuth(mode, username, password) {
+  if (!authConfigured()) throw new Error('Firebase is not configured yet.');
+  const name = cleanName(username);
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new Error('Username must be 3–16 letters, numbers or underscores.');
+  const data = await authRequest(mode === 'signup' ? 'signUp' : 'signInWithPassword', { email: authEmail(name), password: password, returnSecureToken: true });
+  persistAuth(data, name);
+  await loadCloudSave();
+  authMessage = '';
+  ensureAuthUI();
+  renderAuthUI();
+  ui.dirty = true;
+  await cloudSave(true);
+}
+async function restoreSession() {
+  if (!authConfigured()) { ensureAuthUI(); return; }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (e) {}
+  if (!saved || !saved.refreshToken || !saved.uid || !saved.username) { ensureAuthUI(); return; }
+  authUser = { uid: saved.uid, username: saved.username, refreshToken: saved.refreshToken, idToken: '', expiresAt: 0 };
+  try {
+    await refreshAuth();
+    await loadCloudSave();
+    ensureAuthUI();
+    renderAuthUI();
+    await submitScore();
+    await refreshBoard();
+  } catch (e) {
+    authUser = null;
+    try { localStorage.removeItem(AUTH_KEY); } catch (x) {}
+    showAuthGate('Your saved login expired. Please log in again.');
+  }
+}
+async function logoutAccount() {
+  if (authUser) await cloudSave(true);
+  authUser = null; profileOpen = false;
+  try { localStorage.removeItem(AUTH_KEY); } catch (e) {}
+  showAuthGate('You have been logged out.');
+}
+
+/* No computer-generated names are allowed in any leaderboard. */
+RIVALS.length = 0;
+RANK_BONUSES.length = 0; /* No artificial bot ranks or rewards. */
+function realBoardRows(board) {
+  const rows = [];
+  const k = KUMAR_BY_ID[S.kumar] || KUMARS[0];
+  rows.push({ id: 'you', name: authUser ? authUser.username : (S.playerName || 'You'), title: currentTitle(), icon: k.icon, value: playerValue(board), you: true });
+  if (authUser && net.loaded) net.rows.forEach(r => rows.push({ id: r.id, name: r.name, title: r.title, icon: r.icon, value: safeNum(r.vals[board]), you: false }));
+  rows.sort((a,b) => b.value - a.value);
+  rows.forEach((r,i) => r.rank = i + 1);
+  return rows;
+}
+function renderRealBoard() {
+  const rows = realBoardRows(ui.board);
+  const live = !!(authUser && net.loaded);
+  let h = '<div class="panel"><div class="row"><span class="panel-title" style="margin:0">Real Player Leaderboard</span><span class="grow"></span><span class="pill ' + (live ? 'mint' : '') + '">' + (live ? rows.length + ' players' : authUser ? 'Connecting…' : 'Log in required') + '</span></div>'
+    + '<div class="row" style="margin-top:10px">';
+  BOARDS.forEach(b => { h += '<button class="mode-btn' + (ui.board === b.id ? ' active' : '') + '" type="button" data-act="board" data-id="' + b.id + '">' + esc(b.name) + '</button>'; });
+  h += '</div><p class="panel-sub" style="margin-top:8px">Only accounts that sign up and play are shown. No bots or computer rivals.</p></div><div class="panel"><div class="lb">';
+  rows.slice(0,50).forEach(r => { h += '<div class="lb-row' + (r.you ? ' you' : '') + (r.rank <= 3 ? ' top' + r.rank : '') + '"><span class="lb-rank">' + (r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '#' + r.rank) + '</span><span class="lb-name"><span class="lb-icon">' + esc(r.icon) + '</span>' + esc(r.name) + (r.you ? ' (you)' : '') + (r.title ? '<span class="hint-line" style="display:block;font-weight:700">' + esc(r.title) + '</span>' : '') + '</span><span class="lb-val mono">' + esc(fmt(r.value)) + '</span></div>'; });
+  if (!rows.length) h += '<p class="panel-sub">No players yet.</p>';
+  h += '</div></div>';
+  h += '<div class="panel"><h3 class="panel-title">Your Records</h3><div class="stats-scroll"><table class="stats-table"><tbody>' + statRow('Lifetime Finn Kumar', fmt(S.lifeEarned)) + statRow('Best production', fmt(S.stats.bestCps) + ' / s') + statRow('Total clicks', fmt(S.counters.clicks)) + '</tbody></table></div></div>';
+  return h;
+}
+TAB_BY_ID.board.render = renderRealBoard;
+const originalProfileRender = TAB_BY_ID.profile.render;
+TAB_BY_ID.profile.render = function () {
+  const fi = profileFrameIndex();
+  const accountCard = '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Online Account</h3><span class="grow"></span><span class="pill mint">Signed in</span></div>'
+    + '<div class="row" style="align-items:center;gap:12px"><span class="fk-avatar-frame big" style="background:' + FRAME_STYLES[fi][1] + '"><span>' + esc(profileAvatar()) + '</span></span><span><b>' + esc(profileName()) + '</b><small style="display:block;color:var(--muted)">' + esc(authUser.uid.slice(0, 12)) + '…</small></span></div>'
+    + '<p class="panel-sub">Your game progress is saved to this account and can be restored on another device.</p>'
+    + '<div class="row"><label class="setting-name" for="fkFrameSelectProfile">Avatar frame</label><select id="fkFrameSelectProfile" class="input">' + FRAME_STYLES.map((f,i) => '<option value="' + i + '" ' + (fi === i ? 'selected' : '') + '>' + f[0] + '</option>').join('') + '</select><button class="btn btn-sm" type="button" id="fkLogoutProfile">Log out</button></div></div>';
+  return accountCard + originalProfileRender();
+};
+TAB_BY_ID.board.sig = () => [ui.board, net.at, net.loaded, authUser ? authUser.uid : ''].join('|');
+
+/* Replace unauthenticated public writes with account-owned records. */
+submitScore = async function () {
+  if (!authUser) return;
+  const rec = myRecord();
+  rec.name = authUser.username;
+  rec.uid = authUser.uid;
+  try { await dbRequest('/scores/' + encodeURIComponent(authUser.uid) + '.json', { method: 'PUT', body: JSON.stringify(rec) }); }
+  catch (e) { net.err = e.message || 'offline'; }
+};
+refreshBoard = async function () {
+  if (!authUser) { net.rows = []; net.loaded = false; return; }
+  try {
+    const data = await fetch(DB + '/scores.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    const rows = [];
+    if (data && typeof data === 'object') Object.keys(data).forEach(id => {
+      const d = data[id];
+      if (!d || typeof d !== 'object' || id === authUser.uid || typeof d.life !== 'number' || !d.uid) return;
+      const vals = { life: safeNum(d.life), cps: safeNum(d.cps), clicks: safeNum(d.clicks) };
+      EXTRA_BOARDS.forEach(b => { vals[b.id] = safeNum(d[b.id]); });
+      const kum = KUMAR_BY_ID[d.kumar];
+      rows.push({ id: 'p' + id.replace(/[^A-Za-z0-9_-]/g, '').slice(0,24), name: cleanName(d.name) || 'Player', title: String(d.title || '').slice(0,30), icon: kum ? kum.icon : '🥚', vals });
+    });
+    net.rows = rows; net.loaded = true; net.err = ''; net.at = Date.now(); ui.dirty = ui.dirty || ui.tab === 'board';
+  } catch (e) { net.err = e.message || 'offline'; }
+};
+
+step('account-ui', () => {
+  const css = document.createElement('style');
+  css.textContent = `
+  .fk-auth-gate{position:fixed;inset:0;z-index:1000000;display:grid;place-items:center;padding:20px;background:rgba(5,7,18,.94);backdrop-filter:blur(14px);font-family:inherit;color:#fff}
+  .fk-auth-card{width:min(430px,100%);padding:30px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(155deg,#1c2040,#101326);box-shadow:0 24px 90px #0009}
+  .fk-auth-logo{font-size:42px;text-align:center}.fk-auth-card h1{text-align:center;margin:8px 0;font-size:25px}.fk-auth-sub,.fk-auth-note{color:#aab2d0;text-align:center;font-size:13px;line-height:1.55}.fk-auth-card label{display:block;margin:16px 0 6px;color:#cbd2ed;font-size:12px;font-weight:800}.fk-auth-card input,.fk-profile-menu select{box-sizing:border-box;width:100%;padding:13px 14px;border-radius:10px;border:1px solid #424968;background:#0b1023;color:white;outline:none}.fk-auth-card input:focus{border-color:#8d79ff}.fk-auth-submit{width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:linear-gradient(90deg,#8066ff,#bd55ef);color:white;font-weight:900;cursor:pointer}.fk-auth-submit:disabled{opacity:.45;cursor:not-allowed}.fk-auth-switch{display:block;margin:15px auto 0;border:0;background:none;color:#a99bff;cursor:pointer}.fk-auth-error{min-height:18px;margin-top:10px;color:#ff929e;font-size:12px}.fk-auth-warning{padding:12px;margin:16px 0;border:1px solid #98743a;border-radius:10px;background:#46371e;color:#ffe2a4;font-size:12px;line-height:1.5}.fk-auth-warning code{color:#fff}.fk-top-profile{position:fixed;z-index:99990;top:14px;right:16px;font-family:inherit}.fk-profile-trigger{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 6px;border:1px solid #ffffff30;border-radius:30px;background:#10152beF;color:#fff;box-shadow:0 6px 24px #0006;cursor:pointer}.fk-avatar-frame{width:38px;height:38px;border-radius:50%;padding:3px;display:grid;place-items:center;box-sizing:border-box}.fk-avatar-frame>span{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:#11172b;border:2px solid #11172b;font-size:20px}.fk-avatar-frame.big{width:52px;height:52px}.fk-profile-name{font-size:13px;font-weight:900;max-width:125px;overflow:hidden;text-overflow:ellipsis}.fk-profile-caret{color:#bfc5df}.fk-profile-menu{position:absolute;right:0;top:54px;width:245px;padding:15px;border:1px solid #ffffff22;border-radius:15px;background:#11172b;color:#fff;box-shadow:0 16px 45px #0009}.fk-profile-menu-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}.fk-profile-menu-head b{display:block}.fk-profile-menu-head small{display:block;color:#9ca7c9;margin-top:3px}.fk-frame-label{display:block;margin:12px 0 6px;color:#b9c3e4;font-size:11px;font-weight:800}.fk-profile-meta{margin:10px 0;color:#8ee4bd;font-size:11px}.fk-logout{width:100%;padding:10px;border:1px solid #ff7e8b66;border-radius:9px;background:#7d2636;color:#fff;font-weight:800;cursor:pointer}
+  `;
+  document.head.appendChild(css);
+  ensureAuthUI();
+  document.addEventListener('submit', async ev => {
+    if (ev.target.id !== 'fkAuthForm') return;
+    ev.preventDefault(); if (authBusy) return;
+    const username = document.getElementById('fkAuthUsername').value;
+    const password = document.getElementById('fkAuthPassword').value;
+    const confirm = document.getElementById('fkAuthConfirm');
+    if (authMode === 'signup' && confirm && confirm.value !== password) { showAuthGate('Passwords do not match.'); authMode = 'signup'; return; }
+    authBusy = true; authMessage = ''; showAuthGate('');
+    const submit = document.querySelector('.fk-auth-submit'); if (submit) { submit.disabled = true; submit.textContent = 'Please wait…'; }
+    try { await doAuth(authMode, username, password); }
+    catch (e) { authBusy = false; showAuthGate(e.message || 'Could not log in.'); }
+    finally { authBusy = false; }
+  });
+  document.addEventListener('click', ev => {
+    const id = ev.target && ev.target.id;
+    if (id === 'fkAuthSwitch') { authMode = authMode === 'login' ? 'signup' : 'login'; authMessage = ''; showAuthGate(''); }
+    if (id === 'fkProfileToggle') { profileOpen = !profileOpen; renderAuthUI(); }
+    if (id === 'fkLogout' || id === 'fkLogoutProfile') logoutAccount();
+    if (id !== 'fkProfileToggle' && !ev.target.closest('.fk-profile-menu') && !ev.target.closest('.fk-top-profile')) { if (profileOpen) { profileOpen = false; renderAuthUI(); } }
+  });
+  document.addEventListener('change', ev => {
+    if (ev.target.id === 'fkFrameSelect' || ev.target.id === 'fkFrameSelectProfile') { S.profileFrame = Number(ev.target.value) || 0; saveGame(); renderAuthUI(); ui.dirty = true; }
+  });
+  const originalSaveGame = saveGame;
+  saveGame = function () { const ok = originalSaveGame(); if (authUser) cloudSave(false); return ok; };
+  window.addEventListener('beforeunload', () => { if (authUser) cloudSave(true); });
+  setInterval(() => { if (authUser) { cloudSave(false); refreshBoard(); } }, 15000);
+  restoreSession();
+});
+
+/* ---------- finish ---------- */
+step('finish', () => {
+  recalc();
+  updateRank();
+  ui.skinSig = '';
+  ui.buffSig = '';
+  ui.navSig = '';
+  ui.dirty = true;
+  console.log('[finn-patch] loaded' + (online() ? ' (online leaderboard on)' : ' (offline leaderboard)'));
+});
+
+})();
+
+</script>
 </body>
 </html>

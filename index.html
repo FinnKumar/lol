@@ -1321,8 +1321,7 @@ function defaultState() {
       autoRebirthAt: 10,
       buyMode: 1,
       confirmPrestige: true,
-      goldenAlert: true,
-      fullyAuto: false
+      goldenAlert: true
     }
   };
 }
@@ -1455,9 +1454,6 @@ function recalc() {
   goldFreq *= ke.goldFreq * (1 + 0.12 * rl('rgolden'));
   goldVal *= ke.goldVal;
   petAmp *= ke.pet;
-  luck += ke.luck || 0;
-  rtGain *= ke.rt || 1;
-  eggCost *= ke.egg || 1;
   costMult *= ke.cost * Math.max(0.5, 1 - 0.02 * rl('rcost'));
   upCost *= Math.max(0.4, 1 - 0.03 * rl('rupg'));
   eggCost *= Math.max(0.5, 1 - 0.04 * rl('regg'));
@@ -2367,7 +2363,7 @@ function rl(id) { return S.rpUp[id] || 0; }
 
 function kumarEffects() {
   const sc = 1 + 0.1 * rl('rgym');
-  const e = { prod: 1, click: 1, crit: 0, combo: 0, goldFreq: 1, goldVal: 1, pet: 1, rp: 1, cost: 1, offline: 0, luck: 0, rt: 1, egg: 1 };
+  const e = { prod: 1, click: 1, crit: 0, combo: 0, goldFreq: 1, goldVal: 1, pet: 1, rp: 1, cost: 1, offline: 0 };
   switch (S.kumar) {
     case 'finn':
       e.prod = 1 + 0.25 * sc; e.click = 1 + 0.25 * sc;
@@ -3390,26 +3386,6 @@ const KUMARS = [
 ];
 const KUMAR_BY_ID = {};
 KUMARS.forEach(k => { KUMAR_BY_ID[k.id] = k; });
-
-/* Unique secondary passives for existing Kumars. These are additional to
-   each character's original leader boost; no new Kumar characters are added. */
-const KUMAR_PASSIVES = {
-  finn:   'Steady Growth: +5% production and +5% click power.',
-  julian: 'Precision: +3% critical chance and +15% combo strength.',
-  leo:    'Fortune: +10% pet luck, +15% Golden Finn frequency and +10% Golden Finn value.',
-  madhav: 'Efficiency: research +15% faster, generators 5% cheaper and +10% offline efficiency.',
-  secret: 'Shadow Blessing: +10% production, clicks, research and pet power.',
-  zara:   'Rebirth Memory: +10% Rebirth Token gain and +10% offline efficiency.',
-  ralph:  'Power Surge: +8% production and +5% critical chance.',
-  mitch:  'Deep Research: +15% research speed and 3% cheaper generators.',
-  hugh:   'Guardian Discount: generators 10% cheaper and +10% offline efficiency.',
-  sam:    'Quick Reflexes: +15% click power and +5% critical chance.',
-  adam:   'Supreme Balance: +8% production, +5% clicks and +5% research speed.',
-  zander: 'Sky Fortune: +10% Golden Finn frequency, +10% pet luck and +10% offline efficiency.',
-  custom: 'Adaptive Core: +5% production, clicks, research and pet power.',
-  kasi:   'Chosen Blessing: +10% production, clicks, research, pet power and Rebirth Token gain.'
-};
-
 
 /* =====================================================================
    RESEARCH LAB - one research point every minute (faster with upgrades)
@@ -4644,7 +4620,6 @@ function renderKumars() {
       + '<div class="kumar-egg"><svg viewBox="0 0 300 300" aria-hidden="true">' + eggSvgMarkup(k.id, S.skin === 'classic' ? 'classic' : S.skin, 'chill', true, 'k' + i) + '</svg></div>'
       + '<div class="kumar-name">' + esc(k.name) + '</div><div class="kumar-title">' + esc(k.title) + '</div>'
       + '<div class="kumar-desc"><b>Leader boost:</b> ' + esc(k.boost) + '</div>'
-      + (KUMAR_PASSIVES[k.id] ? '<div class="kumar-desc"><b>Unique passive:</b> ' + esc(KUMAR_PASSIVES[k.id]) + '</div>' : '')
       + '<div class="kumar-desc"><b>On missions:</b> ' + esc(k.missionNote) + '</div>';
     if (owned) {
       if (active) h += '<div class="pill sun" style="align-self:center">Leading now</div>';
@@ -5259,29 +5234,22 @@ function showOfflineModal(r) {
 
 </script>
 <script>
-/* FIREBASE CONFIGURATION — add your own Firebase details here. */
-window.FK_CONFIG = window.FK_CONFIG || {
-  firebaseApiKey: 'YOUR-FIREBASE-API-KEY',
-  firebaseDatabaseURL: 'https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com',
-  firebaseProjectId: 'YOUR-FIREBASE-PROJECT-ID',
-  submitEvery: 15,
-  refreshEvery: 20
-};
+/* FIREBASE CONFIGURATION: paste your Firebase Web API key and Realtime Database URL here. */
+window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'AIzaSyAyZEn3I5E3GPK_6VoPKb4GQNV4jYYrdwM', dbUrl: 'https://save-523f5-default-rtdb.firebaseio.com' };
 </script>
 <script>
 /* =====================================================================
    FINN KUMAR INCREMENTAL - add-on patch (already merged into index.html)
 
-   Real-player leaderboard, accounts and cloud saves use Firebase Authentication + Realtime Database.
+   Optional real-player leaderboard: set window.FK_CONFIG = { dbUrl: '...' }
+   to your Firebase Realtime Database URL before this code runs, or edit
+   dbUrl in the CFG line below.
    ===================================================================== */
 (function () {
 'use strict';
 
-const CFG = Object.assign({ firebaseApiKey: '', firebaseDatabaseURL: '', firebaseProjectId: '', submitEvery: 15, refreshEvery: 20 }, window.FK_CONFIG || {});
-const DB = /^https:\/\/[^\s]+$/.test(String(CFG.firebaseDatabaseURL || '')) ? String(CFG.firebaseDatabaseURL).replace(/\/+$/, '') : '';
-const FIREBASE_API_KEY = String(CFG.firebaseApiKey || '');
-const FIREBASE_AUTH = 'https://identitytoolkit.googleapis.com/v1';
-const FIREBASE_TOKEN = 'https://securetoken.googleapis.com/v1/token';
+const CFG = Object.assign({ apiKey: '', dbUrl: '', submitEvery: 15, refreshEvery: 20 }, window.FK_CONFIG || {});
+const DB = /^https:\/\/[^\s]+$/.test(String(CFG.dbUrl || '')) ? String(CFG.dbUrl).replace(/\/+$/, '') : '';
 
 /* ---------- helpers ---------- */
 function step(name, fn) { try { fn(); } catch (err) { console.error('[finn-patch:' + name + ']', err); } }
@@ -5430,10 +5398,11 @@ step('missions', () => {
 step('news', () => {
   NEWS.push(
     'Kasi Kumar has been spotted. Witnesses say the numbers got nervous.',
+    "Kasi Kumar's forehead now has its own weather system. Sunny, with a chance of shine.",
+    'Scientists measure Kasi Kumar\'s forehead. The ruler asked for a bigger ruler.',
     'Titles now come in sizes: small, medium and "please stop clicking".',
     'Leaderboard update: every Kumar is now ranked at everything, including naps.',
     'Daily Gift arrives on time. Daily Gift is very proud of itself.',
-    'Zara Kumar rebirths for fun. Zara Kumar calls it "cardio".',
     'Time Loop opens a second Time Loop. Time Loop was already there.'
   );
 });
@@ -5446,12 +5415,16 @@ const PATTERNS = {
   diamonds(c) { let s = ''; [[96, 86], [204, 92], [150, 142], [70, 190], [230, 196], [110, 246], [196, 250]].forEach(d => { s += '<path d="M0 -15 L12 0 L0 15 L-12 0 Z" transform="translate(' + d[0] + ' ' + d[1] + ')" fill="' + c + '"/>'; }); return s; },
   rings(c) { let s = ''; [[92, 84, 16], [208, 100, 12], [64, 170, 10], [232, 184, 16], [112, 246, 14], [194, 254, 10]].forEach(d => { s += '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="' + d[2] + '" fill="none" stroke="' + c + '" stroke-width="7"/>'; }); return s; },
   bolts(c) { let s = ''; [[100, 92, 1], [204, 102, 0.8], [70, 186, 0.9], [232, 196, 1.1], [120, 246, 1], [190, 252, 0.8]].forEach(d => { s += '<path d="M0 -16 L-9 3 L-1 3 L-5 17 L10 -4 L2 -4 Z" transform="translate(' + d[0] + ' ' + d[1] + ') scale(' + d[2] + ')" fill="' + c + '"/>'; }); return s; },
+  forehead() { return '<ellipse cx="150" cy="72" rx="124" ry="66" fill="#ffe0b8"/>'
+    + '<path d="M92 48 Q150 22 208 48" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M84 74 Q150 46 216 74" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M92 100 Q150 78 208 100" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<ellipse cx="112" cy="40" rx="28" ry="12" fill="#fff" fill-opacity="0.8" transform="rotate(-28 112 40)"/>'; },
   rays(c) { let s = ''; for (let a = 0; a < 360; a += 24) { const r = a * Math.PI / 180; s += '<path d="M150 176 L' + (150 + 260 * Math.cos(r)).toFixed(1) + ' ' + (176 + 260 * Math.sin(r)).toFixed(1) + '" stroke="' + c + '" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round"/>'; } return s; }
 };
 
 const INK = '#17133b';
 const ACC = {
-  zara() { return '<ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="' + INK + '" stroke-width="14"/><ellipse cx="150" cy="20" rx="46" ry="12" fill="none" stroke="#ffd43b" stroke-width="7"/>'; },
   dev() { return '<path d="M92 76 Q150 -10 208 76 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><rect x="82" y="70" width="136" height="16" rx="8" fill="#ffd43b" stroke="' + INK + '" stroke-width="6"/>'; },
   nova() { return '<path d="' + STAR_PATH + '" transform="translate(150 20) scale(2.3)" fill="#ffd43b" stroke="' + INK + '" stroke-width="2.6" stroke-linejoin="round"/>'; },
   sage() { return '<circle cx="150" cy="12" r="22" fill="' + INK + '"/><circle cx="150" cy="12" r="12" fill="#ff8fb8"/>'; },
@@ -5459,16 +5432,18 @@ const ACC = {
   ivy() { return '<path d="M150 30 C118 -8 84 10 96 38 C120 38 138 36 150 30Z" fill="#25d9a2" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M150 30 C182 -8 216 10 204 38 C180 38 162 36 150 30Z" fill="#7ad94c" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/>'; },
   omni() { return '<path d="M96 56 L88 6 L122 32 L150 0 L178 32 L212 6 L204 56 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><circle cx="150" cy="38" r="7" fill="#ff5c9d" stroke="' + INK + '" stroke-width="3"/>'; },
   kasi() {
-    return '<path d="M80 60 L64 -6 L114 28 L150 -18 L186 28 L236 -6 L220 60 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="7" stroke-linejoin="round"/>'
-      + '<circle cx="150" cy="36" r="9" fill="#ff2fa0" stroke="' + INK + '" stroke-width="3"/><circle cx="104" cy="44" r="6" fill="#4cc9ff" stroke="' + INK + '" stroke-width="3"/><circle cx="196" cy="44" r="6" fill="#25d9a2" stroke="' + INK + '" stroke-width="3"/>'
-      + '<ellipse cx="150" cy="96" rx="11" ry="7" fill="#fff" stroke="' + INK + '" stroke-width="4"/><circle cx="150" cy="96" r="4" fill="#ff2fa0"/>';
+    return '<path d="M62 120 C42 50 96 -12 150 -12 C204 -12 258 50 238 120 Q150 92 62 120 Z" fill="#ffe0b8" stroke="' + INK + '" stroke-width="8" stroke-linejoin="round"/>'
+      + '<path d="M96 40 Q150 14 204 40" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+      + '<path d="M84 62 Q150 34 216 62" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+      + '<ellipse cx="108" cy="22" rx="30" ry="12" fill="#fff" fill-opacity="0.85" transform="rotate(-30 108 22)"/>'
+      + '<path d="M74 104 Q150 74 226 104" fill="none" stroke="' + INK + '" stroke-width="15" stroke-linecap="round"/>'
+      + '<path d="M74 104 Q150 74 226 104" fill="none" stroke="#ffd43b" stroke-width="8" stroke-linecap="round"/>'
+      + '<ellipse cx="150" cy="90" rx="11" ry="9" fill="#ff2fa0" stroke="' + INK + '" stroke-width="4"/>'
+      + '<g fill="#fff" stroke="' + INK + '" stroke-width="2"><path d="M236 20 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z"/><path d="M52 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/></g>';
   }
 };
 
 const NEW_KUMARS = [
-  { id: 'zara', icon: '♻️', name: 'Zara Kumar', egg: 'Zara Kumar Egg', title: 'The Reborn', shell: '#ff5c9d', spot: '#fff3a6', pattern: 'rings', aura: 'rgba(255,92,157,0.28)',
-    boost: 'Production x2.5 and offline earnings +25%.', mission: { fk: 1.4, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +40%.',
-    hint: 'Rebirth once.', unlock: () => S.rebirths >= 1, prog: () => [Math.min(S.rebirths, 1), 1] },
   { id: 'ralph', icon: '🦁', name: 'Ralph Kumar', egg: 'Ralph Kumar Egg', title: 'The Fearless', shell: '#ff9a3c', spot: '#ffd43b', pattern: 'zig', aura: 'rgba(255,154,60,0.32)',
     boost: 'Production x3.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
     hint: 'Earn 1 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e6, prog: () => [Math.min(S.lifeEarned, 1e6), 1e6] },
@@ -5493,8 +5468,8 @@ const NEW_KUMARS = [
 ];
 
 const KASI = {
-  id: 'kasi', icon: '🧿', name: 'Kasi Kumar', egg: 'Kasi Kumar Egg', title: 'The Chosen One', hidden: true,
-  shell: '#ffd43b', spot: '#ff2fa0', pattern: 'rays', aura: 'rgba(255,212,59,0.5)',
+  id: 'kasi', icon: '🧿', name: 'Kasi Kumar', egg: 'Kasi Kumar Egg', title: 'The Giant Forehead', hidden: true,
+  shell: '#ffd43b', spot: '#ff2fa0', pattern: 'forehead', aura: 'rgba(255,212,59,0.5)',
   boost: 'Production x1,000, click power x1,000, Golden Finns 3x as often and 3x bigger, research 5x faster, pets x5, generators half price, +25% crit, offline +50%.',
   mission: { fk: 5, rp: 5, egg: 3 }, missionNote: 'Every mission reward x5.',
   hint: 'A secret code wakes this egg.', unlock: () => false, prog: () => [0, 1]
@@ -5517,25 +5492,7 @@ step('kumars', () => {
   wrap('kumarEffects', orig => function () {
     const e = orig();
     const sc = 1 + 0.1 * rl('rgym');
-    /* Secondary passives: these stack with the original character boosts. */
     switch (S.kumar) {
-      case 'finn': e.prod *= 1.05; e.click *= 1.05; break;
-      case 'julian': e.crit += 0.03; e.combo += 0.15; break;
-      case 'leo': e.goldFreq *= 1.15; e.goldVal *= 1.10; e.luck += 0.10; break;
-      case 'madhav': e.rp *= 1.15; e.cost *= 0.95; e.offline += 0.10; break;
-      case 'secret': e.prod *= 1.10; e.click *= 1.10; e.rp *= 1.10; e.pet *= 1.10; break;
-      case 'zara': e.rt *= 1.10; e.offline += 0.10; break;
-      case 'ralph': e.prod *= 1.08; e.crit += 0.05; break;
-      case 'mitch': e.rp *= 1.15; e.cost *= 0.97; break;
-      case 'hugh': e.cost *= 0.90; e.offline += 0.10; break;
-      case 'sam': e.click *= 1.15; e.crit += 0.05; break;
-      case 'adam': e.prod *= 1.08; e.click *= 1.05; e.rp *= 1.05; break;
-      case 'zander': e.goldFreq *= 1.10; e.luck += 0.10; e.offline += 0.10; break;
-      case 'custom': e.prod *= 1.05; e.click *= 1.05; e.rp *= 1.05; e.pet *= 1.05; break;
-      case 'kasi': e.prod *= 1.10; e.click *= 1.10; e.rp *= 1.10; e.pet *= 1.10; e.rt *= 1.10; break;
-    }
-    switch (S.kumar) {
-      case 'zara':  e.prod = 2.5 * sc; e.offline += 0.25 * sc; break;
       case 'ralph': e.prod = 3 * sc; break;
       case 'mitch': e.rp = 2 * sc; break;
       case 'hugh': e.prod = 2 * sc; e.offline += 0.2 * sc; break;
@@ -5549,7 +5506,7 @@ step('kumars', () => {
           leo: { goldFreq: 1 + 0.5 * sc, goldVal: 1 + 0.5 * sc, pet: 1 + 0.25 * sc },
           madhav: { rp: 1 + 0.5 * sc, cost: Math.max(0.5, 1 - 0.1 * sc), offline: 0.25 * sc },
           secret: { prod: 10 * sc, click: 10 * sc, goldFreq: 2 * sc, rp: 2 * sc, pet: 2 * sc },
-          zara: { prod: 2.5 * sc, offline: 0.25 * sc }, ralph: { prod: 3 * sc },
+          ralph: { prod: 3 * sc },
           mitch: { rp: 2 * sc }, hugh: { prod: 2 * sc, offline: 0.2 * sc },
           sam: { click: 4 * sc }, adam: { prod: 5 * sc, click: 3 * sc, rp: 1.5 * sc },
           zander: { prod: 4 * sc, goldFreq: 2 * sc, offline: 0.3 * sc },
@@ -5899,7 +5856,7 @@ step('boards', () => {
 function renderBoard() {
   const live = online() && net.loaded;
   let h = '<div class="panel"><div class="row"><span class="panel-title" style="margin:0">Leaderboard</span><span class="grow"></span>'
-    + '<span class="pill ' + (live ? 'mint' : '') + '">' + (live ? (net.rows.length + 1) + ' real players' : online() ? 'Connecting...' : 'Log in required') + '</span></div>'
+    + '<span class="pill ' + (live ? 'mint' : '') + '">' + (live ? (net.rows.length + 1) + ' real players' : online() ? 'Connecting...' : 'Computer rivals') + '</span></div>'
     + '<div class="row" style="margin-top:10px">';
   BOARDS.forEach(b => {
     h += '<button class="mode-btn' + (ui.board === b.id ? ' active' : '') + '" type="button" data-act="board" data-id="' + b.id + '">' + esc(b.name) + '</button>';
@@ -6052,9 +6009,9 @@ step('profile', () => {
 
 /* =====================================================================
    8. REAL ACCOUNTS: Firebase email/password auth + cloud saves
-   Configure window.FK_CONFIG with the Firebase Project URL and publishable key.
-   Username is mapped to a synthetic email for password authentication;
-   passwords are handled by Firebase and are never stored in this HTML/localStorage.
+   Configure window.FK_CONFIG with your Firebase Web API key and RTDB URL.
+   Username is used as a private synthetic email; passwords are handled by
+   Firebase Authentication and are never stored in this HTML/localStorage.
    ===================================================================== */
 const AUTH_KEY = 'fk-auth-session-v1';
 const USER_EMAIL_DOMAIN = '@kumar.game';
@@ -6072,96 +6029,61 @@ const FRAME_STYLES = [
   ['Crimson', 'linear-gradient(135deg,#ff9b9b,#a41438,#ffd0d0)']
 ];
 
-function authConfigured() {
-  return !!(DB && FIREBASE_API_KEY && CFG.firebaseProjectId);
-}
-function authEmail(username) { return cleanName(username).toLowerCase() + '@accounts.kumargame.com'; }
+function authConfigured() { return !!(CFG.apiKey && !String(CFG.apiKey).includes('PASTE_') && DB && !DB.includes('YOUR-PROJECT')); }
+function authEmail(username) { return cleanName(username).toLowerCase() + USER_EMAIL_DOMAIN; }
 function authErrorMessage(raw) {
-  const msg = String(raw || 'UNKNOWN');
-  const lower = msg.toLowerCase();
-  if (lower.includes('email_exists')) return 'That username is already taken.';
-  if (lower.includes('invalid_password') || lower.includes('email_not_found') || lower.includes('invalid_login_credentials')) return 'Username or password is incorrect.';
-  if (lower.includes('weak_password')) return 'Password must be at least 6 characters.';
-  if (lower.includes('operation_not_allowed')) return 'Enable Email/Password sign-in in Firebase Authentication.';
-  if (lower.includes('network') || lower.includes('fetch')) return 'Could not connect. Check your internet and Firebase settings.';
-  return msg.replace(/_/g, ' ').slice(0, 180);
+  const code = String(raw || 'UNKNOWN');
+  const map = {
+    EMAIL_EXISTS: 'That username is already taken.',
+    EMAIL_NOT_FOUND: 'Username or password is incorrect.',
+    INVALID_PASSWORD: 'Username or password is incorrect.',
+    INVALID_LOGIN_CREDENTIALS: 'Username or password is incorrect.',
+    WEAK_PASSWORD: 'Password must be at least 6 characters.',
+    TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many attempts. Try again later.',
+    OPERATION_NOT_ALLOWED: 'Enable Email/Password sign-in in Firebase Authentication.',
+    API_KEY_INVALID: 'Firebase API key is incorrect.',
+    USER_DISABLED: 'This account has been disabled.'
+  };
+  return map[code] || ('Account error: ' + code.replace(/_/g, ' ').toLowerCase());
 }
-async function firebaseAuthRequest(path, payload) {
-  const res = await fetch(FIREBASE_AUTH + '/' + path + '?key=' + encodeURIComponent(FIREBASE_API_KEY), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-  });
+async function authRequest(method, payload) {
+  const url = 'https://identitytoolkit.googleapis.com/v1/accounts:' + method + '?key=' + encodeURIComponent(CFG.apiKey);
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(authErrorMessage(data.error && data.error.message));
   return data;
 }
-async function authRequest(method, payload) {
-  const path = method === 'signUp' ? 'accounts:signUp' : 'accounts:signInWithPassword';
-  return firebaseAuthRequest(path, { email: payload.email, password: payload.password, returnSecureToken: true });
-}
 function persistAuth(data, username) {
-  if (!data.idToken || !data.refreshToken || !data.localId) throw new Error('Firebase did not return a valid login session.');
-  authUser = { uid: data.localId, username: username, idToken: data.idToken, refreshToken: data.refreshToken,
-    expiresAt: Date.now() + Math.max(60, Number(data.expiresIn || 3600) - 60) * 1000 };
+  authUser = { uid: data.localId, username: username, idToken: data.idToken, refreshToken: data.refreshToken, expiresAt: Date.now() + Math.max(60, Number(data.expiresIn || 3600) - 60) * 1000 };
   try { localStorage.setItem(AUTH_KEY, JSON.stringify({ uid: authUser.uid, username: username, refreshToken: authUser.refreshToken })); } catch (e) {}
 }
 async function refreshAuth() {
   if (!authUser || !authUser.refreshToken) throw new Error('Please log in again.');
-  const res = await fetch(FIREBASE_TOKEN + '?key=' + encodeURIComponent(FIREBASE_API_KEY), {
+  const res = await fetch('https://securetoken.googleapis.com/v1/token?key=' + encodeURIComponent(CFG.apiKey), {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(authUser.refreshToken)
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.id_token) throw new Error('Your saved login expired. Please log in again.');
-  authUser.uid = data.user_id || authUser.uid;
+  if (!res.ok) { authUser = null; try { localStorage.removeItem(AUTH_KEY); } catch (e) {} throw new Error('Your session expired. Please log in again.'); }
   authUser.idToken = data.id_token;
   authUser.refreshToken = data.refresh_token;
   authUser.expiresAt = Date.now() + Math.max(60, Number(data.expires_in || 3600) - 60) * 1000;
   try { localStorage.setItem(AUTH_KEY, JSON.stringify({ uid: authUser.uid, username: authUser.username, refreshToken: authUser.refreshToken })); } catch (e) {}
 }
-async function token() {
-  if (!authUser) throw new Error('Not logged in.');
-  if (Date.now() >= authUser.expiresAt - 15000) await refreshAuth();
-  return authUser.idToken;
-}
-async function firebaseDbRequest(path, options) {
-  const access = await token();
+async function token() { if (!authUser) throw new Error('Not logged in.'); if (Date.now() >= authUser.expiresAt) await refreshAuth(); return authUser.idToken; }
+async function dbRequest(path, options) {
+  const idToken = await token();
   const opts = Object.assign({}, options || {});
   opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
-  const url = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(access);
+  let url = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(idToken);
   let res = await fetch(url, opts);
   if (res.status === 401 || res.status === 403) {
     await refreshAuth();
-    const retryUrl = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(authUser.idToken);
-    res = await fetch(retryUrl, opts);
+    url = DB + path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(authUser.idToken);
+    res = await fetch(url, opts);
   }
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error('Firebase database error (' + res.status + '): ' + (body && body.error || 'Check Realtime Database Rules.'));
-  return body;
-}
-async function dbRequest(path, options) {
-  const opts = Object.assign({}, options || {});
-  const saveMatch = path.match(/^\/users\/([^/]+)\/save\.json$/);
-  const scoreMatch = path.match(/^\/scores\/([^/.]+)\.json$/);
-  if (saveMatch) {
-    const uid = decodeURIComponent(saveMatch[1]);
-    if (!authUser || uid !== authUser.uid) throw new Error('You can only access your own save.');
-    return firebaseDbRequest('/users/' + encodeURIComponent(uid) + '/save.json', opts);
-  }
-  if (scoreMatch) {
-    const uid = decodeURIComponent(scoreMatch[1]);
-    if (!authUser || uid !== authUser.uid) throw new Error('You can only update your own leaderboard record.');
-    if (opts.method === 'PUT') {
-      const r = JSON.parse(opts.body || '{}');
-      const row = { user_id: uid, username: authUser.username, title: r.title || '', kumar: r.kumar || '', life: safeNum(r.life), cps: safeNum(r.cps), clicks: safeNum(r.clicks), updated_at: new Date().toISOString() };
-      EXTRA_BOARDS.forEach(b => { row[b.id] = safeNum(r[b.id]); });
-      return firebaseDbRequest('/scores/' + encodeURIComponent(uid) + '.json', { method: 'PUT', body: JSON.stringify(row) });
-    }
-  }
-  if (path === '/scores.json' && (!opts.method || opts.method === 'GET')) {
-    const data = await firebaseDbRequest('/scores.json', { method: 'GET' });
-    return data ? Object.keys(data).map(k => data[k]).filter(Boolean).sort((a,b) => safeNum(b.life)-safeNum(a.life)).slice(0,300) : [];
-  }
-  throw new Error('Unsupported Firebase request: ' + path);
+  if (!res.ok) throw new Error('Database request failed (' + res.status + '). Check Firebase Realtime Database rules.');
+  return res.status === 204 ? null : res.json().catch(() => null);
 }
 function profileFrameIndex() { return Math.max(0, Math.min(FRAME_STYLES.length - 1, Number(S.profileFrame || 0) | 0)); }
 function profileAvatar() { const k = KUMAR_BY_ID[S.kumar] || KUMARS[0]; return k.icon || '🥚'; }
@@ -6171,7 +6093,7 @@ function authOverlayHtml() {
   return '<div id="fkAuthGate" class="fk-auth-gate"><div class="fk-auth-card">'
     + '<div class="fk-auth-logo">🥚</div><h1>' + (authMode === 'signup' ? 'Create your account' : 'Welcome back') + '</h1>'
     + '<p class="fk-auth-sub">' + (authMode === 'signup' ? 'Choose a username and password. Your progress will be saved online.' : 'Log in to load your account and continue your progress.') + '</p>'
-    + (!configured ? '<div class="fk-auth-warning"><b>Firebase setup required</b><br>Firebase project configuration is included. Enable Email/Password sign-in and set the Realtime Database Rules described in the setup instructions.</div>' : '')
+    + (!configured ? '<div class="fk-auth-warning"><b>Firebase setup required</b><br>Open the HTML file and add your Firebase Web API key and Realtime Database URL in <code>window.FK_CONFIG</code>. Follow the setup steps below the download link.</div>' : '')
     + '<form id="fkAuthForm"><label>Username</label><input id="fkAuthUsername" autocomplete="username" maxlength="16" minlength="3" required placeholder="3–16 characters">'
     + '<label>Password</label><input id="fkAuthPassword" type="password" autocomplete="' + (authMode === 'signup' ? 'new-password' : 'current-password') + '" minlength="6" required placeholder="At least 6 characters">'
     + (authMode === 'signup' ? '<label>Confirm password</label><input id="fkAuthConfirm" type="password" autocomplete="new-password" minlength="6" required placeholder="Enter password again">' : '')
@@ -6326,14 +6248,15 @@ submitScore = async function () {
 refreshBoard = async function () {
   if (!authUser) { net.rows = []; net.loaded = false; return; }
   try {
-    const data = await dbRequest('/scores.json', { method: 'GET' });
+    const data = await fetch(DB + '/scores.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
     const rows = [];
-    if (Array.isArray(data)) data.forEach(d => {
-      if (!d || typeof d !== 'object' || d.user_id === authUser.uid || typeof d.life !== 'number' || !d.user_id) return;
+    if (data && typeof data === 'object') Object.keys(data).forEach(id => {
+      const d = data[id];
+      if (!d || typeof d !== 'object' || id === authUser.uid || typeof d.life !== 'number' || !d.uid) return;
       const vals = { life: safeNum(d.life), cps: safeNum(d.cps), clicks: safeNum(d.clicks) };
       EXTRA_BOARDS.forEach(b => { vals[b.id] = safeNum(d[b.id]); });
       const kum = KUMAR_BY_ID[d.kumar];
-      rows.push({ id: 'p' + String(d.user_id).replace(/[^A-Za-z0-9_-]/g, '').slice(0,24), name: cleanName(d.username) || 'Player', title: String(d.title || '').slice(0,30), icon: kum ? kum.icon : '🥚', vals });
+      rows.push({ id: 'p' + id.replace(/[^A-Za-z0-9_-]/g, '').slice(0,24), name: cleanName(d.name) || 'Player', title: String(d.title || '').slice(0,30), icon: kum ? kum.icon : '🥚', vals });
     });
     net.rows = rows; net.loaded = true; net.err = ''; net.at = Date.now(); ui.dirty = ui.dirty || ui.tab === 'board';
   } catch (e) { net.err = e.message || 'offline'; }
@@ -6379,280 +6302,6 @@ step('account-ui', () => {
 });
 
 /* ---------- finish ---------- */
-/* =====================================================================
-   9. MEGA EVOLUTION / RUNES / REALMS / FULLY AUTO EXPANSION
-   Additive patch: existing game systems and normal prestige rules remain.
-   ===================================================================== */
-step('mega-runes-realms-auto', () => {
-  const SPECIAL_UID = '64966bed-47a8-45bc-8b16-1d20889cdaa7';
-  const REALMS = {
-    finn:  { name: 'Finn World',  icon: '🥚', desc: 'The original world. No extra modifiers.', prod: 1, click: 1, gold: 1, luck: 0 },
-    neon:  { name: 'Neon World',  icon: '🌆', desc: 'Production x1.5 and click power x1.5.', prod: 1.5, click: 1.5, gold: 1, luck: 0, unlock: () => S.lifeEarned >= 1e9, hint: 'Reach 1B lifetime Finns.' },
-    void:  { name: 'Void World',  icon: '🕳️', desc: 'Production x2 and Golden Finn frequency x2.', prod: 2, click: 1, gold: 2, luck: 0, unlock: () => S.transcends >= 1, hint: 'Transcend once.' },
-    kasi:  { name: 'Kasi World',  icon: '🧿', desc: 'Production x3.5, click x2 and Rune Luck +100%.', prod: 3.5, click: 2, gold: 1, luck: 1, unlock: () => S.megaLevel >= 1, hint: 'Mega Evolve once.' }
-  };
-  const RUNE_FAMILIES = [
-    { id:'flame', name:'Flame', icon:'🔥', stat:'Production', key:'prod', base:.020 },
-    { id:'tide', name:'Tide', icon:'🌊', stat:'Click Power', key:'click', base:.030 },
-    { id:'star', name:'Star', icon:'⭐', stat:'Golden Finn chance', key:'gold', base:.020 },
-    { id:'leaf', name:'Leaf', icon:'🍀', stat:'Rune Luck', key:'luck', base:.040 },
-    { id:'gem', name:'Gem', icon:'💎', stat:'Generator Discount', key:'discount', base:.008 },
-    { id:'void', name:'Void', icon:'🕳️', stat:'Research Speed', key:'research', base:.030 },
-    { id:'moon', name:'Moon', icon:'🌙', stat:'Pet Power', key:'pet', base:.030 },
-    { id:'sun', name:'Sun', icon:'☀️', stat:'Game Speed', key:'speed', base:.020 }
-  ];
-  const RUNE_RARITIES = [
-    { id:'common', name:'Common', weight:60, mult:1, color:'#b8c0d8' },
-    { id:'uncommon', name:'Uncommon', weight:25, mult:2, color:'#64d69a' },
-    { id:'rare', name:'Rare', weight:10, mult:4, color:'#5bbcff' },
-    { id:'epic', name:'Epic', weight:4, mult:8, color:'#bd83ff' },
-    { id:'legendary', name:'Legendary', weight:.9, mult:16, color:'#ffbd55' },
-    { id:'mythic', name:'Mythic', weight:.1, mult:35, color:'#ff6cae' }
-  ];
-  const DEFAULT_EXPANSION = { megaLevel:0, megaStars:{}, petStars:{}, runes:{}, runeRolls:0, realm:'finn', fullyAuto:false, autoStamp:{ rebirth:0, transcend:0, ascend:0 } };
-  function ensureExpansion(st) {
-    Object.keys(DEFAULT_EXPANSION).forEach(k => {
-      if (st[k] === undefined || st[k] === null) st[k] = JSON.parse(JSON.stringify(DEFAULT_EXPANSION[k]));
-    });
-    if (!isPlainObject(st.megaStars)) st.megaStars = {};
-    if (!isPlainObject(st.petStars)) st.petStars = {};
-    if (!isPlainObject(st.runes)) st.runes = {};
-    if (!isPlainObject(st.autoStamp)) st.autoStamp = { rebirth:0, transcend:0, ascend:0 };
-    if (!REALMS[st.realm]) st.realm = 'finn';
-    st.megaLevel = Math.max(0, Math.floor(safeNum(st.megaLevel)));
-    st.runeRolls = Math.max(0, Math.floor(safeNum(st.runeRolls)));
-    Object.keys(st.runes).forEach(k => { if (!Array.isArray(st.runes[k])) st.runes[k] = []; });
-    return st;
-  }
-  ensureExpansion(S);
-  const originalStateFromSaved = stateFromSaved;
-  stateFromSaved = function(obj) { return ensureExpansion(originalStateFromSaved(obj)); };
-  const originalDefaultState = defaultState;
-  defaultState = function() { return ensureExpansion(originalDefaultState()); };
-
-  function isFullyAutoAccount() { return !!(authUser && authUser.uid === SPECIAL_UID); }
-  function isFullyAutoOn() { return isFullyAutoAccount() && !!(S.settings && S.settings.fullyAuto); }
-  function megaCost(level) { return 1e12 * Math.pow(6, level); }
-  function megaUnlocked() { return S.crowns >= megaCost(S.megaLevel); }
-  function runeSlots() { return 3 + Math.min(6, S.megaLevel); }
-  function runePowerMult() { return S.kumar === 'runa' ? 1.5 : 1; }
-  function currentRunes() { return Array.isArray(S.runes[S.kumar]) ? S.runes[S.kumar] : []; }
-  function runeSummary() {
-    const out = { prod:1, click:1, gold:1, luck:0, discount:1, research:1, pet:1, speed:1 };
-    const counts = {};
-    currentRunes().slice(0, runeSlots()).forEach(r => {
-      const fam = RUNE_FAMILIES.find(f => f.id === r.family);
-      const rar = RUNE_RARITIES.find(x => x.id === r.rarity);
-      if (!fam || !rar) return;
-      counts[fam.id] = (counts[fam.id] || 0) + 1;
-      const strength = fam.base * rar.mult * Math.max(.1, safeNum(r.strength) || 1) * runePowerMult();
-      if (fam.key === 'discount') out.discount *= Math.max(.1, 1 - strength);
-      else if (fam.key === 'luck') out.luck += strength;
-      else out[fam.key] *= 1 + strength;
-    });
-    Object.keys(counts).forEach(id => {
-      const n = counts[id];
-      const set = n >= 6 ? 2.5 : n >= 4 ? 1.6 : n >= 2 ? 1.25 : 1;
-      if (set === 1) return;
-      const fam = RUNE_FAMILIES.find(f => f.id === id);
-      if (!fam) return;
-      /* Set bonus amplifies the family contribution, not unrelated stats. */
-      const raw = currentRunes().filter(r => r.family === id).reduce((v,r) => {
-        const rr = RUNE_RARITIES.find(x => x.id === r.rarity);
-        return v + fam.base * (rr ? rr.mult : 1) * Math.max(.1, safeNum(r.strength) || 1) * runePowerMult();
-      }, 0);
-      if (fam.key === 'discount') out.discount = Math.max(.05, out.discount / Math.max(.1, 1 - raw) * Math.max(.05, 1 - raw * set));
-      else if (fam.key === 'luck') out.luck += raw * (set - 1);
-      else out[fam.key] *= (1 + raw * set) / (1 + raw);
-    });
-    return out;
-  }
-  function pickRune(luck) {
-    const weights = RUNE_RARITIES.map((r,i) => r.weight * (i >= 2 ? 1 + Math.max(0,luck) * (i + 1) : 1));
-    let roll = Math.random() * weights.reduce((a,b) => a+b,0);
-    let rarity = RUNE_RARITIES[0];
-    for (let i=0;i<weights.length;i++) { roll -= weights[i]; if (roll <= 0) { rarity=RUNE_RARITIES[i]; break; } }
-    const family = RUNE_FAMILIES[Math.floor(Math.random()*RUNE_FAMILIES.length)];
-    return { id:'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7), family:family.id, rarity:rarity.id, strength:1, created:Date.now() };
-  }
-  function runeRollCost(n) {
-    const base = Math.max(5000, safeNum(calc.cps) * 240);
-    const growth = 1.3;
-    return base * (Math.pow(growth, n) - 1) / (growth - 1);
-  }
-  function rollRunes(n) {
-    n = clamp(Math.floor(+n || 1),1,100);
-    const cost = runeRollCost(n);
-    if (S.fk < cost) return false;
-    spendFk(cost);
-    if (!S.runes[S.kumar]) S.runes[S.kumar] = [];
-    const luck = (calc.petLuck || 0) + (S.realm === 'kasi' ? 1 : 0);
-    for (let i=0;i<n;i++) S.runes[S.kumar].push(pickRune(luck));
-    S.runeRolls += n;
-    recalc(); ui.dirty = true; saveGame();
-    return true;
-  }
-  function equipRune(index) {
-    const arr = currentRunes();
-    if (index < 0 || index >= arr.length || index >= runeSlots()) return false;
-    const r = arr.splice(index,1)[0]; arr.unshift(r); S.runes[S.kumar] = arr; recalc(); ui.dirty = true; return true;
-  }
-  function megaEvolve() {
-    if (!megaUnlocked()) return false;
-    const cost = megaCost(S.megaLevel);
-    const special = isFullyAutoAccount();
-    if (!special) S.crowns = Math.max(0,S.crowns-cost);
-    S.megaLevel++;
-    S.megaStars[S.kumar] = (S.megaStars[S.kumar] || 0) + 1;
-    S.pets.forEach(p => { S.petStars[p.u] = (S.petStars[p.u] || 0) + 1; });
-    if (!special) resetRunState();
-    recalc(); saveGame(); bus.emit('prestige',{layer:'mega',gain:1}); ui.dirty = true;
-    return true;
-  }
-  function setRealm(id) {
-    const r = REALMS[id];
-    if (!r) return false;
-    if (id !== 'finn' && !(r.unlock && r.unlock())) return false;
-    S.realm = id; recalc(); ui.dirty = true; saveGame(); return true;
-  }
-
-  /* Extra passive multipliers are applied after the base game recalculates. */
-  const baseRecalc = recalc;
-  recalc = function() {
-    baseRecalc();
-    ensureExpansion(S);
-    const r = REALMS[S.realm] || REALMS.finn;
-    const rs = runeSummary();
-    const mega = 1 + .5 * S.megaLevel;
-    const kumarStars = S.megaStars[S.kumar] || 0;
-    const starMult = 1 + .75 * kumarStars;
-    calc.cps = Math.min(LIMIT, calc.cps * r.prod * rs.prod * mega * starMult * rs.speed);
-    calc.clickBase *= r.click * rs.click * mega * starMult * rs.speed;
-    calc.goldFreq *= r.gold * rs.gold;
-    calc.petLuck = (calc.petLuck || 0) + rs.luck + (r.luck || 0);
-    calc.costMult = Math.max(.02, calc.costMult * rs.discount);
-    calc.upCostMult = Math.max(.02, calc.upCostMult * rs.discount);
-    calc.rpInterval = Math.max(1, calc.rpInterval / rs.research / rs.speed);
-    calc.petAmp *= rs.pet;
-    calc.megaMult = mega; calc.runeFx = rs;
-  };
-  const basePetValue = petBaseValue;
-  petBaseValue = function(p) { return basePetValue(p) * Math.pow(1.6, S.petStars[p.u] || 0); };
-
-  /* Special account: prestige awards are granted without wiping any saved progress. */
-  const originalRebirth = doRebirth;
-  doRebirth = function() {
-    if (!isFullyAutoAccount()) return originalRebirth();
-    const gain = rebirthGain(); if (gain < 1) return false;
-    S.rt += gain; S.rtTotal += gain; S.rtRun += gain; S.rebirths++;
-    S.stats.lastRebirthGain = gain; recalc(); bus.emit('prestige',{layer:'rebirth',gain}); return true;
-  };
-  const originalTranscend = doTranscend;
-  doTranscend = function() {
-    if (!isFullyAutoAccount()) return originalTranscend();
-    const gain = transcendGain(); if (gain < 1) return false;
-    S.shards += gain; S.shardsTotal += gain; S.shardRun += gain; S.transcends++;
-    recalc(); bus.emit('prestige',{layer:'transcend',gain}); return true;
-  };
-  const originalAscend = doAscend;
-  doAscend = function() {
-    if (!isFullyAutoAccount()) return originalAscend();
-    const gain = ascendGain(); if (gain < 1) return false;
-    S.crowns += gain; S.crownsTotal += gain; S.ascensions++;
-    recalc(); bus.emit('prestige',{layer:'ascend',gain}); return true;
-  };
-
-  /* Add two new navigation tabs without replacing any existing tab. */
-  TABS.splice(TABS.length-1,0,
-    { id:'runes', label:'Runes', render:renderRunesExpansion, sig:()=>S.kumar+'|'+S.runeRolls+'|'+S.megaLevel+'|'+currentRunes().length, badge:()=>0 },
-    { id:'realms', label:'Realms', render:renderRealmsExpansion, sig:()=>S.realm+'|'+S.megaLevel+'|'+S.lifeEarned+'|'+S.transcends, badge:()=>0 }
-  );
-  function renderRunesExpansion() {
-    const arr = currentRunes(); const active = arr.slice(0,runeSlots()); const fxv = runeSummary();
-    let h = '<div class="panel"><h3 class="panel-title">✨ Rune Forge</h3><p class="panel-sub">Runes are stored separately for each Kumar. Roll runes with Finns, then equip up to '+runeSlots()+' runes. Family bonuses stack.</p>'
-      + '<div class="shop-grid"><div class="shop-item"><b>Roll x1</b><p>Cost '+fmt(runeRollCost(1))+' Finns</p><button class="btn btn-sun btn-block" data-act="rollrunes" data-n="1">Roll x1</button></div>'
-      + '<div class="shop-item"><b>Roll x10</b><p>Cost '+fmt(runeRollCost(10))+' Finns</p><button class="btn btn-sky btn-block" data-act="rollrunes" data-n="10">Roll x10</button></div>'
-      + '<div class="shop-item"><b>Roll x100</b><p>Cost '+fmt(runeRollCost(100))+' Finns</p><button class="btn btn-pink btn-block" data-act="rollrunes" data-n="100">Roll x100</button></div></div></div>';
-    h += '<div class="panel"><h3 class="panel-title">Your '+esc((KUMAR_BY_ID[S.kumar]||{name:'Kumar'}).name)+' Rune Loadout</h3><p class="panel-sub">'+active.length+' / '+runeSlots()+' equipped · '+arr.length+' owned</p><div class="shop-grid">';
-    if (!arr.length) h += '<p class="panel-sub">No runes yet. Roll your first rune above.</p>';
-    arr.forEach((r,i)=>{ const f=RUNE_FAMILIES.find(x=>x.id===r.family)||RUNE_FAMILIES[0]; const q=RUNE_RARITIES.find(x=>x.id===r.rarity)||RUNE_RARITIES[0];
-      h += '<div class="shop-item" style="border-color:'+q.color+'"><div class="shop-top"><span class="shop-name">'+f.icon+' '+f.name+' Rune</span><span class="shop-lvl" style="color:'+q.color+'">'+q.name+'</span></div><div class="shop-desc">'+f.stat+' · '+(i<runeSlots()?'Equipped':'Stored')+'</div>'+(i>=runeSlots()?'<button class="btn btn-sky btn-block" data-act="equiprune" data-i="'+i+'">Equip</button>':'<span class="pill mint">Equipped</span>')+'</div>';
-    });
-    h += '</div></div><div class="panel"><h3 class="panel-title">Active Rune Bonuses</h3><div class="stats-scroll"><table class="stats-table"><tbody>';
-    [['Production',fmt((fxv.prod-1)*100)+'%'],['Click power',fmt((fxv.click-1)*100)+'%'],['Golden Finn frequency',fmt((fxv.gold-1)*100)+'%'],['Rune luck',fmt(fxv.luck*100)+'%'],['Generator discount',fmt((1-fxv.discount)*100)+'%'],['Research speed',fmt((fxv.research-1)*100)+'%'],['Pet power',fmt((fxv.pet-1)*100)+'%'],['Game speed',fmt((fxv.speed-1)*100)+'%']].forEach(x=>h+='<tr><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>');
-    h += '</tbody></table></div><p class="panel-sub">Family sets: 2 pieces x1.25 · 4 pieces x1.6 · 6 pieces x2.5. Existing Kumars receive their own passive bonuses.</p></div>';
-    return h;
-  }
-  function renderRealmsExpansion() {
-    let h = '<div class="panel"><h3 class="panel-title">🌍 Realms</h3><p class="panel-sub">Switch worlds at any time. Changing realms never resets your save or removes resources.</p><div class="shop-grid">';
-    Object.keys(REALMS).forEach(id=>{const r=REALMS[id];const ok=id==='finn'||r.unlock();const cur=S.realm===id;
-      h+='<div class="shop-item'+(cur?' maxed':ok?' afford':'')+'"><div class="shop-top"><span class="shop-name">'+r.icon+' '+r.name+'</span><span class="shop-lvl">'+(cur?'ACTIVE':ok?'UNLOCKED':'LOCKED')+'</span></div><div class="shop-desc">'+r.desc+'</div><p class="panel-sub">'+(ok?'Available now.':r.hint)+'</p><button class="btn '+(cur?'btn-mint':'btn-sky')+' btn-block" data-act="setrealm" data-id="'+id+'" '+(!ok||cur?'disabled':'')+'>'+(cur?'Current Realm':'Travel Here')+'</button></div>';
-    });
-    h+='</div></div>'; return h;
-  }
-
-  /* Mega evolution card is attached to the existing Prestige page. */
-  const oldPrestigeRender = renderPrestige;
-  renderPrestige = function() {
-    let h = oldPrestigeRender();
-    const cost = megaCost(S.megaLevel), can = megaUnlocked();
-    h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">🌟 Mega Evolution</h3><span class="grow"></span><span class="pill sun">Level '+S.megaLevel+'</span></div>'
-      + '<p class="pcard-desc">Unlock at 1,000B Crowns for the first evolution. Each level gives +50% production and click power, +1 permanent Star to your leading Kumar and +1 Star to every owned Pet. More Mega levels unlock more Rune slots.</p>'
-      + '<div class="progress-text">Next cost: '+fmt(cost)+' Crowns · Your Crowns: '+fmt(S.crowns)+'</div>'
-      + '<div class="progress-text">Kumar Stars: '+(S.megaStars[S.kumar]||0)+' · Rune slots: '+runeSlots()+'</div>'
-      + '<button class="btn btn-sun btn-block" data-act="megaevolve" '+(!can?'disabled':'')+'>Mega Evolve</button></div>';
-    return h;
-  };
-  if (TAB_BY_ID.prestige) TAB_BY_ID.prestige.render = renderPrestige;
-
-  /* Fully Auto is only rendered for the exact logged-in Firebase UID. */
-  const oldSettingsRender = renderSettings;
-  renderSettings = function() {
-    let h = oldSettingsRender();
-    if (isFullyAutoAccount()) {
-      const enabled = !!(S.settings && S.settings.fullyAuto);
-      const status = enabled ? 'ON — automatic progression is running.' : 'OFF — enable to automate progression.';
-      h = '<div class="panel"><h3 class="panel-title">⚡ Fully Auto</h3><p class="panel-sub">Special account feature. Automatically clicks, buys maximum generators, buys upgrades, and performs eligible Rebirth, Transcend, Ascend and Mega Evolution actions. Prestige operations preserve this account’s existing progress.</p><div class="setting-row"><div><div class="setting-name">Fully Auto</div><div class="setting-desc">'+status+'</div></div><input class="switch" type="checkbox" data-set="fullyAuto" '+(enabled?'checked':'')+'></div></div>' + h;
-    }
-    return h;
-  };
-  if (TAB_BY_ID.settings) TAB_BY_ID.settings.render = renderSettings;
-
-  /* Actions */
-  ACTIONS.rollrunes = d => { if (!rollRunes(d.n)) toast('Not enough Finns','You need '+fmt(runeRollCost(+d.n||1))+' Finns.','bad'); else toast('Runes rolled','Added '+d.n+' runes to '+(KUMAR_BY_ID[S.kumar]||{name:'Kumar'}).name+'.','good'); ui.dirty=true; };
-  ACTIONS.equiprune = d => { if (equipRune(+d.i)) toast('Rune equipped','Your rune loadout has been updated.','good'); ui.dirty=true; };
-  ACTIONS.setrealm = d => { if (setRealm(d.id)) toast('Realm changed','Welcome to '+REALMS[d.id].name+'.','good'); else toast('Realm locked','Meet the unlock requirement first.','bad'); ui.dirty=true; };
-  ACTIONS.megaevolve = () => { if (megaEvolve()) toast('Mega Evolution!','Your Kumar and owned Pets gained permanent Stars.','gold'); else toast('Not enough Crowns','You need '+fmt(megaCost(S.megaLevel))+' Crowns.','bad'); ui.dirty=true; };
-
-  /* The automatic loop runs after ordinary income and does not run two prestige layers in one tick. */
-  const previousTick = tick;
-  tick = function() {
-    previousTick();
-    if (!isFullyAutoOn()) return;
-    let changed = false;
-    /* Active click production. Keep bounded to avoid freezing a browser tab. */
-    for (let i=0;i<12;i++) doClick(true);
-    /* Buy Max for every generator, then all affordable upgrades. */
-    if (buyMaxAll() > 0) changed = true;
-    if (buyAllUpgrades() > 0) changed = true;
-    /* Prestige layers are mutually exclusive per tick. Stamp the current gain to avoid repeats at an unchanged threshold. */
-    const rb = rebirthGain(), tr = transcendGain(), as = ascendGain();
-    if (as > 0 && S.autoStamp.ascend !== as) { S.autoStamp.ascend=as; doAscend(); changed=true; }
-    else if (tr > 0 && S.autoStamp.transcend !== tr) { S.autoStamp.transcend=tr; doTranscend(); changed=true; }
-    else if (rb > 0 && S.autoStamp.rebirth !== rb) { S.autoStamp.rebirth=rb; doRebirth(); changed=true; }
-    if (megaUnlocked()) { if (megaEvolve()) changed=true; }
-    if (changed) { recalc(); ui.dirty=true; }
-  };
-
-  /* Hide Fully Auto data from non-authorized accounts and ensure settings re-render after auth changes. */
-  const originalPersistAuth = persistAuth;
-  persistAuth = function(data, username) { const result = originalPersistAuth(data,username); ui.dirty=true; return result; };
-  const originalLogout = logoutAccount;
-  if (typeof originalLogout === 'function') logoutAccount = function() { if (S.settings) S.settings.fullyAuto=false; const r=originalLogout.apply(this,arguments); ui.dirty=true; return r; };
-  recalc();
-});
-
-
 step('finish', () => {
   recalc();
   updateRank();

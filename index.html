@@ -5235,7 +5235,7 @@ function showOfflineModal(r) {
 </script>
 <script>
 /* FIREBASE CONFIGURATION: paste your Firebase Web API key and Realtime Database URL here. */
-window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'PASTE_FIREBASE_WEB_API_KEY_HERE', dbUrl: 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' };
+window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'AIzaSyAyZEn3I5E3GPK_6VoPKb4GQNV4jYYrdwM', dbUrl: 'https://save-523f5-default-rtdb.firebaseio.com/' };
 </script>
 <script>
 /* =====================================================================
@@ -5398,6 +5398,8 @@ step('missions', () => {
 step('news', () => {
   NEWS.push(
     'Kasi Kumar has been spotted. Witnesses say the numbers got nervous.',
+    "Kasi Kumar's forehead now has its own weather system. Sunny, with a chance of shine.",
+    'Scientists measure Kasi Kumar\'s forehead. The ruler asked for a bigger ruler.',
     'Titles now come in sizes: small, medium and "please stop clicking".',
     'Leaderboard update: every Kumar is now ranked at everything, including naps.',
     'Daily Gift arrives on time. Daily Gift is very proud of itself.',
@@ -5413,6 +5415,11 @@ const PATTERNS = {
   diamonds(c) { let s = ''; [[96, 86], [204, 92], [150, 142], [70, 190], [230, 196], [110, 246], [196, 250]].forEach(d => { s += '<path d="M0 -15 L12 0 L0 15 L-12 0 Z" transform="translate(' + d[0] + ' ' + d[1] + ')" fill="' + c + '"/>'; }); return s; },
   rings(c) { let s = ''; [[92, 84, 16], [208, 100, 12], [64, 170, 10], [232, 184, 16], [112, 246, 14], [194, 254, 10]].forEach(d => { s += '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="' + d[2] + '" fill="none" stroke="' + c + '" stroke-width="7"/>'; }); return s; },
   bolts(c) { let s = ''; [[100, 92, 1], [204, 102, 0.8], [70, 186, 0.9], [232, 196, 1.1], [120, 246, 1], [190, 252, 0.8]].forEach(d => { s += '<path d="M0 -16 L-9 3 L-1 3 L-5 17 L10 -4 L2 -4 Z" transform="translate(' + d[0] + ' ' + d[1] + ') scale(' + d[2] + ')" fill="' + c + '"/>'; }); return s; },
+  forehead() { return '<ellipse cx="150" cy="72" rx="124" ry="66" fill="#ffe0b8"/>'
+    + '<path d="M92 48 Q150 22 208 48" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M84 74 Q150 46 216 74" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M92 100 Q150 78 208 100" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+    + '<ellipse cx="112" cy="40" rx="28" ry="12" fill="#fff" fill-opacity="0.8" transform="rotate(-28 112 40)"/>'; },
   rays(c) { let s = ''; for (let a = 0; a < 360; a += 24) { const r = a * Math.PI / 180; s += '<path d="M150 176 L' + (150 + 260 * Math.cos(r)).toFixed(1) + ' ' + (176 + 260 * Math.sin(r)).toFixed(1) + '" stroke="' + c + '" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round"/>'; } return s; }
 };
 
@@ -5425,9 +5432,14 @@ const ACC = {
   ivy() { return '<path d="M150 30 C118 -8 84 10 96 38 C120 38 138 36 150 30Z" fill="#25d9a2" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M150 30 C182 -8 216 10 204 38 C180 38 162 36 150 30Z" fill="#7ad94c" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/>'; },
   omni() { return '<path d="M96 56 L88 6 L122 32 L150 0 L178 32 L212 6 L204 56 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="6" stroke-linejoin="round"/><circle cx="150" cy="38" r="7" fill="#ff5c9d" stroke="' + INK + '" stroke-width="3"/>'; },
   kasi() {
-    return '<path d="M80 60 L64 -6 L114 28 L150 -18 L186 28 L236 -6 L220 60 Z" fill="#ffd43b" stroke="' + INK + '" stroke-width="7" stroke-linejoin="round"/>'
-      + '<circle cx="150" cy="36" r="9" fill="#ff2fa0" stroke="' + INK + '" stroke-width="3"/><circle cx="104" cy="44" r="6" fill="#4cc9ff" stroke="' + INK + '" stroke-width="3"/><circle cx="196" cy="44" r="6" fill="#25d9a2" stroke="' + INK + '" stroke-width="3"/>'
-      + '<ellipse cx="150" cy="96" rx="11" ry="7" fill="#fff" stroke="' + INK + '" stroke-width="4"/><circle cx="150" cy="96" r="4" fill="#ff2fa0"/>';
+    return '<path d="M62 120 C42 50 96 -12 150 -12 C204 -12 258 50 238 120 Q150 92 62 120 Z" fill="#ffe0b8" stroke="' + INK + '" stroke-width="8" stroke-linejoin="round"/>'
+      + '<path d="M96 40 Q150 14 204 40" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+      + '<path d="M84 62 Q150 34 216 62" fill="none" stroke="rgba(120,60,20,0.35)" stroke-width="6" stroke-linecap="round"/>'
+      + '<ellipse cx="108" cy="22" rx="30" ry="12" fill="#fff" fill-opacity="0.85" transform="rotate(-30 108 22)"/>'
+      + '<path d="M74 104 Q150 74 226 104" fill="none" stroke="' + INK + '" stroke-width="15" stroke-linecap="round"/>'
+      + '<path d="M74 104 Q150 74 226 104" fill="none" stroke="#ffd43b" stroke-width="8" stroke-linecap="round"/>'
+      + '<ellipse cx="150" cy="90" rx="11" ry="9" fill="#ff2fa0" stroke="' + INK + '" stroke-width="4"/>'
+      + '<g fill="#fff" stroke="' + INK + '" stroke-width="2"><path d="M236 20 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z"/><path d="M52 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/></g>';
   }
 };
 
@@ -5456,8 +5468,8 @@ const NEW_KUMARS = [
 ];
 
 const KASI = {
-  id: 'kasi', icon: '🧿', name: 'Kasi Kumar', egg: 'Kasi Kumar Egg', title: 'The Chosen One', hidden: true,
-  shell: '#ffd43b', spot: '#ff2fa0', pattern: 'rays', aura: 'rgba(255,212,59,0.5)',
+  id: 'kasi', icon: '🧿', name: 'Kasi Kumar', egg: 'Kasi Kumar Egg', title: 'The Giant Forehead', hidden: true,
+  shell: '#ffd43b', spot: '#ff2fa0', pattern: 'forehead', aura: 'rgba(255,212,59,0.5)',
   boost: 'Production x1,000, click power x1,000, Golden Finns 3x as often and 3x bigger, research 5x faster, pets x5, generators half price, +25% crit, offline +50%.',
   mission: { fk: 5, rp: 5, egg: 3 }, missionNote: 'Every mission reward x5.',
   hint: 'A secret code wakes this egg.', unlock: () => false, prog: () => [0, 1]

@@ -88,6 +88,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .num { font-variant-numeric: tabular-nums; }
 
+.star-tag { color: var(--sun-deep); font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 0 var(--ink); }
+
 /* ---------- App shell ---------- */
 .app {
   max-width: 1320px;
@@ -1140,6 +1142,10 @@ const T = {                   /* transient, never saved */
   lastClick: 0,
   autoClickAcc: 0,
   autoBuyAcc: 0,
+  fullAutoAcc: 0,
+  autoQuiet: false,
+  autoSum: null,
+  autoSumAt: 0,
   achAcc: 0,
   saveAcc: 0,
   questAcc: 0,
@@ -1287,6 +1293,7 @@ function defaultState() {
     rebirths: 0, rt: 0, rtTotal: 0, rtRun: 0, rtUp: {},
     transcends: 0, shards: 0, shardsTotal: 0, shardRun: 0, shardNodes: {},
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
+    crownRun: 0, megaCount: 0, kumarStars: {},
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
     achievements: {},
@@ -1319,6 +1326,7 @@ function defaultState() {
       autoupg: true,
       autoRebirth: false,
       autoRebirthAt: 10,
+      fullAuto: false,
       buyMode: 1,
       confirmPrestige: true,
       goldenAlert: true
@@ -1364,7 +1372,7 @@ function prevMilestone(n) {
 
 /* ---------- Derived numbers ---------- */
 function petBaseValue(p) {
-  return PET_BY_ID[p.id].power * PET_LEVEL_MULT[p.lvl];
+  return PET_BY_ID[p.id].power * PET_LEVEL_MULT[p.lvl] * petStarMult(p);
 }
 
 function recalc() {
@@ -1964,7 +1972,7 @@ function mergePets() {
           if (ei >= 0) { wasEquipped = true; S.equipped.splice(ei, 1); }
         });
         S.pets = S.pets.filter(p => eat.indexOf(p) < 0);
-        const np = { u: S.petUid++, id: keeper.id, lvl: keeper.lvl + 1 };
+        const np = { u: S.petUid++, id: keeper.id, lvl: keeper.lvl + 1, star: Math.min.apply(null, eat.map(x => x.star | 0)) };
         S.pets.push(np);
         if (wasEquipped && S.equipped.length < calc.slots) S.equipped.push(np.u);
         merges++;
@@ -2178,6 +2186,7 @@ function resetRunState() {
 function doRebirth() {
   const gain = rebirthGain();
   if (gain < 1) return false;
+  if (fullAutoOn()) return prestigeKeep('rebirth', gain);
   const runTime = (Date.now() - S.runStart) / 1000;
   S.rt += gain; S.rtTotal += gain; S.rtRun += gain;
   S.rebirths++;
@@ -2196,6 +2205,7 @@ function resetRebirthLayer(keepShop) {
 function doTranscend() {
   const gain = transcendGain();
   if (gain < 1) return false;
+  if (fullAutoOn()) return prestigeKeep('transcend', gain);
   S.shards += gain; S.shardsTotal += gain; S.shardRun += gain;
   S.transcends++;
   resetRebirthLayer(hasNode('a1'));
@@ -2207,7 +2217,8 @@ function doTranscend() {
 function doAscend() {
   const gain = ascendGain();
   if (gain < 1) return false;
-  S.crowns += gain; S.crownsTotal += gain;
+  if (fullAutoOn()) return prestigeKeep('ascend', gain);
+  S.crowns += gain; S.crownsTotal += gain; S.crownRun += gain;
   S.ascensions++;
   S.shards = 0; S.shardsTotal = 0; S.shardRun = 0;
   if (!crownLv('cmemory')) S.shardNodes = {};
@@ -2215,6 +2226,162 @@ function doAscend() {
   resetRunState();
   bus.emit('prestige', { layer: 'ascend', gain: gain });
   return true;
+}
+
+
+/* =====================================================================
+   MEGA EVOLUTION  (after 1,000B crowns: full restart, Kumar + pets +1 star)
+   FULLY AUTO      (special account only)
+   ===================================================================== */
+const MEGA_CROWNS = 1e12;            /* 1000B crowns earned in this evolution cycle */
+const MEGA_MAX_STARS = 1e9;          /* effectively no cap on stars */
+const PET_STAR_MULT = 3;             /* each pet star: pet bonus x3 */
+const KUMAR_STAR_PROD = 4;           /* each Kumar star: production and click x4 */
+const KUMAR_STAR_FX = 0.5;           /* each Kumar star: other leader effects +50% */
+const FULL_AUTO_ID = '64966bed-47a8-45bc-8b16-1d20889cdaa7';
+
+function kumarStar(id) { return (S.kumarStars && S.kumarStars[id]) | 0; }
+function petStarMult(p) { return Math.min(1e100, Math.pow(PET_STAR_MULT, p.star | 0)); }
+function starText(n) { return n <= 0 ? '' : n <= 5 ? '\u2605'.repeat(n) : '\u2605\u00d7' + n; }
+
+function applyKumarStars(e) {
+  const st = kumarStar(S.kumar);
+  if (!st) return e;
+  const f = 1 + KUMAR_STAR_FX * st;
+  const sm = Math.min(1e100, Math.pow(KUMAR_STAR_PROD, st));   /* clamped so huge star counts never overflow */
+  e.prod *= sm;
+  e.click *= sm;
+  e.goldFreq = 1 + (e.goldFreq - 1) * f;
+  e.goldVal = 1 + (e.goldVal - 1) * f;
+  e.pet = 1 + (e.pet - 1) * f;
+  e.rp = 1 + (e.rp - 1) * f;
+  e.cost = Math.max(0.5, 1 - (1 - e.cost) * f);
+  e.crit *= f; e.combo *= f; e.offline *= f;
+  return e;
+}
+
+function fullAutoUnlocked() { return !!S && String(S.pid || '').toLowerCase() === FULL_AUTO_ID; }
+function fullAutoOn() { return fullAutoUnlocked() && !!S.settings.fullAuto; }
+
+function megaReady() { return S.crownRun >= MEGA_CROWNS; }
+
+function doMegaEvolve() {
+  if (!megaReady()) return false;
+  const kid = S.kumar;
+  S.kumarStars[kid] = kumarStar(kid) + 1;
+  S.pets.forEach(p => { p.star = (p.star | 0) + 1; });
+  S.megaCount++;
+  S.crownRun = 0;
+  if (!fullAutoOn()) {
+    /* full restart: every prestige layer and the run itself. Kumars, pets, research, achievements stay. */
+    S.rt = 0; S.rtTotal = 0; S.rtRun = 0; S.rtUp = {};
+    S.shards = 0; S.shardsTotal = 0; S.shardRun = 0; S.shardNodes = {};
+    S.crowns = 0; S.crownsTotal = 0; S.crownPerks = {};
+    resetRunState();
+  } else {
+    recalc();
+  }
+  bus.emit('mega', { kumar: kid, stars: S.kumarStars[kid] });
+  return true;
+}
+
+/* Prestige that loses nothing: only the counter that feeds that layer's formula starts over. */
+function prestigeKeep(layer, gain) {
+  if (layer === 'rebirth') {
+    const runTime = (Date.now() - S.runStart) / 1000;
+    S.rt += gain; S.rtTotal += gain; S.rtRun += gain;
+    S.rebirths++;
+    S.stats.lastRebirthGain = gain;
+    if (!S.stats.fastestRebirth || runTime < S.stats.fastestRebirth) S.stats.fastestRebirth = runTime;
+    S.runEarned = 0; S.runStart = Date.now();
+  } else if (layer === 'transcend') {
+    S.shards += gain; S.shardsTotal += gain; S.shardRun += gain;
+    S.transcends++;
+    S.rtRun = 0;
+  } else {
+    S.crowns += gain; S.crownsTotal += gain; S.crownRun += gain;
+    S.ascensions++;
+    S.shardRun = 0;
+  }
+  recalc();
+  bus.emit('prestige', { layer: layer, gain: gain });
+  return true;
+}
+
+function fullAutoSpend() {
+  let guard = 0;
+  while (guard++ < 300) {                       /* rebirth shop, cheapest first */
+    let best = null, bc = Infinity;
+    for (let i = 0; i < RT_UPGRADES.length; i++) {
+      const d = RT_UPGRADES[i], l = lv(d.id);
+      if (l >= d.max) continue;
+      const c = rtUpgradeCost(d, l);
+      if (c <= S.rt && c < bc) { best = d; bc = c; }
+    }
+    if (!best || !buyRtUpgrade(best.id)) break;
+  }
+  guard = 0;
+  while (guard++ < 100) {                       /* shard tree */
+    let best = null;
+    for (let i = 0; i < SHARD_NODES.length; i++) {
+      const n = SHARD_NODES[i];
+      if (!hasNode(n.id) && nodeAvailable(n) && S.shards >= n.cost && (!best || n.cost < best.cost)) best = n;
+    }
+    if (!best || !buyShardNode(best.id)) break;
+  }
+  guard = 0;
+  while (guard++ < 300) {                       /* crown perks */
+    let best = null, bc = Infinity;
+    for (let i = 0; i < CROWN_PERKS.length; i++) {
+      const d = CROWN_PERKS[i], l = crownLv(d.id);
+      if (l >= d.max) continue;
+      const c = crownPerkCost(d, l);
+      if (c <= S.crowns && c < bc) { best = d; bc = c; }
+    }
+    if (!best || !buyCrownPerk(best.id)) break;
+  }
+  guard = 0;
+  while (guard++ < 300) {                       /* research lab */
+    let best = null, bc = Infinity;
+    for (let i = 0; i < RP_UPGRADES.length; i++) {
+      const d = RP_UPGRADES[i], l = rl(d.id);
+      if (l >= d.max) continue;
+      const c = rpCost(d, l);
+      if (c <= S.rp && c < bc) { best = d; bc = c; }
+    }
+    if (!best || !buyResearch(best.id)) break;
+  }
+}
+
+function fullAutoStep() {
+  T.autoQuiet = true;
+  const sum = T.autoSum || (T.autoSum = { rebirth: 0, transcend: 0, ascend: 0, mega: 0 });
+  try {
+    buyAllUpgrades();          /* "auto upgrade" = buy everything affordable */
+    buyMaxAll();               /* "auto buy" = buy max of every generator */
+    buyAllUpgrades();
+    fullAutoSpend();
+    let g;
+    if ((g = ascendGain()) >= 1 && doAscend()) sum.ascend += g;
+    if ((g = transcendGain()) >= 1 && doTranscend()) sum.transcend += g;
+    if ((g = rebirthGain()) >= 1 && doRebirth()) sum.rebirth += g;
+    fullAutoSpend();
+    if (megaReady()) { T.autoQuiet = false; if (doMegaEvolve()) sum.mega++; T.autoQuiet = true; }
+  } finally {
+    T.autoQuiet = false;
+  }
+  const now = Date.now();
+  if (now - T.autoSumAt > 20000) {
+    if (T.autoSumAt && (sum.rebirth || sum.transcend || sum.ascend)) {
+      const parts = [];
+      if (sum.rebirth) parts.push('+' + fmtInt(sum.rebirth) + ' tokens');
+      if (sum.transcend) parts.push('+' + fmtInt(sum.transcend) + ' shards');
+      if (sum.ascend) parts.push('+' + fmtInt(sum.ascend) + ' crowns');
+      bus.emit('toast', { title: 'Fully Auto', text: parts.join(', ') + ' in the last 20s.', tone: 'good' });
+    }
+    T.autoSum = null;
+    T.autoSumAt = now;
+  }
 }
 
 function buyRtUpgrade(id) {
@@ -2625,12 +2792,15 @@ function stateFromSaved(obj) {
   if (!Array.isArray(st.buffs)) st.buffs = [];
   if (!Array.isArray(st.quests)) st.quests = [];
   /* guard against corrupt numbers */
-  ['fk', 'runEarned', 'lifeEarned', 'rt', 'rtTotal', 'rtRun', 'shards', 'shardsTotal', 'shardRun', 'crowns', 'crownsTotal'].forEach(k => {
+  ['fk', 'runEarned', 'lifeEarned', 'rt', 'rtTotal', 'rtRun', 'shards', 'shardsTotal', 'shardRun', 'crowns', 'crownsTotal', 'crownRun', 'megaCount'].forEach(k => {
     if (typeof st[k] !== 'number' || !isFinite(st[k]) || st[k] < 0) st[k] = 0;
   });
   GENS.forEach(g => { if (typeof st.gens[g.id] !== 'number' || st.gens[g.id] < 0) st.gens[g.id] = 0; });
   st.pets = st.pets.filter(p => p && PET_BY_ID[p.id]);
-  st.pets.forEach(p => { p.lvl = clamp(p.lvl | 0, 0, PET_MAX_LEVEL); });
+  st.pets.forEach(p => { p.lvl = clamp(p.lvl | 0, 0, PET_MAX_LEVEL); p.star = clamp(p.star | 0, 0, MEGA_MAX_STARS); });
+  if (!obj || obj.crownRun === undefined) st.crownRun = st.crownsTotal;   /* saves from before Mega Evolution */
+  if (!isPlainObject(st.kumarStars)) st.kumarStars = {};
+  Object.keys(st.kumarStars).forEach(id => { st.kumarStars[id] = clamp(st.kumarStars[id] | 0, 0, MEGA_MAX_STARS); if (!st.kumarStars[id]) delete st.kumarStars[id]; });
   const uids = {};
   st.pets.forEach(p => { uids[p.u] = 1; });
   st.equipped = st.equipped.filter(u => uids[u]);
@@ -2704,8 +2874,13 @@ function tick() {
   }
 
   /* auto buyer */
+  if (fullAutoOn()) {
+    T.fullAutoAcc += dt;
+    if (T.fullAutoAcc >= 0.5) { T.fullAutoAcc = 0; fullAutoStep(); }
+  }
+
   const ab = lv('autobuy');
-  if (ab > 0 && S.settings.autobuy) {
+  if (ab > 0 && S.settings.autobuy && !fullAutoOn()) {
     T.autoBuyAcc += dt;
     if (T.autoBuyAcc >= 3 / ab) {
       T.autoBuyAcc = 0;
@@ -2716,13 +2891,13 @@ function tick() {
   }
 
   /* auto rebirth */
-  if (hasNode('a2') && S.settings.autoRebirth && rebirthGain() >= Math.max(1, S.settings.autoRebirthAt)) {
+  if (hasNode('a2') && S.settings.autoRebirth && !fullAutoOn() && rebirthGain() >= Math.max(1, S.settings.autoRebirthAt)) {
     const g = rebirthGain();
     if (doRebirth()) bus.emit('toast', { title: 'Auto Rebirth', text: 'Gained ' + g + ' Rebirth Tokens.', tone: 'good' });
   }
 
   /* research lab auto buyers */
-  if (calc.autoBuyEvery > 0 && S.settings.autobuy) {
+  if (calc.autoBuyEvery > 0 && S.settings.autobuy && !fullAutoOn()) {
     T.rAutoBuyAcc += dt;
     if (T.rAutoBuyAcc >= calc.autoBuyEvery) {
       T.rAutoBuyAcc = 0;
@@ -2731,7 +2906,7 @@ function tick() {
       }
     }
   }
-  if (calc.autoUpEvery > 0 && S.settings.autoupg) {
+  if (calc.autoUpEvery > 0 && S.settings.autoupg && !fullAutoOn()) {
     T.rAutoUpAcc += dt;
     if (T.rAutoUpAcc >= calc.autoUpEvery) {
       T.rAutoUpAcc = 0;
@@ -3895,6 +4070,10 @@ function liveText(key) {
       return 'Ascend now for ' + fmtInt(g) + ' Crown' + (g > 1 ? 's' : '') + '.';
     }
     case 'asmult': return 'Crown boost now x' + fmt(calc.crownMult);
+    case 'megatxt': {
+      if (S.crownRun < MEGA_CROWNS) return 'Earn ' + fmt(MEGA_CROWNS) + ' Crowns this cycle. Now: ' + fmt(S.crownRun) + '.';
+      return 'Ready! Mega Evolve for +1 star on your Kumar and every pet.';
+    }
     case 'asbal': return fmtInt(S.crowns) + ' crowns';
     case 'q': {
       const q = S.quests.find(x => x.uid === +a);
@@ -3969,6 +4148,7 @@ function liveBar(key) {
     case 'rb': return clamp(S.runEarned / REBIRTH_MIN, 0, 1);
     case 'tr': return clamp(S.rtRun / TRANSCEND_MIN_RT, 0, 1);
     case 'as': return clamp(S.shardRun / ASCEND_MIN_SHARDS, 0, 1);
+    case 'mega': return clamp(Math.log10(Math.max(1, S.crownRun)) / Math.log10(MEGA_CROWNS), 0, 1);
     default: return 0;
   }
 }
@@ -3992,6 +4172,7 @@ function liveAff(key) {
     case 'rebirth': return rebirthGain() >= 1;
     case 'transcend': return transcendGain() >= 1;
     case 'ascend': return ascendGain() >= 1;
+    case 'mega': return megaReady();
     case 'wheel': return wheelReady() && !ui.wheelSpinning;
     case 'catch': return catcherReady() && !catcher.running;
     case 'slot': return !ui.slotBusy && Math.floor(S.fk * (+a)) >= 1;
@@ -4087,7 +4268,7 @@ function renderUpgrades() {
    TAB: PETS
    ===================================================================== */
 function petsSig() {
-  return S.pets.length + '|' + S.equipped.join(',') + '|' + EGGS.map(e => eggVisible(e) ? 1 : 0).join('') + '|' + calc.slots + '|' + Object.keys(S.petDex).length + '|' + calc.petLuck;
+  return S.pets.length + '|' + S.pets.reduce((a, p) => a + (p.star | 0), 0) + '|' + S.equipped.join(',') + '|' + EGGS.map(e => eggVisible(e) ? 1 : 0).join('') + '|' + calc.slots + '|' + Object.keys(S.petDex).length + '|' + calc.petLuck;
 }
 
 function renderPets() {
@@ -4116,7 +4297,7 @@ function renderPets() {
     const p = S.equipped[i] ? findPet(S.equipped[i]) : null;
     if (p) {
       const def = PET_BY_ID[p.id];
-      h += '<button class="slot filled r-' + def.rarity + '" type="button" data-act="petinfo" data-u="' + p.u + '"><span><span style="font-size:28px;display:block">' + def.emoji + '</span>Lv ' + (p.lvl + 1) + '</span></button>';
+      h += '<button class="slot filled r-' + def.rarity + '" type="button" data-act="petinfo" data-u="' + p.u + '"><span><span style="font-size:28px;display:block">' + def.emoji + '</span>Lv ' + (p.lvl + 1) + (p.star ? '<br><span class="star-tag">' + starText(p.star) + '</span>' : '') + '</span></button>';
     } else h += '<div class="slot">Empty</div>';
   }
   h += '</div></div>';
@@ -4132,7 +4313,7 @@ function renderPets() {
       const def = PET_BY_ID[p.id];
       h += '<button class="pet r-' + def.rarity + (S.equipped.indexOf(p.u) >= 0 ? ' equipped' : '') + '" type="button" data-act="petinfo" data-u="' + p.u + '">'
         + '<span class="pet-lvl">' + (p.lvl + 1) + '</span><span class="pet-emoji">' + def.emoji + '</span>'
-        + '<span class="pet-name">' + esc(def.name) + '</span><span class="pet-pow">' + esc(petEffectText(p)) + '</span></button>';
+        + '<span class="pet-name">' + esc(def.name) + (p.star ? ' <span class="star-tag">' + starText(p.star) + '</span>' : '') + '</span><span class="pet-pow">' + esc(petEffectText(p)) + '</span></button>';
     });
     h += '</div>';
   }
@@ -4154,7 +4335,7 @@ function showPetModal(uid) {
   const eq = S.equipped.indexOf(uid) >= 0;
   const copies = S.pets.filter(x => x.id === p.id && x.lvl === p.lvl).length;
   showModal(def.name, '<div style="text-align:center"><div style="font-size:64px">' + def.emoji + '</div>'
-    + '<p>' + rarityLabel(def.rarity) + ' | Level ' + (p.lvl + 1) + (p.lvl >= PET_MAX_LEVEL ? ' (max)' : '') + '</p>'
+    + '<p>' + rarityLabel(def.rarity) + ' | Level ' + (p.lvl + 1) + (p.lvl >= PET_MAX_LEVEL ? ' (max)' : '') + (p.star ? ' | <span class="star-tag">' + starText(p.star) + '</span>' : '') + '</p>'
     + '<p><b>' + esc(petEffectText(p)) + '</b></p>'
     + '<p class="muted">' + (p.lvl < PET_MAX_LEVEL ? 'You own ' + copies + ' of this pet at this level. Three merge into the next level.' : 'This pet is at its highest level.') + '</p></div>', [
     { label: 'Close', cls: '' },
@@ -4171,7 +4352,7 @@ function showPetModal(uid) {
    TAB: PRESTIGE
    ===================================================================== */
 function prestigeSig() {
-  return [S.lifeEarned >= 1e7 || S.rebirths > 0 ? 1 : 0, S.rtTotal >= 25 || S.transcends > 0 ? 1 : 0, S.shardsTotal >= 20 || S.ascensions > 0 ? 1 : 0].join('');
+  return [S.lifeEarned >= 1e7 || S.rebirths > 0 ? 1 : 0, S.rtTotal >= 25 || S.transcends > 0 ? 1 : 0, S.shardsTotal >= 20 || S.ascensions > 0 ? 1 : 0, S.megaCount, kumarStar(S.kumar), S.kumar].join('|');
 }
 
 function renderPrestige() {
@@ -4240,8 +4421,25 @@ function renderPrestige() {
         + '<div class="shop-cost">' + (maxed ? 'MAXED' : 'Cost ' + fmtInt(crownPerkCost(d, l)) + ' crowns') + '</div></button>';
     });
     h += '</div></div>';
+    const ks = kumarStar(S.kumar);
+    h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Mega Evolution</h3><span class="grow"></span>'
+      + '<span class="pill pink">' + S.megaCount + ' evolution' + (S.megaCount === 1 ? '' : 's') + '</span><span class="pill sun">' + (ks ? starText(ks) : 'No stars') + '</span></div>'
+      + '<p class="pcard-desc">Reach ' + fmt(MEGA_CROWNS) + ' Crowns in one cycle to Mega Evolve. You restart from the beginning (tokens, shards, Crowns, perks, generators), but your leading Kumar and every pet gain 1 star. '
+      + 'Each Kumar star gives x' + KUMAR_STAR_PROD + ' production and clicks and +' + (KUMAR_STAR_FX * 100) + '% to its other boosts. Each pet star makes that pet x' + PET_STAR_MULT + ' stronger. No star limit.'
+      + (fullAutoOn() ? ' Fully Auto is on, so nothing is lost when you evolve.' : '') + '</p>'
+      + '<div class="progress"><div class="progress-fill" data-bar="mega:x"></div></div>'
+      + '<div class="progress-text" data-live="megatxt:x"></div>'
+      + '<button class="btn btn-pink btn-block" type="button" data-btn="1" data-act="megaevolve" data-aff="mega:x">Mega Evolve</button></div>';
   }
   return h;
+}
+
+function megaConfirm() {
+  if (!megaReady()) { toast('Not ready', 'You need ' + fmt(MEGA_CROWNS) + ' Crowns this cycle.', 'bad'); return; }
+  const body = fullAutoOn()
+    ? 'Your leading Kumar and every pet gain 1 star. Fully Auto is on, so you keep everything else.'
+    : 'Your leading Kumar and every pet gain 1 star. Everything else restarts: Rebirth Tokens, Shards, Crowns, perks, generators and upgrades.';
+  confirmModal('Mega Evolve?', body, 'Mega Evolve', 'btn-pink', () => { if (doMegaEvolve()) ui.dirty = true; });
 }
 
 function prestigeConfirm(layer) {
@@ -4565,6 +4763,7 @@ function renderSettings() {
   h += toggleRow('sound', 'Sound effects', 'Small beeps and chimes.');
   h += toggleRow('goldenAlert', 'Golden Finn chime', 'Play a sound when a golden Finn appears.');
   h += toggleRow('confirmPrestige', 'Confirm prestige', 'Ask before Rebirth, Transcend and Ascend.');
+  if (fullAutoUnlocked()) h += toggleRow('fullAuto', 'Fully Auto', 'Buys max generators and every upgrade, spends all tokens, shards, crowns and research, then Rebirths, Transcends, Ascends and Mega Evolves whenever possible. Nothing is lost when you do.');
   if (lv('autobuy') > 0 || rl('rauto') > 0) h += toggleRow('autobuy', 'Auto Buyer', 'Let the Auto Buyers purchase generators.');
   if (rl('rautoup') > 0) h += toggleRow('autoupg', 'Auto Upgrader', 'Let the Auto Upgrader purchase cheap upgrades.');
   if (hasNode('a2')) {
@@ -4598,7 +4797,7 @@ function renderSettings() {
    TAB: KUMARS (playable eggs)
    ===================================================================== */
 function kumarsSig() {
-  return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? 1 : 0) + (S.kumar === k.id ? 'a' : '') + (missionOf(k.id) ? 'm' : '')).join('|') + '|' + S.skin;
+  return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? 1 : 0) + (S.kumar === k.id ? 'a' : '') + (missionOf(k.id) ? 'm' : '') + kumarStar(k.id)).join('|') + '|' + S.skin;
 }
 
 function renderKumars() {
@@ -4618,7 +4817,7 @@ function renderKumars() {
     }
     h += '<div class="kumar-card' + (owned ? '' : ' locked') + (active ? ' active' : '') + '">'
       + '<div class="kumar-egg"><svg viewBox="0 0 300 300" aria-hidden="true">' + eggSvgMarkup(k.id, S.skin === 'classic' ? 'classic' : S.skin, 'chill', true, 'k' + i) + '</svg></div>'
-      + '<div class="kumar-name">' + esc(k.name) + '</div><div class="kumar-title">' + esc(k.title) + '</div>'
+      + '<div class="kumar-name">' + esc(k.name) + (kumarStar(k.id) ? ' <span class="star-tag">' + starText(kumarStar(k.id)) + '</span>' : '') + '</div><div class="kumar-title">' + esc(k.title) + '</div>'
       + '<div class="kumar-desc"><b>Leader boost:</b> ' + esc(k.boost) + '</div>'
       + '<div class="kumar-desc"><b>On missions:</b> ' + esc(k.missionNote) + '</div>';
     if (owned) {
@@ -4787,7 +4986,7 @@ const TABS = [
   { id: 'research', label: 'Research', render: renderResearch, sig: researchSig, badge: () => RP_UPGRADES.filter(d => rl(d.id) < d.max && S.rp >= rpCost(d, rl(d.id))).length },
   { id: 'missions', label: 'Missions', render: renderMissions, sig: missionsSig, badge: () => S.missions.filter(missionDone).length },
   { id: 'pets', label: 'Pets', render: renderPets, sig: petsSig, badge: () => 0 },
-  { id: 'prestige', label: 'Prestige', render: renderPrestige, sig: prestigeSig, badge: () => (rebirthGain() >= 1 ? 1 : 0) + (transcendGain() >= 1 ? 1 : 0) + (ascendGain() >= 1 ? 1 : 0) },
+  { id: 'prestige', label: 'Prestige', render: renderPrestige, sig: prestigeSig, badge: () => (rebirthGain() >= 1 ? 1 : 0) + (transcendGain() >= 1 ? 1 : 0) + (ascendGain() >= 1 ? 1 : 0) + (megaReady() ? 1 : 0) },
   { id: 'quests', label: 'Quests', render: renderQuests, sig: questsSig, badge: () => S.quests.filter(q => q.done).length },
   { id: 'arcade', label: 'Arcade', render: renderArcade, sig: () => '', badge: () => (wheelReady() ? 1 : 0) + (catcherReady() ? 1 : 0) },
   { id: 'board', label: 'Board', render: renderBoardTab, sig: boardSig, badge: () => 0 },
@@ -4859,14 +5058,14 @@ function updateStage() {
   const buffed = S.buffs.some(b => b.kind === 'cps' && b.mult >= 7);
   const mood = moodFor(T.combo, buffed);
   const kum = KUMAR_BY_ID[S.kumar] || KUMARS[0];
-  const skinSig = S.kumar + '|' + S.skin + '|' + mood + '|' + (S.ascensions > 0 ? 'a' : S.transcends > 0 ? 't' : S.rebirths > 0 ? 'r' : 'n');
+  const skinSig = S.kumar + '|' + kumarStar(S.kumar) + '|' + S.skin + '|' + mood + '|' + (S.ascensions > 0 ? 'a' : S.transcends > 0 ? 't' : S.rebirths > 0 ? 'r' : 'n');
   if (skinSig !== ui.skinSig) {
     ui.skinSig = skinSig;
     $('finnSvg').innerHTML = eggSvgMarkup(S.kumar, S.skin, mood, false, '');
     const skin = SKIN_BY_ID[S.skin] || SKINS[0];
     $('finnStage').style.setProperty('--aura-a', S.skin === 'classic' ? kum.aura : skin.aura);
     $('finnBtn').classList.toggle('hype', mood === 'hype' || mood === 'wild');
-    $('finnName').textContent = kum.egg;
+    $('finnName').textContent = kum.egg + (kumarStar(S.kumar) ? ' ' + starText(kumarStar(S.kumar)) : '');
     $('kumarBoost').textContent = kum.boost;
   }
 
@@ -4985,6 +5184,7 @@ const ACTIONS = {
   rebirth: () => prestigeConfirm('rebirth'),
   transcend: () => prestigeConfirm('transcend'),
   ascend: () => prestigeConfirm('ascend'),
+  megaevolve: () => megaConfirm(),
   buyrt: d => { if (buyRtUpgrade(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
   buynode: d => { if (buyShardNode(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
   buycrown: d => { if (buyCrownPerk(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
@@ -5137,7 +5337,16 @@ function wireBus() {
   bus.on('toast', t => toast(t.title, t.text, t.tone));
   bus.on('questReady', q => { toast('Quest complete', questText(q), 'good'); sfx.win(); });
   bus.on('questClaimed', q => toast('Reward claimed', questRewardText(q.reward), 'good'));
+  bus.on('mega', m => {
+    sfx.prestige();
+    fx.burstCenter(60);
+    const k = KUMAR_BY_ID[m.kumar] || KUMARS[0];
+    toast('Mega Evolution!', k.name + ' is now ' + starText(m.stars) + ' and every pet gained a star.', 'gold');
+    ui.dirty = true;
+    ui.skinSig = '';
+  });
   bus.on('prestige', p => {
+    if (T.autoQuiet) { ui.dirty = true; return; }
     sfx.prestige();
     fx.burstCenter(40);
     const nm = { rebirth: 'Reborn!', transcend: 'Transcended!', ascend: 'Ascended!' }[p.layer];
@@ -5525,6 +5734,7 @@ step('kumars', () => {
     }
     const t = titleFx();
     e.prod *= t.prod; e.click *= t.click; e.goldFreq *= t.gold; e.pet *= t.pet; e.rp *= t.rp;
+    applyKumarStars(e);
     return e;
   });
 
@@ -5702,7 +5912,7 @@ step('restore', () => {
     if (typeof raw.kumar === 'string' && KUMAR_BY_ID[raw.kumar] && S.kumarsUnlocked[raw.kumar]) S.kumar = raw.kumar;
     if (Array.isArray(raw.pets)) {
       raw.pets.forEach(p => {
-        if (p && PET_BY_ID[p.id] && typeof p.u === 'number' && !findPet(p.u)) S.pets.push({ u: p.u, id: p.id, lvl: clamp(p.lvl | 0, 0, PET_MAX_LEVEL) });
+        if (p && PET_BY_ID[p.id] && typeof p.u === 'number' && !findPet(p.u)) S.pets.push({ u: p.u, id: p.id, lvl: clamp(p.lvl | 0, 0, PET_MAX_LEVEL), star: clamp(p.star | 0, 0, MEGA_MAX_STARS) });
       });
       S.pets.forEach(p => { S.petDex[p.id] = S.petDex[p.id] || 1; });
     }

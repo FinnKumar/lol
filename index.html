@@ -90,6 +90,77 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .star-tag { color: var(--sun-deep); font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 0 var(--ink); }
 
+/* ---------- Evolution bar under the Kumar ---------- */
+.evo-box { width: 100%; max-width: 330px; margin: 8px auto 2px; }
+.evo-top { display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+.evo-bar { height: 20px; }
+.evo-fill { background: linear-gradient(90deg, #25d9a2, #ffd43b, #ff5c9d); transition: width .12s linear; }
+.evo-txt { text-align: center; font-size: 12px; font-weight: 800; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+.evo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 12px; }
+.evo-card { background: var(--paper); border: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.evo-card.lead { background: #fff6cf; }
+.evo-card-top { display: flex; align-items: center; gap: 10px; }
+.evo-ic { font-size: 30px; }
+.evo-card-name { font-family: var(--font-display); font-size: 18px; }
+.evo-card-tier { font-size: 12px; font-weight: 800; color: var(--muted); }
+.evo-card-boost { font-size: 12px; font-weight: 800; }
+.star-tag { color: var(--sun-deep); font-weight: 800; letter-spacing: 1px; }
+
+/* ---------- Mega Tree ---------- */
+.mt-head { background: linear-gradient(135deg, #fff0f7, #fff8d6); }
+.mt-branches { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; margin: 6px 0; }
+.mt-branch { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 92px; padding: 8px 10px; background: var(--paper); border: var(--line); border-radius: 14px; box-shadow: var(--shadow-sm); cursor: pointer; font-family: var(--font-display); color: var(--ink); transition: transform .1s; }
+.mt-branch:hover { transform: translateY(-2px); }
+.mt-branch.active { background: var(--bc); box-shadow: 5px 5px 0 var(--ink); transform: translateY(-3px); }
+.mt-b-ic { font-size: 24px; }
+.mt-b-name { font-size: 14px; }
+.mt-b-count { font-size: 11px; font-family: var(--font-mono); font-weight: 800; opacity: .75; }
+.mt-panel { border-top: 8px solid var(--bc); }
+.mt-title { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.mt-title-ic { width: 52px; height: 52px; display: grid; place-items: center; font-size: 30px; background: var(--bc); border: var(--line); border-radius: 50%; box-shadow: var(--shadow-sm); }
+.mt-lane { margin-top: 14px; }
+.mt-lane-name { font-family: var(--font-display); font-size: 15px; margin-bottom: 6px; color: var(--ink-soft); letter-spacing: .5px; text-transform: uppercase; }
+.mt-track { display: flex; gap: 22px; overflow-x: auto; padding: 8px 6px 14px; position: relative; }
+.mt-node { position: relative; flex: 0 0 auto; width: 112px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px 8px; background: #e7e4f7; border: var(--line); border-radius: 16px; box-shadow: var(--shadow-sm); cursor: pointer; text-align: center; color: var(--ink); font-family: var(--font-body); transition: transform .1s; }
+.mt-node:not(:last-child)::after { content: ''; position: absolute; top: 50%; left: 100%; width: 22px; height: 6px; margin-top: -3px; background: var(--ink); opacity: .25; border-radius: 3px; }
+.mt-node.owned:not(:last-child)::after { background: var(--bc); opacity: 1; border: 2px solid var(--ink); height: 10px; margin-top: -5px; box-sizing: border-box; }
+.mt-ic { font-size: 28px; line-height: 1; }
+.mt-nm { font-family: var(--font-display); font-size: 13px; }
+.mt-fx { font-size: 11px; font-weight: 700; line-height: 1.15; min-height: 26px; color: var(--ink-soft); }
+.mt-cost { font-family: var(--font-mono); font-size: 12px; font-weight: 800; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 8px; }
+.mt-node.locked { opacity: .55; filter: grayscale(.8); cursor: not-allowed; }
+.mt-node.avail { background: #fff; }
+.mt-node.afford { background: #fffbe0; animation: mtPulse 1.4s ease-in-out infinite; }
+.mt-node.afford:hover { transform: translateY(-3px) scale(1.03); }
+.mt-node.owned { background: var(--bc); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--bc); }
+.mt-node.owned .mt-cost { background: var(--ink); color: #fff; }
+@keyframes mtPulse { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 rgba(255,212,59,0); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 16px rgba(255,212,59,.95); } }
+.mt-totals { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.mt-total { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; background: var(--paper-3); border: 2px solid var(--ink); border-radius: 12px; font-weight: 800; font-size: 13px; }
+.rename-row { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+.rename-row .input { flex: 1; min-width: 0; }
+
+/* ---------- Prestige overview ---------- */
+.pl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pl-card { background: var(--paper); border: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.pl-card.rebirth { border-top: 8px solid #ff5c9d; } .pl-card.transcend { border-top: 8px solid #4cc9ff; }
+.pl-card.ascend { border-top: 8px solid #ffd43b; } .pl-card.mega { border-top: 8px solid #8d7bff; }
+.pl-card.locked { opacity: .7; filter: grayscale(.6); }
+.pl-head { display: flex; align-items: center; gap: 8px; }
+.pl-ic { font-size: 26px; } .pl-name { font-family: var(--font-display); font-size: 20px; }
+.pl-desc { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.pl-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.pl-hint { text-align: center; font-size: 12px; font-weight: 800; color: var(--muted); margin: 10px 0 0; }
+.pl-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--paper); border: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 10px; }
+.pl-bar-title { font-family: var(--font-display); font-size: 20px; }
+.layer-body { max-height: calc(100vh - 290px); min-height: 260px; overflow: auto; padding: 2px 4px 8px; }
+.mega-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.mega-note { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.layer-body .mt-track { flex-wrap: wrap; gap: 10px; overflow: visible; padding: 6px 2px; }
+.layer-body .mt-node { width: 98px; padding: 8px 4px 6px; } .layer-body .mt-node::after { display: none !important; }
+.layer-body .mt-ic { font-size: 22px; } .layer-body .mt-fx { min-height: 22px; font-size: 10px; }
+@media (max-width: 700px) { .pl-grid { grid-template-columns: 1fr; } }
+
 /* ---------- App shell ---------- */
 .app {
   max-width: 1320px;
@@ -1070,6 +1141,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <button class="icon-btn" id="btnSound" type="button" title="Toggle sound">SFX</button>
       <button class="icon-btn" id="btnFx" type="button" title="Toggle particles">FX</button>
       <button class="icon-btn" id="btnSave" type="button" title="Save now">SAVE</button>
+      <button class="icon-btn" id="btnAdmin" type="button" title="Admin panel" style="display:none">ADMIN</button>
     </div>
   </header>
 
@@ -1089,6 +1161,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
         <div class="finn-name" id="finnName">Finn Kumar</div>
         <div class="finn-title" id="finnTitle">Rookie Finn</div>
+        <div class="evo-box"><div class="evo-top"><span id="evoTier">Tier 0</span><span id="evoBoost">x1</span></div><div class="progress evo-bar"><div class="progress-fill evo-fill" id="evoFill"></div></div><div class="evo-txt" id="evoTxt"></div></div>
         <div class="kumar-boost" id="kumarBoost"></div>
 
         <div class="click-info">
@@ -1165,7 +1238,94 @@ const T = {                   /* transient, never saved */
   boardCache: {}
 };
 
-const LIMIT = 1e300;
+const LIMIT = 1.7e308;   /* biggest plain number; Finn Kumar itself is Big and goes to 1e1000000 */
+
+/* =====================================================================
+   BIG NUMBERS: Finn Kumar (bank, run, lifetime, per second, costs) go up to 1e1000000.
+   Big behaves like a number in comparisons through valueOf (huge values read as Infinity there),
+   and uses exact big-number math wherever the economy adds, spends and multiplies.
+   ===================================================================== */
+const BIG_MAX_E = 1000000;
+class Big {
+  constructor(m, e) { this.m = m; this.e = e; }
+  static norm(m, e) {
+    if (!(m > 0) || !isFinite(m)) return new Big(0, 0);
+    if (m >= 10 || m < 1) {
+      const d = Math.floor(Math.log10(m));
+      m /= Math.pow(10, d); e += d;
+      if (m >= 10) { m /= 10; e++; } else if (m < 1) { m *= 10; e--; }
+    }
+    if (e > BIG_MAX_E) return new Big(1, BIG_MAX_E);
+    if (e < -BIG_MAX_E) return new Big(0, 0);
+    return new Big(m, e);
+  }
+  static from(x) {
+    if (x instanceof Big) return x;
+    if (typeof x === 'string') {
+      const t = x.trim().toLowerCase();
+      const i = t.indexOf('e');
+      if (i > 0 && /^[0-9.]+$/.test(t.slice(0, i)) && /^-?[0-9]+$/.test(t.slice(i + 1))) return Big.norm(parseFloat(t.slice(0, i)), parseInt(t.slice(i + 1), 10));
+      x = parseFloat(t);
+    }
+    x = +x;
+    if (!(x > 1e-300) || !isFinite(x)) return new Big(0, 0);
+    const e = Math.floor(Math.log10(x));
+    return Big.norm(x / Math.pow(10, e), e);
+  }
+  isZero() { return this.m === 0; }
+  toNumber() {
+    if (this.m === 0) return 0;
+    if (this.e > 308) return Infinity;
+    if (this.e < -300) return 0;
+    return this.m * Math.pow(10, this.e);
+  }
+  num() { return Math.min(LIMIT, this.toNumber()); }
+  valueOf() { return this.toNumber(); }
+  log10() { return this.m === 0 ? -Infinity : this.e + Math.log10(this.m); }
+  cmp(o) {
+    o = Big.from(o);
+    if (this.m === 0) return o.m === 0 ? 0 : -1;
+    if (o.m === 0) return 1;
+    if (this.e !== o.e) return this.e > o.e ? 1 : -1;
+    return this.m === o.m ? 0 : (this.m > o.m ? 1 : -1);
+  }
+  gt(o) { return this.cmp(o) > 0; } gte(o) { return this.cmp(o) >= 0; }
+  lt(o) { return this.cmp(o) < 0; } lte(o) { return this.cmp(o) <= 0; } eq(o) { return this.cmp(o) === 0; }
+  add(o) {
+    o = Big.from(o);
+    if (this.m === 0) return o;
+    if (o.m === 0) return this;
+    const d = this.e - o.e;
+    if (d > 17) return this;
+    if (d < -17) return o;
+    return d >= 0 ? Big.norm(this.m + o.m * Math.pow(10, -d), this.e) : Big.norm(o.m + this.m * Math.pow(10, d), o.e);
+  }
+  sub(o) {
+    o = Big.from(o);
+    if (o.m === 0) return this;
+    if (this.cmp(o) <= 0) return new Big(0, 0);
+    const d = this.e - o.e;
+    if (d > 17) return this;
+    return Big.norm(this.m - o.m * Math.pow(10, -d), this.e);
+  }
+  mul(o) { o = Big.from(o); if (this.m === 0 || o.m === 0) return new Big(0, 0); return Big.norm(this.m * o.m, this.e + o.e); }
+  div(o) { o = Big.from(o); if (this.m === 0 || o.m === 0) return new Big(0, 0); return Big.norm(this.m / o.m, this.e - o.e); }
+  pow(n) {
+    if (this.m === 0) return new Big(0, 0);
+    const L = this.log10() * n;
+    if (L > BIG_MAX_E) return new Big(1, BIG_MAX_E);
+    const e = Math.floor(L);
+    return Big.norm(Math.pow(10, L - e), e);
+  }
+  sqrt() { return this.pow(0.5); }
+  toJSON() { return this.m === 0 ? 0 : (this.e < 15 ? this.toNumber() : this.m.toFixed(12) + 'e' + this.e); }
+  toString() { return String(this.toJSON()); }
+}
+function bigFmt(b) {
+  if (b.e < 300) return fmt(b.toNumber());
+  return b.m.toFixed(2).replace(/\.?0+$/, '') + 'e' + b.e;
+}
+
 const REBIRTH_MIN = 5e8;
 const TRANSCEND_MIN_RT = 100;
 const ASCEND_MIN_SHARDS = 40;
@@ -1222,6 +1382,7 @@ function trimZeros(str) {
 }
 
 function fmt(n) {
+  if (n instanceof Big) { if (n.e >= 300) return bigFmt(n); n = n.toNumber(); }
   if (typeof n !== 'number' || isNaN(n)) return '0';
   if (!isFinite(n)) return n > 0 ? 'Infinity' : '-Infinity';
   if (n === 0) return '0';
@@ -1259,6 +1420,7 @@ function fmt(n) {
 }
 
 function fmtInt(n) {
+  if (n instanceof Big) return fmt(n);
   if (n < 1e6) return Math.floor(n).toLocaleString('en-US');
   return fmt(n);
 }
@@ -1284,9 +1446,9 @@ function defaultState() {
   GENS.forEach(g => { gens[g.id] = 0; });
   return {
     v: SAVE_VERSION,
-    fk: 0,
-    runEarned: 0,
-    lifeEarned: 0,
+    fk: Big.from(0),
+    runEarned: Big.from(0),
+    lifeEarned: Big.from(0),
     gens,
     upgrades: {},
 
@@ -1294,6 +1456,7 @@ function defaultState() {
     transcends: 0, shards: 0, shardsTotal: 0, shardRun: 0, shardNodes: {},
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
     crownRun: 0, megaCount: 0, kumarStars: {},
+    mp: 0, mpTotal: 0, mtree: {}, evo: {}, customName: '', autoSec: 1,
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
     achievements: {},
@@ -1514,21 +1677,26 @@ function recalc() {
   c.buffCps = buffCps;
   c.buffClick = buffClick;
   c.globalMult = global * c.achMult * c.prestigeMult * c.petCpsMult * buffCps;
+  if (!isFinite(c.globalMult)) c.globalMult = LIMIT;
 
   /* generators */
   let total = 0;
   if (!c.genCps) c.genCps = [];
+  let totalBig = Big.from(0);
   for (let i = 0; i < GENS.length; i++) {
     const g = GENS[i];
     const n = S.gens[g.id] || 0;
     const m = genMult[g.id] * milestoneMult(n) * (buffGen[g.id] || 1);
-    c.genCps[i] = n * g.cps * m * c.globalMult;
+    const gb = Big.from(n).mul(g.cps).mul(m).mul(c.globalMult);
+    c.genCps[i] = gb.num();
+    totalBig = totalBig.add(gb);
     total += c.genCps[i];
   }
   c.genMult = genMult;
   c.buffGen = buffGen;
   c.cps = Math.min(total, LIMIT);
-  if (c.cps > S.stats.bestCps) S.stats.bestCps = c.cps;
+  c.cpsBig = totalBig;
+  if (totalBig.gt(S.stats.bestCps)) S.stats.bestCps = totalBig;
 
   /* clicking */
   c.clickBase = (1 + clickAdd) * clickMult * c.prestigeMult * c.achMult;
@@ -1558,16 +1726,18 @@ function recalc() {
 
 /* ---------- Earning ---------- */
 function addFk(n, source) {
-  if (!(n > 0) || !isFinite(n)) return;
-  S.fk = Math.min(LIMIT, S.fk + n);
-  S.runEarned = Math.min(LIMIT, S.runEarned + n);
-  S.lifeEarned = Math.min(LIMIT, S.lifeEarned + n);
-  if (source === 'golden') S.stats.goldenEarned += n;
+  const b = Big.from(n);
+  if (b.isZero()) return;
+  S.fk = S.fk.add(b);
+  S.runEarned = S.runEarned.add(b);
+  S.lifeEarned = S.lifeEarned.add(b);
+  if (source === 'golden') S.stats.goldenEarned = Math.min(LIMIT, S.stats.goldenEarned + b.num());
 }
 
 function spendFk(n) {
-  S.fk = Math.max(0, S.fk - n);
-  S.counters.spent += n;
+  const b = Big.from(n);
+  S.fk = S.fk.sub(b);
+  S.counters.spent = Math.min(LIMIT, S.counters.spent + b.num());
 }
 
 function comboFactor() {
@@ -1575,8 +1745,8 @@ function comboFactor() {
 }
 
 function clickValueNow(withCombo) {
-  const base = calc.clickBase + calc.cps * calc.clickCpsPct;
-  return base * (withCombo ? comboFactor() : 1) * calc.buffClick;
+  const base = Big.from(calc.clickBase).add(calc.cpsBig.mul(calc.clickCpsPct));
+  return base.mul(withCombo ? comboFactor() : 1).mul(calc.buffClick);
 }
 
 function doClick(auto) {
@@ -1584,37 +1754,41 @@ function doClick(auto) {
   let crit = false;
   if (Math.random() < calc.crit) {
     crit = true;
-    v *= calc.critMult;
+    v = v.mul(calc.critMult);
     if (!auto) S.counters.crits++;
   }
   addFk(v);
   if (!auto) {
     S.counters.clicks++;
+    evoClick();
     T.combo = Math.min(100, T.combo + 5);
     T.lastClick = Date.now();
     if (T.combo > S.counters.maxCombo) S.counters.maxCombo = Math.floor(T.combo);
   }
-  if (v > S.stats.biggestClick) S.stats.biggestClick = v;
+  if (v.gt(S.stats.biggestClick)) S.stats.biggestClick = v;
   return { value: v, crit: crit };
 }
 
 /* ---------- Generators ---------- */
 function genUnitCost(i) {
   const g = GENS[i];
-  return g.cost * Math.pow(GROWTH, S.gens[g.id]) * calc.costMult;
+  return Big.from(g.cost).mul(Big.from(GROWTH).pow(S.gens[g.id])).mul(calc.costMult);
 }
 
 function genBulkCost(i, n) {
   const first = genUnitCost(i);
-  return first * (Math.pow(GROWTH, n) - 1) / (GROWTH - 1);
+  return first.mul(Big.from(GROWTH).pow(n).sub(1)).div(GROWTH - 1);
 }
 
 function genMaxAfford(i, budget) {
   const first = genUnitCost(i);
-  if (!isFinite(first) || first <= 0 || budget < first) return 0;
-  let n = Math.floor(Math.log(1 + budget * (GROWTH - 1) / first) / Math.log(GROWTH));
+  budget = Big.from(budget);
+  if (first.isZero() || budget.lt(first)) return 0;
+  const x = budget.mul(GROWTH - 1).div(first);
+  const lnx = x.e < 300 ? Math.log(1 + x.toNumber()) : x.log10() * Math.LN10;
+  let n = Math.floor(lnx / Math.log(GROWTH));
   n = clamp(n, 0, 2000);
-  while (n > 0 && genBulkCost(i, n) > budget) n--;
+  while (n > 0 && genBulkCost(i, n).gt(budget)) n--;
   return n;
 }
 
@@ -1627,7 +1801,7 @@ function buyAmountFor(i) {
 function buyGen(i, n) {
   if (n < 1) return false;
   const cost = genBulkCost(i, n);
-  if (!isFinite(cost) || S.fk < cost) return false;
+  if (S.fk.lt(cost)) return false;
   spendFk(cost);
   S.gens[GENS[i].id] += n;
   recalc();
@@ -1661,7 +1835,7 @@ function checkUnlock(un) {
 }
 
 function upgradeCost(u) { return u.cost * calc.upCostMult; }
-function upgradeAvailable(u) { return !S.upgrades[u.id] && checkUnlock(u.unlock); }
+function upgradeAvailable(u) { return UPGRADES_ENABLED && !S.upgrades[u.id] && checkUnlock(u.unlock); }
 
 function availableUpgrades() {
   const list = [];
@@ -1672,7 +1846,7 @@ function availableUpgrades() {
 
 function buyUpgrade(id) {
   const u = UP_BY_ID[id];
-  if (!u || S.upgrades[id] || !checkUnlock(u.unlock)) return false;
+  if (!UPGRADES_ENABLED || !u || S.upgrades[id] || !checkUnlock(u.unlock)) return false;
   const cost = upgradeCost(u);
   if (S.fk < cost) return false;
   spendFk(cost);
@@ -2008,8 +2182,8 @@ const QUEST_TYPES = {
   earn: {
     avail: () => calc.cps > 0,
     make: t => ({ target: Math.max(1000, calc.cps * (600 + t * 240)) }),
-    base: () => S.lifeEarned,
-    prog: q => S.lifeEarned - q.base,
+    base: () => Math.min(LIMIT, +S.lifeEarned),
+    prog: q => Math.min(LIMIT, +S.lifeEarned) - q.base,
     text: q => 'Earn ' + fmt(q.target) + ' Finn Kumar'
   },
   golden: {
@@ -2027,11 +2201,11 @@ const QUEST_TYPES = {
     text: q => 'Hatch ' + q.target + ' egg' + (q.target > 1 ? 's' : '')
   },
   upgrade: {
-    avail: () => availableUpgrades().length > 0,
+    avail: () => true,
     make: t => ({ target: 2 + t * 2 }),
     base: () => S.counters.upgrades,
     prog: q => S.counters.upgrades - q.base,
-    text: q => 'Buy ' + q.target + ' upgrades'
+    text: q => 'Evolve or buy ' + q.target + ' upgrades'
   },
   own: {
     avail: () => true,
@@ -2147,9 +2321,9 @@ function checkAchievements() {
 
 /* ---------- Prestige ---------- */
 function rebirthGain() {
-  const base = Math.sqrt(S.runEarned / REBIRTH_MIN);
+  const base = S.runEarned.div(REBIRTH_MIN).sqrt().num();
   if (!(base >= 1)) return 0;
-  return Math.floor(base * calc.rtGainMult);
+  return Math.min(LIMIT, Math.floor(base * calc.rtGainMult * mtFx().rtGain));
 }
 
 function nextRebirthAt(gain) {
@@ -2159,22 +2333,22 @@ function nextRebirthAt(gain) {
 
 function transcendGain() {
   if (S.rtRun < TRANSCEND_MIN_RT) return 0;
-  const g = Math.pow(S.rtRun / 50, 0.6) * (1 + 0.3 * crownLv('cshard'));
+  const g = Math.pow(S.rtRun / 50, 0.6) * (1 + 0.3 * crownLv('cshard')) * mtFx().shardGain;
   return Math.floor(g);
 }
 
 function ascendGain() {
   if (S.shardRun < ASCEND_MIN_SHARDS) return 0;
-  return Math.floor(Math.sqrt(S.shardRun / 20));
+  return Math.floor(Math.sqrt(S.shardRun / 20) * mtFx().crownGain);
 }
 
 function resetRunState() {
   GENS.forEach(g => { S.gens[g.id] = 0; });
   S.upgrades = {};
   S.buffs = [];
-  S.runEarned = 0;
+  S.runEarned = Big.from(0);
   S.runStart = Date.now();
-  S.fk = headStartAmount(lv('headstart'));
+  S.fk = Big.from(headStartAmount(lv('headstart')));
   T.combo = 0;
   T.goldens.forEach(g => bus.emit('goldenEnd', g, false));
   T.goldens = [];
@@ -2234,7 +2408,7 @@ function doAscend() {
    FULLY AUTO      (special account only)
    ===================================================================== */
 const MEGA_CROWNS = 1e12;            /* 1000B crowns earned in this evolution cycle */
-const MEGA_MAX_STARS = 1e9;          /* effectively no cap on stars */
+const MEGA_MAX_STARS = 50;           /* stars stop at 50; Mega Points keep coming */
 const PET_STAR_MULT = 3;             /* each pet star: pet bonus x3 */
 const KUMAR_STAR_PROD = 4;           /* each Kumar star: production and click x4 */
 const KUMAR_STAR_FX = 0.5;           /* each Kumar star: other leader effects +50% */
@@ -2268,9 +2442,11 @@ function megaReady() { return S.crownRun >= MEGA_CROWNS; }
 function doMegaEvolve() {
   if (!megaReady()) return false;
   const kid = S.kumar;
-  S.kumarStars[kid] = kumarStar(kid) + 1;
-  S.pets.forEach(p => { p.star = (p.star | 0) + 1; });
+  if (kumarStar(kid) < MEGA_MAX_STARS) S.kumarStars[kid] = kumarStar(kid) + 1;
+  S.pets.forEach(p => { if ((p.star | 0) < MEGA_MAX_STARS) p.star = (p.star | 0) + 1; });
   S.megaCount++;
+  const mpGain = megaPointsGain();
+  S.mp += mpGain; S.mpTotal += mpGain;
   S.crownRun = 0;
   if (!fullAutoOn()) {
     /* full restart: every prestige layer and the run itself. Kumars, pets, research, achievements stay. */
@@ -2281,7 +2457,7 @@ function doMegaEvolve() {
   } else {
     recalc();
   }
-  bus.emit('mega', { kumar: kid, stars: S.kumarStars[kid] });
+  bus.emit('mega', { kumar: kid, stars: kumarStar(kid), mp: mpGain });
   return true;
 }
 
@@ -2293,7 +2469,7 @@ function prestigeKeep(layer, gain) {
     S.rebirths++;
     S.stats.lastRebirthGain = gain;
     if (!S.stats.fastestRebirth || runTime < S.stats.fastestRebirth) S.stats.fastestRebirth = runTime;
-    S.runEarned = 0; S.runStart = Date.now();
+    S.runEarned = Big.from(0); S.runStart = Date.now();
   } else if (layer === 'transcend') {
     S.shards += gain; S.shardsTotal += gain; S.shardRun += gain;
     S.transcends++;
@@ -2340,6 +2516,7 @@ function fullAutoSpend() {
     }
     if (!best || !buyCrownPerk(best.id)) break;
   }
+  mtBuyAll();                                   /* Mega Tree */
   guard = 0;
   while (guard++ < 300) {                       /* research lab */
     let best = null, bc = Infinity;
@@ -2382,6 +2559,159 @@ function fullAutoStep() {
     T.autoSum = null;
     T.autoSumAt = now;
   }
+}
+
+
+/* =====================================================================
+   MEGA TREE (permanent, bought with Mega Points), EVOLUTION, CUSTOM NAME
+   ===================================================================== */
+const UPGRADES_ENABLED = false;      /* the old upgrade list was replaced by Evolution + the Mega Tree */
+const MT_ADD = { crit: 1, combo: 1, offline: 1, evoXp: 1, evoPow: 1 };
+const MT_LABEL = { prod: 'production', click: 'click power', goldFreq: 'golden Finn rate', goldVal: 'golden Finn rewards', pet: 'pet power', rp: 'research speed',
+  rtGain: 'Rebirth Tokens', shardGain: 'Shards', crownGain: 'Crowns', mpGain: 'Mega Points' };
+const MT_BRANCHES = [
+  { id: 'prod', name: 'Production', icon: '\u2699\ufe0f', color: '#ffb21e', desc: 'More Finn Kumar every second.',
+    lanes: [{ name: 'Gears', ic: '\u2699\ufe0f', fx: 'prod', v: 1.12 }, { name: 'Engines', ic: '\ud83c\udfed', fx: 'prod', v: 1.15 }, { name: 'Reactors', ic: '\u2622\ufe0f', fx: 'prod', v: 1.2 }] },
+  { id: 'click', name: 'Clicking', icon: '\ud83d\udc46', color: '#ff5c9d', desc: 'Stronger taps, more crits and bigger combos.',
+    lanes: [{ name: 'Power', ic: '\ud83d\udc46', fx: 'click', v: 1.15 }, { name: 'Crit', ic: '\ud83c\udfaf', fx: 'crit', v: 0.004 }, { name: 'Combo', ic: '\ud83d\udd25', fx: 'combo', v: 0.02 }] },
+  { id: 'luck', name: 'Fortune', icon: '\ud83c\udf40', color: '#25d9a2', desc: 'Golden Finns show up more and pay out more.',
+    lanes: [{ name: 'Clover', ic: '\ud83c\udf40', fx: 'goldFreq', v: 1.06 }, { name: 'Jackpot', ic: '\ud83d\udc8e', fx: 'goldVal', v: 1.1 }, { name: 'Fate', ic: '\ud83c\udfb0', fx: 'goldVal', v: 1.06 }] },
+  { id: 'pets', name: 'Pets', icon: '\ud83d\udc3e', color: '#b05cff', desc: 'Your pets hit much harder.',
+    lanes: [{ name: 'Bond', ic: '\ud83d\udc3e', fx: 'pet', v: 1.1 }, { name: 'Nest', ic: '\ud83e\udd5a', fx: 'pet', v: 1.08 }, { name: 'Wonder', ic: '\ud83e\udd84', fx: 'pet', v: 1.12 }] },
+  { id: 'eco', name: 'Economy', icon: '\ud83d\udcb0', color: '#4cc9ff', desc: 'Cheaper generators, faster research, better offline gains.',
+    lanes: [{ name: 'Discount', ic: '\ud83c\udff7\ufe0f', fx: 'cost', v: 0.985 }, { name: 'Lab', ic: '\ud83d\udd2c', fx: 'rp', v: 1.08 }, { name: 'Time', ic: '\u23f3', fx: 'offline', v: 0.03 }] },
+  { id: 'prestige', name: 'Prestige', icon: '\ud83d\udc51', color: '#ff9a3c', desc: 'Bigger Rebirth, Transcend and Ascend rewards.',
+    lanes: [{ name: 'Tokens', ic: '\ud83d\udd04', fx: 'rtGain', v: 1.08 }, { name: 'Shards', ic: '\ud83d\udca0', fx: 'shardGain', v: 1.06 }, { name: 'Crowns', ic: '\ud83d\udc51', fx: 'crownGain', v: 1.05 }] },
+  { id: 'mega', name: 'Mega', icon: '\u2728', color: '#8d7bff', desc: 'More Mega Points and raw power.',
+    lanes: [{ name: 'Points', ic: '\u2728', fx: 'mpGain', v: 1.06 }, { name: 'Surge', ic: '\u26a1', fx: 'prod', v: 1.1 }, { name: 'Strike', ic: '\ud83d\udca5', fx: 'click', v: 1.1 }] },
+  { id: 'evo', name: 'Evolution', icon: '\ud83e\uddec', color: '#3ccf7a', desc: 'Evolve faster and make every tier count more.',
+    lanes: [{ name: 'Growth', ic: '\ud83c\udf31', fx: 'evoXp', v: 0.25 }, { name: 'Mutation', ic: '\ud83e\uddec', fx: 'evoPow', v: 0.015 }, { name: 'Vigor', ic: '\ud83d\udcaa', fx: 'prod', v: 1.08 }] }
+];
+const MT_NODES = [];
+const MT_BY_ID = {};
+(function buildMegaTree() {
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+  MT_BRANCHES.forEach(b => b.lanes.forEach((ln, li) => {
+    for (let i = 0; i < 10; i++) {
+      const id = b.id + li + '_' + i;
+      const n = { id: id, branch: b.id, lane: li, i: i, name: ln.name + ' ' + roman[i], icon: ln.ic, fx: ln.fx, v: ln.v,
+        cost: Math.ceil(2 * Math.pow(1.32, i) * (1 + li * 0.45)),
+        req: i > 0 ? b.id + li + '_' + (i - 1) : (li > 0 ? b.id + (li - 1) + '_2' : null) };
+      MT_NODES.push(n); MT_BY_ID[id] = n;
+    }
+  }));
+})();
+
+function mtFx() {
+  const o = { prod: 1, click: 1, crit: 0, combo: 0, goldFreq: 1, goldVal: 1, pet: 1, rp: 1, cost: 1, offline: 0, rtGain: 1, shardGain: 1, crownGain: 1, mpGain: 1, evoXp: 0, evoPow: 0 };
+  if (!S || !S.mtree) return o;
+  for (const id in S.mtree) {
+    const n = MT_BY_ID[id];
+    if (!n) continue;
+    if (MT_ADD[n.fx]) o[n.fx] += n.v; else o[n.fx] *= n.v;
+  }
+  o.cost = Math.max(0.5, o.cost);
+  return o;
+}
+function applyMegaTree(e) {
+  const f = mtFx();
+  e.prod *= f.prod; e.click *= f.click; e.crit += f.crit; e.combo += f.combo;
+  e.goldFreq *= f.goldFreq; e.goldVal *= f.goldVal; e.pet *= f.pet; e.rp *= f.rp;
+  e.cost = Math.max(0.5, e.cost * f.cost); e.offline += f.offline;
+  return e;
+}
+function mtFxText(n) {
+  switch (n.fx) {
+    case 'crit': return '+' + (n.v * 100).toFixed(1) + '% crit chance';
+    case 'combo': return '+' + Math.round(n.v * 100) + '% combo bonus';
+    case 'offline': return '+' + Math.round(n.v * 100) + '% offline gains';
+    case 'evoXp': return '+' + n.v + ' evolution XP per click';
+    case 'evoPow': return '+' + n.v + ' power per evolution tier';
+    case 'cost': return '-' + ((1 - n.v) * 100).toFixed(1) + '% generator cost';
+    default: return '+' + Math.round((n.v - 1) * 100) + '% ' + (MT_LABEL[n.fx] || n.fx);
+  }
+}
+function mtState(n) {
+  if (S.mtree[n.id]) return 'owned';
+  if (n.req && !S.mtree[n.req]) return 'locked';
+  return S.mp >= n.cost ? 'afford' : 'avail';
+}
+function buyMt(id) {
+  const n = MT_BY_ID[id];
+  if (!n || S.mtree[id] || (n.req && !S.mtree[n.req]) || S.mp < n.cost) return false;
+  S.mp -= n.cost; S.mtree[id] = 1; S.counters.upgrades++;
+  recalc();
+  return true;
+}
+function mtBuyAll() {
+  let c = 0, g = 0;
+  while (g++ < 400) {
+    let best = null;
+    for (let i = 0; i < MT_NODES.length; i++) {
+      const n = MT_NODES[i];
+      if (!S.mtree[n.id] && (!n.req || S.mtree[n.req]) && S.mp >= n.cost && (!best || n.cost < best.cost)) best = n;
+    }
+    if (!best || !buyMt(best.id)) break;
+    c++;
+  }
+  return c;
+}
+function mtOwnedCount() { return Object.keys(S.mtree).length; }
+function mtAffordable() { let c = 0; for (let i = 0; i < MT_NODES.length; i++) if (mtState(MT_NODES[i]) === 'afford') c++; return c; }
+function megaPointsGain() { return Math.max(1, Math.floor((10 + kumarStar(S.kumar)) * mtFx().mpGain)); }
+
+/* ---------- Evolution (tiers + progress bar under your Kumar) ---------- */
+const EVO_MAX = 30;
+const EVO_NAMES = ['Hatchling', 'Sprout', 'Rookie', 'Sparkler', 'Elite', 'Champion', 'Master', 'Hero', 'Legend', 'Mythic', 'Cosmic', 'Celestial', 'Divine', 'Eternal'];
+function evoTier(id) { return S.evo && S.evo[id] ? S.evo[id].t | 0 : 0; }
+function evoXp(id) { return S.evo && S.evo[id] ? S.evo[id].x : 0; }
+function evoNeed(t) { return Math.round(25 * Math.pow(1.28, t)); }
+function evoName(t) { return t <= 0 ? 'Egg' : (EVO_NAMES[t - 1] || ('Ascended ' + (t - EVO_NAMES.length))); }
+function evoBase() { return 1.6 + mtFx().evoPow; }
+function evoMult(id) { return Math.pow(evoBase(), evoTier(id)); }
+function applyKumarEvo(e) { const m = evoMult(S.kumar); e.prod *= m; e.click *= m; return e; }
+function evoClick() {
+  const id = S.kumar;
+  const e = S.evo[id] || (S.evo[id] = { t: 0, x: 0 });
+  if (e.t >= EVO_MAX) return;
+  e.x += 1 + mtFx().evoXp;
+  let up = false;
+  while (e.t < EVO_MAX && e.x >= evoNeed(e.t)) { e.x -= evoNeed(e.t); e.t++; S.counters.upgrades++; up = true; }
+  if (e.t >= EVO_MAX) e.x = 0;
+  if (up) { recalc(); bus.emit('evolve', { id: id, t: e.t }); }
+}
+
+/* ---------- Custom Kumar: apply 150% power ---------- */
+const CUSTOM_POWER = 1.5;
+function applyCustomPower(e) {
+  const f = CUSTOM_POWER;
+  e.prod *= f; e.click *= f; e.goldFreq *= f; e.goldVal *= f; e.pet *= f; e.rp *= f;
+  e.crit *= f; e.combo *= f; e.offline *= f;
+  e.cost = Math.max(0.5, 1 - (1 - e.cost) * f);
+  return e;
+}
+
+/* ---------- Custom Kumar name (anything except Chris and its sound-alikes) ---------- */
+function nameSoundKey(str) {
+  let s = String(str).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const homo = { '\u0441': 'c', '\u043a': 'k', '\u0456': 'i', '\u0455': 's', '\u043e': 'o', '\u0430': 'a', '\u0435': 'e', '\u0440': 'p', '\u0445': 'x', '\u0443': 'y', '\u04bb': 'h', '\u0501': 'd' };
+  s = s.replace(/[^\u0000-\u007f]/g, ch => homo[ch] || ch);
+  const leet = { '0': 'o', '1': 'i', '!': 'i', '|': 'i', '3': 'e', '4': 'a', '@': 'a', '5': 's', '$': 's', '7': 't', '8': 'b' };
+  s = s.replace(/[0-9!|@$]/g, ch => leet[ch] || ch);
+  s = s.replace(/[^a-z]/g, '');
+  s = s.replace(/ph/g, 'f').replace(/ch|kh|ck|cq|qu|q/g, 'k').replace(/x/g, 'ks');
+  s = s.replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/z/g, 's').replace(/y/g, 'i').replace(/h/g, '');
+  s = s.replace(/ea|ie|ee|ei/g, 'i').replace(/[ei]+/g, 'i').replace(/(.)\1+/g, '$1');
+  return s;
+}
+function isChrisLike(name) { return nameSoundKey(name).indexOf('kris') !== -1; }
+function validateKumarName(raw) {
+  const n = String(raw || '').replace(/\s+/g, ' ').trim();
+  if (n.length < 2) return { ok: false, name: '', msg: 'Names need at least 2 characters.' };
+  if (n.length > 16) return { ok: false, name: '', msg: 'Names can be up to 16 characters.' };
+  if (!/^[\p{L}\p{N} '._-]+$/u.test(n)) return { ok: false, name: '', msg: 'Use letters, numbers, spaces and . _ - only.' };
+  if (isChrisLike(n)) return { ok: false, name: '', msg: 'That name is not allowed. Pick another one.' };
+  return { ok: true, name: n, msg: '' };
 }
 
 function buyRtUpgrade(id) {
@@ -2480,7 +2810,7 @@ function finishCatcher(score) {
 }
 
 function slotBetFor(pct) {
-  return Math.floor(S.fk * pct);
+  return Math.min(LIMIT, Math.floor(S.fk * pct));
 }
 
 function slotSpin(bet) {
@@ -2511,9 +2841,9 @@ function applyOffline(seconds) {
   recalc();
   const cap = calc.offlineCapH * 3600;
   const used = Math.min(seconds, cap);
-  const gain = calc.cps * used * calc.offlineEff;
+  const gain = calc.cpsBig.mul(used * calc.offlineEff);
   addFk(gain);
-  S.stats.offlineEarned += gain;
+  S.stats.offlineEarned = Math.min(LIMIT, S.stats.offlineEarned + gain.num());
   /* research keeps ticking while you are away, at offline efficiency */
   const effSec = used * calc.offlineEff + S.rpProgress;
   const cycles = Math.floor(effSec / calc.rpInterval);
@@ -2699,7 +3029,7 @@ function rivalValue(r, board) {
 }
 
 function playerValue(board) {
-  if (board === 'cps') return S.stats.bestCps;
+  if (board === 'cps') return +S.stats.bestCps;
   if (board === 'clicks') return S.counters.clicks;
   return S.lifeEarned;
 }
@@ -2784,7 +3114,10 @@ function readSave() {
 
 function stateFromSaved(obj) {
   const st = mergeState(defaultState(), obj);
+  st.fk = Big.from(st.fk); st.runEarned = Big.from(st.runEarned); st.lifeEarned = Big.from(st.lifeEarned);
+  if (isPlainObject(st.stats)) { st.stats.bestCps = Big.from(st.stats.bestCps); st.stats.biggestClick = Big.from(st.stats.biggestClick); }
   if (!(obj.v >= 2)) st.settings.autosave = 1;   /* saves from version 1 used a slower autosave */
+  if (!obj || obj.autoSec === undefined) st.settings.autosave = 1;   /* autosave every second */
   st.v = SAVE_VERSION;
   if (!isPlainObject(st.codes)) st.codes = {};
   if (!Array.isArray(st.pets)) st.pets = [];
@@ -2792,7 +3125,7 @@ function stateFromSaved(obj) {
   if (!Array.isArray(st.buffs)) st.buffs = [];
   if (!Array.isArray(st.quests)) st.quests = [];
   /* guard against corrupt numbers */
-  ['fk', 'runEarned', 'lifeEarned', 'rt', 'rtTotal', 'rtRun', 'shards', 'shardsTotal', 'shardRun', 'crowns', 'crownsTotal', 'crownRun', 'megaCount'].forEach(k => {
+  ['rt', 'rtTotal', 'rtRun', 'shards', 'shardsTotal', 'shardRun', 'crowns', 'crownsTotal', 'crownRun', 'megaCount'].forEach(k => {
     if (typeof st[k] !== 'number' || !isFinite(st[k]) || st[k] < 0) st[k] = 0;
   });
   GENS.forEach(g => { if (typeof st.gens[g.id] !== 'number' || st.gens[g.id] < 0) st.gens[g.id] = 0; });
@@ -2801,6 +3134,20 @@ function stateFromSaved(obj) {
   if (!obj || obj.crownRun === undefined) st.crownRun = st.crownsTotal;   /* saves from before Mega Evolution */
   if (!isPlainObject(st.kumarStars)) st.kumarStars = {};
   Object.keys(st.kumarStars).forEach(id => { st.kumarStars[id] = clamp(st.kumarStars[id] | 0, 0, MEGA_MAX_STARS); if (!st.kumarStars[id]) delete st.kumarStars[id]; });
+  ['mp', 'mpTotal'].forEach(k => { if (typeof st[k] !== 'number' || !isFinite(st[k]) || st[k] < 0) st[k] = 0; });
+  if (!isPlainObject(st.mtree)) st.mtree = {};
+  Object.keys(st.mtree).forEach(id => { if (!MT_BY_ID[id]) delete st.mtree[id]; else st.mtree[id] = 1; });
+  if (!isPlainObject(st.evo)) st.evo = {};
+  Object.keys(st.evo).forEach(id => {
+    const e = st.evo[id];
+    if (!isPlainObject(e)) { delete st.evo[id]; return; }
+    e.t = clamp(e.t | 0, 0, EVO_MAX); e.x = (typeof e.x === 'number' && isFinite(e.x) && e.x > 0) ? e.x : 0;
+  });
+  { const cn = validateKumarName(st.customName); st.customName = cn.ok ? cn.name : ''; }
+  if (isPlainObject(st.kumarsUnlocked) && st.megaCount < 1) {   /* Custom Kumar is not free: first Mega Evolution unlocks it */
+    delete st.kumarsUnlocked.custom;
+    if (st.kumar === 'custom') st.kumar = 'finn';
+  }
   const uids = {};
   st.pets.forEach(p => { uids[p.u] = 1; });
   st.equipped = st.equipped.filter(u => uids[u]);
@@ -2833,7 +3180,7 @@ function parseExport(str) {
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     const obj = JSON.parse(new TextDecoder().decode(bytes));
-    if (!isPlainObject(obj) || typeof obj.fk !== 'number' || !isPlainObject(obj.gens)) return null;
+    if (!isPlainObject(obj) || (typeof obj.fk !== 'number' && typeof obj.fk !== 'string') || !isPlainObject(obj.gens)) return null;
     return obj;
   } catch (err) {
     return null;
@@ -2854,7 +3201,7 @@ function tick() {
     bus.emit('offline', r);
     dt = 0.1;
   } else {
-    addFk(calc.cps * dt);
+    addFk(calc.cpsBig.mul(dt));
     S.playtime += dt;
   }
 
@@ -2938,7 +3285,9 @@ function tick() {
     saveGame();
   }
 
-  if (!isFinite(S.fk)) S.fk = LIMIT;
+  if (!(S.fk instanceof Big)) S.fk = Big.from(S.fk);
+  if (!(S.runEarned instanceof Big)) S.runEarned = Big.from(S.runEarned);
+  if (!(S.lifeEarned instanceof Big)) S.lifeEarned = Big.from(S.lifeEarned);
   bus.emit('tick', dt);
 }
 
@@ -4006,7 +4355,7 @@ function petEffectText(p) {
   }
 }
 
-function afford(n) { return S.fk >= n; }
+function afford(n) { return S.fk.gte(n); }
 
 /* =====================================================================
    LIVE PATCHING
@@ -4070,9 +4419,13 @@ function liveText(key) {
       return 'Ascend now for ' + fmtInt(g) + ' Crown' + (g > 1 ? 's' : '') + '.';
     }
     case 'asmult': return 'Crown boost now x' + fmt(calc.crownMult);
+    case 'evotxt': {
+      const t = evoTier(a);
+      return t >= EVO_MAX ? 'MAX EVOLUTION' : fmtInt(evoXp(a)) + ' / ' + fmtInt(evoNeed(t)) + ' taps to Tier ' + (t + 1);
+    }
     case 'megatxt': {
       if (S.crownRun < MEGA_CROWNS) return 'Earn ' + fmt(MEGA_CROWNS) + ' Crowns this cycle. Now: ' + fmt(S.crownRun) + '.';
-      return 'Ready! Mega Evolve for +1 star on your Kumar and every pet.';
+      return 'Ready! +' + fmtInt(megaPointsGain()) + ' Mega Points' + (kumarStar(S.kumar) < MEGA_MAX_STARS ? ' and +1 star for your Kumar and every pet.' : ' (this Kumar is already at ' + MEGA_MAX_STARS + ' stars).');
     }
     case 'asbal': return fmtInt(S.crowns) + ' crowns';
     case 'q': {
@@ -4117,7 +4470,7 @@ function liveText(key) {
     }
     case 'slotbet': {
       const pct = +a;
-      return fmt(Math.floor(S.fk * pct));
+      return fmt(Math.min(LIMIT, Math.floor(S.fk * pct)));
     }
     default: return '';
   }
@@ -4148,6 +4501,7 @@ function liveBar(key) {
     case 'rb': return clamp(S.runEarned / REBIRTH_MIN, 0, 1);
     case 'tr': return clamp(S.rtRun / TRANSCEND_MIN_RT, 0, 1);
     case 'as': return clamp(S.shardRun / ASCEND_MIN_SHARDS, 0, 1);
+    case 'evo': { const t = evoTier(a); return t >= EVO_MAX ? 1 : clamp(evoXp(a) / evoNeed(t), 0, 1); }
     case 'mega': return clamp(Math.log10(Math.max(1, S.crownRun)) / Math.log10(MEGA_CROWNS), 0, 1);
     default: return 0;
   }
@@ -4158,7 +4512,7 @@ function liveAff(key) {
   const k = p[0];
   const a = p[1];
   switch (k) {
-    case 'gen': { const i = +a; return genMaxAfford(i, S.fk) >= 1 && S.fk >= genBulkCost(i, buyAmountFor(i)); }
+    case 'gen': { const i = +a; return genMaxAfford(i, S.fk) >= 1 && S.fk.gte(genBulkCost(i, buyAmountFor(i))); }
     case 'up': return S.fk >= upgradeCost(UP_BY_ID[a]);
     case 'egg': {
       const egg = EGG_BY_ID[a];
@@ -4352,93 +4706,96 @@ function showPetModal(uid) {
    TAB: PRESTIGE
    ===================================================================== */
 function prestigeSig() {
-  return [S.lifeEarned >= 1e7 || S.rebirths > 0 ? 1 : 0, S.rtTotal >= 25 || S.transcends > 0 ? 1 : 0, S.shardsTotal >= 20 || S.ascensions > 0 ? 1 : 0, S.megaCount, kumarStar(S.kumar), S.kumar].join('|');
+  return [S.lifeEarned >= 1e7 || S.rebirths > 0 ? 1 : 0, S.rtTotal >= 25 || S.transcends > 0 ? 1 : 0, S.shardsTotal >= 20 || S.ascensions > 0 ? 1 : 0, S.megaCount, kumarStar(S.kumar), S.kumar].join('|') + '|' + prestigeSigExtra();
+}
+
+const PLAYERS = [
+  { id: 'rebirth', name: 'Rebirth', icon: '\ud83d\udd04', cls: 'btn-pink', act: 'rebirth', aff: 'rebirth:x', bar: 'rb:x', txt: 'rbtxt:x', bal: 'rbbal:x', up: 'Rebirth Shop',
+    count: () => S.rebirths + ' rebirths', open: () => true, desc: 'Reset for Rebirth Tokens. Each token adds +4% production.' },
+  { id: 'transcend', name: 'Transcend', icon: '\ud83d\udca0', cls: 'btn-sky', act: 'transcend', aff: 'transcend:x', bar: 'tr:x', txt: 'trtxt:x', bal: 'trbal:x', up: 'Shard Tree',
+    count: () => S.transcends + ' times', open: () => S.rtTotal >= 25 || S.transcends > 0, lock: 'Collect 25 Rebirth Tokens in total to unlock.', desc: 'Reset tokens too for Shards. Each Shard adds +20% production.' },
+  { id: 'ascend', name: 'Ascend', icon: '\ud83d\udc51', cls: 'btn-sun', act: 'ascend', aff: 'ascend:x', bar: 'as:x', txt: 'astxt:x', bal: 'asbal:x', up: 'Crown Perks',
+    count: () => S.ascensions + ' times', open: () => S.shardsTotal >= 20 || S.ascensions > 0, lock: 'Collect 20 Shards in total to unlock.', desc: 'Reset shards too for Crowns. Each Crown adds +10% production.' },
+  { id: 'mega', name: 'Mega Evolution', icon: '\u2728', cls: 'btn-pink', act: 'megaevolve', aff: 'mega:x', bar: 'mega:x', txt: 'megatxt:x', up: 'Mega Tree',
+    count: () => S.megaCount + ' evolutions', open: () => S.shardsTotal >= 20 || S.ascensions > 0 || S.megaCount > 0, lock: 'Unlock the Ascend layer first.', desc: 'Reach ' + '1000B' + ' Crowns: restart, gain a star and Mega Points.' }
+];
+
+function prestigeSigExtra() { return (ui.pLayer || '') + '|' + (ui.mtBranch || '') + '|' + mtOwnedCount() + '|' + Math.floor(S.mp); }
+
+function layerCard(L) {
+  if (!L.open()) {
+    return '<div class="pl-card locked"><div class="pl-head"><span class="pl-ic">\ud83d\udd12</span><span class="pl-name">' + L.name + '</span></div><p class="pl-desc">' + L.lock + '</p></div>';
+  }
+  return '<div class="pl-card ' + L.id + '"><div class="pl-head"><span class="pl-ic">' + L.icon + '</span><span class="pl-name">' + L.name + '</span><span class="grow"></span><span class="pill">' + L.count() + '</span></div>'
+    + '<p class="pl-desc">' + L.desc + '</p>'
+    + '<div class="progress"><div class="progress-fill" data-bar="' + L.bar + '"></div></div><div class="progress-text" data-live="' + L.txt + '"></div>'
+    + '<div class="pl-btns"><button class="btn ' + L.cls + '" type="button" data-btn="1" data-act="' + L.act + '" data-aff="' + L.aff + '">' + (L.id === 'mega' ? 'Mega Evolve' : L.name) + '</button>'
+    + '<button class="btn btn-mint" type="button" data-act="playr" data-id="' + L.id + '">' + L.up + ' \u25b8</button></div></div>';
 }
 
 function renderPrestige() {
-  let h = '';
-  const showTr = S.rtTotal >= 25 || S.transcends > 0;
-  const showAs = S.shardsTotal >= 20 || S.ascensions > 0;
+  if (ui.pLayer && PLAYERS.some(x => x.id === ui.pLayer && x.open())) return renderPrestigeLayer(ui.pLayer);
+  ui.pLayer = null;
+  return '<div class="pl-grid">' + PLAYERS.map(layerCard).join('') + '</div>'
+    + '<p class="pl-hint">Tip: press an upgrade button on a layer to open its upgrades. Everything stays on this one screen.</p>';
+}
 
-  /* Rebirth */
-  h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Rebirth</h3><span class="grow"></span><span class="pill pink">' + S.rebirths + ' rebirths</span><span class="pill sun" data-live="rbbal:x"></span></div>'
-    + '<p class="pcard-desc">Reset your generators, upgrades and Finn Kumar for Rebirth Tokens. Every token permanently adds +4% production, and you can spend them in the shop below.</p>'
-    + '<div class="progress"><div class="progress-fill" data-bar="rb:x"></div></div>'
-    + '<div class="progress-text" data-live="rbtxt:x"></div><div class="progress-text" data-live="rbmult:x"></div>'
-    + '<button class="btn btn-pink btn-block" type="button" data-btn="1" data-act="rebirth" data-aff="rebirth:x">Rebirth</button></div>';
-
-  h += '<div class="panel"><h3 class="panel-title">Rebirth Shop</h3><p class="panel-sub">These upgrades stay through rebirths.</p><div class="shop-grid">';
-  RT_UPGRADES.forEach(d => {
-    const l = lv(d.id);
-    const maxed = l >= d.max;
-    h += '<button class="shop-item' + (maxed ? ' maxed' : '') + '" type="button" data-act="buyrt" data-id="' + d.id + '" data-aff="rt:' + d.id + '">'
-      + '<div class="shop-top"><span class="shop-name">' + d.icon + ' ' + esc(d.name) + '</span><span class="shop-lvl">' + l + ' / ' + d.max + '</span></div>'
-      + '<div class="shop-desc">' + esc(d.desc(l)) + '</div>'
-      + '<div class="shop-cost">' + (maxed ? 'MAXED' : 'Cost ' + fmtInt(rtUpgradeCost(d, l)) + ' tokens') + '</div></button>';
-  });
-  h += '</div></div>';
-
-  /* Transcend */
-  if (!showTr) {
-    h += '<div class="panel pcard locked"><div class="pcard-head"><h3 class="pcard-title">Transcend</h3></div><p class="pcard-desc">Locked. Collect 25 Rebirth Tokens in total to reveal the next prestige layer.</p></div>';
-  } else {
-    h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Transcend</h3><span class="grow"></span><span class="pill sky">' + S.transcends + ' times</span><span class="pill sun" data-live="trbal:x"></span></div>'
-      + '<p class="pcard-desc">Reset everything including your Rebirth Tokens for Shards. Each Shard gives +20% production and unlocks the Shard Tree.</p>'
-      + '<div class="progress"><div class="progress-fill" data-bar="tr:x"></div></div>'
-      + '<div class="progress-text" data-live="trtxt:x"></div><div class="progress-text" data-live="trmult:x"></div>'
-      + '<button class="btn btn-sky btn-block" type="button" data-btn="1" data-act="transcend" data-aff="transcend:x">Transcend</button></div>';
-    h += '<div class="panel"><h3 class="panel-title">Shard Tree</h3><div class="tree">';
+function renderPrestigeLayer(id) {
+  const L = PLAYERS.find(x => x.id === id);
+  let h = '<div class="pl-bar"><button class="btn btn-sm" type="button" data-act="playr" data-id="">\u25c2 Back</button>'
+    + '<span class="pl-bar-title">' + L.icon + ' ' + L.up + '</span><span class="grow"></span>'
+    + (L.bal ? '<span class="pill sun" data-live="' + L.bal + '"></span>' : '<span class="pill pink">' + fmtInt(S.mp) + ' Mega Points</span>')
+    + '<button class="btn btn-sm ' + L.cls + '" type="button" data-btn="1" data-act="' + L.act + '" data-aff="' + L.aff + '">' + (id === 'mega' ? 'Mega Evolve' : L.name) + '</button></div>'
+    + '<div class="layer-body">';
+  if (id === 'rebirth') {
+    h += '<p class="panel-sub">These upgrades stay through rebirths.</p><div class="shop-grid">';
+    RT_UPGRADES.forEach(d => {
+      const l = lv(d.id), maxed = l >= d.max;
+      h += '<button class="shop-item' + (maxed ? ' maxed' : '') + '" type="button" data-act="buyrt" data-id="' + d.id + '" data-aff="rt:' + d.id + '">'
+        + '<div class="shop-top"><span class="shop-name">' + d.icon + ' ' + esc(d.name) + '</span><span class="shop-lvl">' + l + ' / ' + d.max + '</span></div>'
+        + '<div class="shop-desc">' + esc(d.desc(l)) + '</div>'
+        + '<div class="shop-cost">' + (maxed ? 'MAXED' : 'Cost ' + fmtInt(rtUpgradeCost(d, l)) + ' tokens') + '</div></button>';
+    });
+    h += '</div>';
+  } else if (id === 'transcend') {
+    h += '<div class="tree">';
     SHARD_BRANCHES.forEach(br => {
       h += '<div><h4 class="branch-title">' + esc(br.name) + '</h4><div class="branch-row">';
       SHARD_NODES.filter(n => n.branch === br.id).forEach(n => {
-        const owned = hasNode(n.id);
-        const avail = nodeAvailable(n);
+        const owned = hasNode(n.id), avail = nodeAvailable(n);
         h += '<button class="node' + (owned ? ' owned' : avail ? ' avail' : ' locked') + '" type="button" data-act="buynode" data-id="' + n.id + '" data-aff="node:' + n.id + '">'
           + '<div class="node-name">' + esc(n.name) + '</div><div class="node-desc">' + esc(n.desc) + '</div>'
           + '<div class="node-cost">' + (owned ? 'OWNED' : avail ? 'Cost ' + n.cost + ' shards' : 'Locked') + '</div></button>';
       });
       h += '</div></div>';
     });
-    h += '</div></div>';
-  }
-
-  /* Ascend */
-  if (!showAs) {
-    h += '<div class="panel pcard locked"><div class="pcard-head"><h3 class="pcard-title">Ascend</h3></div><p class="pcard-desc">Locked. Collect 20 Shards in total to reveal the final prestige layer.</p></div>';
-  } else {
-    h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Ascend</h3><span class="grow"></span><span class="pill pink">' + S.ascensions + ' times</span><span class="pill sun" data-live="asbal:x"></span></div>'
-      + '<p class="pcard-desc">Reset Shards and everything below for Crowns. Each Crown permanently adds +10% production and buys powerful Crown perks.</p>'
-      + '<div class="progress"><div class="progress-fill" data-bar="as:x"></div></div>'
-      + '<div class="progress-text" data-live="astxt:x"></div><div class="progress-text" data-live="asmult:x"></div>'
-      + '<button class="btn btn-sun btn-block" type="button" data-btn="1" data-act="ascend" data-aff="ascend:x">Ascend</button></div>';
-    h += '<div class="panel"><h3 class="panel-title">Crown Perks</h3><div class="shop-grid">';
+    h += '</div>';
+  } else if (id === 'ascend') {
+    h += '<div class="shop-grid">';
     CROWN_PERKS.forEach(d => {
-      const l = crownLv(d.id);
-      const maxed = l >= d.max;
+      const l = crownLv(d.id), maxed = l >= d.max;
       h += '<button class="shop-item' + (maxed ? ' maxed' : '') + '" type="button" data-act="buycrown" data-id="' + d.id + '" data-aff="crown:' + d.id + '">'
         + '<div class="shop-top"><span class="shop-name">' + d.icon + ' ' + esc(d.name) + '</span><span class="shop-lvl">' + l + ' / ' + d.max + '</span></div>'
         + '<div class="shop-desc">' + esc(d.desc(l)) + '</div>'
         + '<div class="shop-cost">' + (maxed ? 'MAXED' : 'Cost ' + fmtInt(crownPerkCost(d, l)) + ' crowns') + '</div></button>';
     });
-    h += '</div></div>';
+    h += '</div>';
+  } else {
     const ks = kumarStar(S.kumar);
-    h += '<div class="panel pcard"><div class="pcard-head"><h3 class="pcard-title">Mega Evolution</h3><span class="grow"></span>'
-      + '<span class="pill pink">' + S.megaCount + ' evolution' + (S.megaCount === 1 ? '' : 's') + '</span><span class="pill sun">' + (ks ? starText(ks) : 'No stars') + '</span></div>'
-      + '<p class="pcard-desc">Reach ' + fmt(MEGA_CROWNS) + ' Crowns in one cycle to Mega Evolve. You restart from the beginning (tokens, shards, Crowns, perks, generators), but your leading Kumar and every pet gain 1 star. '
-      + 'Each Kumar star gives x' + KUMAR_STAR_PROD + ' production and clicks and +' + (KUMAR_STAR_FX * 100) + '% to its other boosts. Each pet star makes that pet x' + PET_STAR_MULT + ' stronger. No star limit.'
-      + (fullAutoOn() ? ' Fully Auto is on, so nothing is lost when you evolve.' : '') + '</p>'
-      + '<div class="progress"><div class="progress-fill" data-bar="mega:x"></div></div>'
-      + '<div class="progress-text" data-live="megatxt:x"></div>'
-      + '<button class="btn btn-pink btn-block" type="button" data-btn="1" data-act="megaevolve" data-aff="mega:x">Mega Evolve</button></div>';
+    h += '<div class="mega-info"><span class="pill pink">' + S.megaCount + ' evolution' + (S.megaCount === 1 ? '' : 's') + '</span><span class="pill sun">' + (ks ? starText(ks) : 'No stars') + '</span>'
+      + '<span class="mega-note">Stars stop at ' + MEGA_MAX_STARS + '. Each Kumar star: x' + KUMAR_STAR_PROD + ' production and clicks. Each pet star: x' + PET_STAR_MULT + ' pet power.'
+      + (fullAutoOn() ? ' Fully Auto: nothing is lost.' : '') + '</span></div>'
+      + '<div class="progress"><div class="progress-fill" data-bar="mega:x"></div></div><div class="progress-text" data-live="megatxt:x"></div>'
+      + renderMegaTree();
   }
-  return h;
+  return h + '</div>';
 }
 
 function megaConfirm() {
   if (!megaReady()) { toast('Not ready', 'You need ' + fmt(MEGA_CROWNS) + ' Crowns this cycle.', 'bad'); return; }
   const body = fullAutoOn()
-    ? 'Your leading Kumar and every pet gain 1 star. Fully Auto is on, so you keep everything else.'
-    : 'Your leading Kumar and every pet gain 1 star. Everything else restarts: Rebirth Tokens, Shards, Crowns, perks, generators and upgrades.';
+    ? 'You earn Mega Points and your Kumar and pets gain a star (max ' + MEGA_MAX_STARS + '). Fully Auto is on, so you keep everything else.'
+    : 'You earn Mega Points and your Kumar and pets gain a star (max ' + MEGA_MAX_STARS + '). Everything else restarts: Rebirth Tokens, Shards, Crowns, perks, generators and upgrades.';
   confirmModal('Mega Evolve?', body, 'Mega Evolve', 'btn-pink', () => { if (doMegaEvolve()) ui.dirty = true; });
 }
 
@@ -4646,7 +5003,7 @@ function onArenaClick(ev) {
 /* Finn Slots */
 function doSlot(pct) {
   if (ui.slotBusy) return;
-  const bet = Math.floor(S.fk * pct);
+  const bet = Math.min(LIMIT, Math.floor(S.fk * pct));
   if (bet < 1) { toast('Not enough Finn Kumar', 'Earn a bit more first.', 'bad'); return; }
   const res = slotSpin(bet);
   if (!res) return;
@@ -4797,7 +5154,7 @@ function renderSettings() {
    TAB: KUMARS (playable eggs)
    ===================================================================== */
 function kumarsSig() {
-  return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? 1 : 0) + (S.kumar === k.id ? 'a' : '') + (missionOf(k.id) ? 'm' : '') + kumarStar(k.id)).join('|') + '|' + S.skin;
+  return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? 1 : 0) + (S.kumar === k.id ? 'a' : '') + (missionOf(k.id) ? 'm' : '') + kumarStar(k.id)).join('|') + '|' + S.skin + '|' + S.customName;
 }
 
 function renderKumars() {
@@ -4821,6 +5178,7 @@ function renderKumars() {
       + '<div class="kumar-desc"><b>Leader boost:</b> ' + esc(k.boost) + '</div>'
       + '<div class="kumar-desc"><b>On missions:</b> ' + esc(k.missionNote) + '</div>';
     if (owned) {
+      if (k.id === 'custom') h += renameRow();
       if (active) h += '<div class="pill sun" style="align-self:center">Leading now</div>';
       else if (away) h += '<button class="btn btn-sm" type="button" disabled>On a mission</button>';
       else h += '<button class="btn btn-sm btn-sun" type="button" data-act="selkumar" data-id="' + k.id + '">Make leader</button>';
@@ -4979,14 +5337,94 @@ function renderBoardTab() {
 /* =====================================================================
    TAB REGISTRY + RENDERING
    ===================================================================== */
+
+/* =====================================================================
+   TAB: EVOLVE
+   ===================================================================== */
+function evoSig() { return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? evoTier(k.id) : '-')).join(',') + '|' + S.kumar + '|' + evoBase(); }
+
+function renderEvolve() {
+  let h = '<div class="panel"><div class="row"><span class="panel-title" style="margin:0">Evolution</span><span class="grow"></span><span class="pill sun">Max tier ' + EVO_MAX + '</span></div>'
+    + '<p class="panel-sub" style="margin:8px 0 0">Tap your leading Kumar to fill the bar under it. Each full bar evolves that Kumar to the next tier: <b>x' + evoBase().toFixed(2) + '</b> production and click power, kept forever. Make another Kumar the leader to evolve it too.</p></div>'
+    + '<div class="evo-grid">';
+  KUMARS.forEach(k => {
+    if (!S.kumarsUnlocked[k.id]) return;
+    const t = evoTier(k.id);
+    const lead = S.kumar === k.id;
+    h += '<div class="evo-card' + (lead ? ' lead' : '') + '"><div class="evo-card-top"><span class="evo-ic">' + (k.icon || '\ud83e\udd5a') + '</span>'
+      + '<div class="grow"><div class="evo-card-name">' + esc(k.name) + (kumarStar(k.id) ? ' <span class="star-tag">' + starText(kumarStar(k.id)) + '</span>' : '') + '</div>'
+      + '<div class="evo-card-tier">Tier ' + t + ' \u00b7 ' + esc(evoName(t)) + '</div></div>'
+      + (lead ? '<span class="pill sun">Leading</span>' : '') + '</div>'
+      + '<div class="progress"><div class="progress-fill evo-fill" data-bar="evo:' + k.id + '"></div></div>'
+      + '<div class="progress-text" data-live="evotxt:' + k.id + '"></div>'
+      + '<div class="evo-card-boost">Boost: x' + fmt(evoMult(k.id)) + ' production and clicks</div></div>';
+  });
+  return h + '</div>';
+}
+
+/* =====================================================================
+   TAB: MEGA TREE
+   ===================================================================== */
+function mtSig() { return (ui.mtBranch || 'prod') + '|' + mtOwnedCount() + '|' + Math.floor(S.mp) + '|' + S.megaCount; }
+
+function renderMegaTree() {
+  const bid = ui.mtBranch || (ui.mtBranch = 'prod');
+  const br = MT_BRANCHES.find(b => b.id === bid) || MT_BRANCHES[0];
+  const total = MT_NODES.length;
+  let h = '<div class="panel mt-head"><div class="row"><span class="panel-title" style="margin:0">\u2728 Mega Tree</span><span class="grow"></span>'
+    + '<span class="pill pink">' + fmtInt(S.mp) + ' Mega Points</span><span class="pill sun">' + mtOwnedCount() + ' / ' + total + '</span>'
+    + '<button class="btn btn-sm btn-mint" type="button" data-act="mtbuyall">Buy all affordable</button></div>'
+    + '<p class="panel-sub" style="margin:8px 0 0">Every Mega Evolution gives Mega Points. Spend them on permanent upgrades that survive every reset. Each path unlocks one node at a time.</p>'
+    + '<div class="progress" style="margin-top:10px"><div class="progress-fill" style="width:' + (mtOwnedCount() / total * 100).toFixed(1) + '%;background:linear-gradient(90deg,#ff5c9d,#ffd43b)"></div></div></div>';
+  h += '<div class="mt-branches">';
+  MT_BRANCHES.forEach(b => {
+    const owned = MT_NODES.filter(n => n.branch === b.id && S.mtree[n.id]).length;
+    h += '<button class="mt-branch' + (b.id === br.id ? ' active' : '') + '" type="button" data-act="mtbranch" data-id="' + b.id + '" style="--bc:' + b.color + '">'
+      + '<span class="mt-b-ic">' + b.icon + '</span><span class="mt-b-name">' + esc(b.name) + '</span><span class="mt-b-count">' + owned + '/30</span></button>';
+  });
+  h += '</div>';
+  h += '<div class="panel mt-panel" style="--bc:' + br.color + '"><div class="mt-title"><span class="mt-title-ic">' + br.icon + '</span><div><h3 class="panel-title" style="margin:0">' + esc(br.name) + '</h3><p class="panel-sub" style="margin:2px 0 0">' + esc(br.desc) + '</p></div></div>';
+  br.lanes.forEach((ln, li) => {
+    h += '<div class="mt-lane"><div class="mt-lane-name">' + esc(ln.name) + '</div><div class="mt-track">';
+    for (let i = 0; i < 10; i++) {
+      const n = MT_BY_ID[br.id + li + '_' + i];
+      const st = mtState(n);
+      h += '<button class="mt-node ' + st + '" type="button" data-act="mtbuy" data-id="' + n.id + '" title="' + esc(n.name + ': ' + mtFxText(n)) + '">'
+        + '<span class="mt-ic">' + (st === 'locked' ? '\ud83d\udd12' : n.icon) + '</span>'
+        + '<span class="mt-nm">' + esc(n.name) + '</span><span class="mt-fx">' + esc(mtFxText(n)) + '</span>'
+        + '<span class="mt-cost">' + (st === 'owned' ? '\u2713 Owned' : n.cost + ' MP') + '</span></button>';
+    }
+    h += '</div></div>';
+  });
+  h += '</div>';
+  const f = mtFx();
+  const rows = [];
+  ['prod', 'click', 'goldFreq', 'goldVal', 'pet', 'rp', 'rtGain', 'shardGain', 'crownGain', 'mpGain'].forEach(k => { if (f[k] > 1.0001) rows.push([MT_LABEL[k], 'x' + fmt(f[k])]); });
+  if (f.cost < 0.9999) rows.push(['Generator cost', 'x' + f.cost.toFixed(3)]);
+  if (f.crit) rows.push(['Crit chance', '+' + (f.crit * 100).toFixed(1) + '%']);
+  if (f.combo) rows.push(['Combo bonus', '+' + Math.round(f.combo * 100) + '%']);
+  if (f.offline) rows.push(['Offline gains', '+' + Math.round(f.offline * 100) + '%']);
+  if (f.evoXp) rows.push(['Evolution XP per click', '+' + f.evoXp]);
+  if (f.evoPow) rows.push(['Evolution power per tier', '+' + f.evoPow.toFixed(3)]);
+  h += '<div class="panel"><h3 class="panel-title">Your Mega bonuses</h3>' + (rows.length
+    ? '<div class="mt-totals">' + rows.map(r => '<div class="mt-total"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>').join('') + '</div>'
+    : '<p class="panel-sub" style="margin:0">Nothing yet. Reach ' + fmt(MEGA_CROWNS) + ' Crowns and Mega Evolve to earn your first Mega Points.</p>') + '</div>';
+  return h;
+}
+
+function renameRow() {
+  return '<div class="rename-row"><input class="input" type="text" id="customNameInput" maxlength="16" placeholder="Name your Kumar" value="' + esc(S.customName) + '" autocomplete="off" spellcheck="false">'
+    + '<button class="btn btn-sm btn-sun" type="button" data-act="renamecustom">Rename</button></div>';
+}
+
 const TABS = [
   { id: 'shop', label: 'Shop', render: renderShop, sig: shopSig, badge: () => 0 },
-  { id: 'upgrades', label: 'Upgrades', render: renderUpgrades, sig: upgradesSig, badge: () => availableUpgrades().filter(u => S.fk >= upgradeCost(u)).length },
+  { id: 'evolve', label: 'Evolve', render: renderEvolve, sig: evoSig, badge: () => 0 },
   { id: 'kumars', label: 'Kumars', render: renderKumars, sig: kumarsSig, badge: () => 0 },
   { id: 'research', label: 'Research', render: renderResearch, sig: researchSig, badge: () => RP_UPGRADES.filter(d => rl(d.id) < d.max && S.rp >= rpCost(d, rl(d.id))).length },
   { id: 'missions', label: 'Missions', render: renderMissions, sig: missionsSig, badge: () => S.missions.filter(missionDone).length },
   { id: 'pets', label: 'Pets', render: renderPets, sig: petsSig, badge: () => 0 },
-  { id: 'prestige', label: 'Prestige', render: renderPrestige, sig: prestigeSig, badge: () => (rebirthGain() >= 1 ? 1 : 0) + (transcendGain() >= 1 ? 1 : 0) + (ascendGain() >= 1 ? 1 : 0) + (megaReady() ? 1 : 0) },
+  { id: 'prestige', label: 'Prestige', render: renderPrestige, sig: prestigeSig, badge: () => (rebirthGain() >= 1 ? 1 : 0) + (transcendGain() >= 1 ? 1 : 0) + (ascendGain() >= 1 ? 1 : 0) + (megaReady() ? 1 : 0) + (mtAffordable() > 0 ? 1 : 0) },
   { id: 'quests', label: 'Quests', render: renderQuests, sig: questsSig, badge: () => S.quests.filter(q => q.done).length },
   { id: 'arcade', label: 'Arcade', render: renderArcade, sig: () => '', badge: () => (wheelReady() ? 1 : 0) + (catcherReady() ? 1 : 0) },
   { id: 'board', label: 'Board', render: renderBoardTab, sig: boardSig, badge: () => 0 },
@@ -5048,6 +5486,11 @@ function updateStage() {
   $('comboText').textContent = 'x' + comboFactor().toFixed(2);
   $('comboFill').style.width = T.combo.toFixed(0) + '%';
   $('finnTitle').textContent = currentTitle();
+  { const et = evoTier(S.kumar), need = evoNeed(et);
+    $('evoTier').textContent = 'Tier ' + et + ' \u00b7 ' + evoName(et);
+    $('evoBoost').textContent = 'x' + fmt(evoMult(S.kumar)) + ' power';
+    $('evoFill').style.width = (et >= EVO_MAX ? 100 : clamp(evoXp(S.kumar) / need, 0, 1) * 100).toFixed(1) + '%';
+    $('evoTxt').textContent = et >= EVO_MAX ? 'MAX EVOLUTION' : 'Tap to evolve: ' + fmtInt(evoXp(S.kumar)) + ' / ' + fmtInt(need); }
   $('qsMult').textContent = 'x' + fmt(calc.globalMult);
   $('qsAch').textContent = achievementCount() + '/' + ACHIEVEMENTS.length;
   $('qsRt').textContent = fmtInt(S.rt);
@@ -5185,6 +5628,19 @@ const ACTIONS = {
   transcend: () => prestigeConfirm('transcend'),
   ascend: () => prestigeConfirm('ascend'),
   megaevolve: () => megaConfirm(),
+  playr: d => { ui.pLayer = d.id || null; ui.dirty = true; },
+  mtbranch: d => { ui.mtBranch = d.id; ui.dirty = true; },
+  mtbuy: d => { if (buyMt(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
+  mtbuyall: () => { const n = mtBuyAll(); if (n > 0) { sfx.buy(); toast('Mega Tree', n + ' upgrade' + (n > 1 ? 's' : '') + ' bought', 'good'); } else sfx.fail(); ui.dirty = true; },
+  renamecustom: () => {
+    const inp = $('customNameInput');
+    const raw = inp ? inp.value : '';
+    if (!raw.trim()) { S.customName = ''; ui.dirty = true; ui.skinSig = ''; toast('Name reset', 'Back to Custom Kumar.', ''); return; }
+    const r = validateKumarName(raw);
+    if (!r.ok) { sfx.fail(); toast('Name not allowed', r.msg, 'bad'); return; }
+    S.customName = r.name; ui.dirty = true; ui.skinSig = '';
+    toast('Renamed', 'Your custom Kumar is now ' + r.name + '.', 'good');
+  },
   buyrt: d => { if (buyRtUpgrade(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
   buynode: d => { if (buyShardNode(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
   buycrown: d => { if (buyCrownPerk(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
@@ -5337,11 +5793,17 @@ function wireBus() {
   bus.on('toast', t => toast(t.title, t.text, t.tone));
   bus.on('questReady', q => { toast('Quest complete', questText(q), 'good'); sfx.win(); });
   bus.on('questClaimed', q => toast('Reward claimed', questRewardText(q.reward), 'good'));
+  bus.on('evolve', v => {
+    sfx.win();
+    const k = KUMAR_BY_ID[v.id] || KUMARS[0];
+    toast('Evolved!', k.name + ' reached Tier ' + v.t + ': ' + evoName(v.t) + '.', 'gold');
+    ui.dirty = ui.dirty || ui.tab === 'evolve';
+  });
   bus.on('mega', m => {
     sfx.prestige();
     fx.burstCenter(60);
     const k = KUMAR_BY_ID[m.kumar] || KUMARS[0];
-    toast('Mega Evolution!', k.name + ' is now ' + starText(m.stars) + ' and every pet gained a star.', 'gold');
+    toast('Mega Evolution!', k.name + (m.stars ? ' is now ' + starText(m.stars) + '. ' : '. ') + '+' + fmtInt(m.mp) + ' Mega Points!', 'gold');
     ui.dirty = true;
     ui.skinSig = '';
   });
@@ -5671,9 +6133,9 @@ const NEW_KUMARS = [
   { id: 'zander', icon: '🪽', name: 'Zander Kumar', egg: 'Zander Kumar Egg', title: 'The Skybound', shell: '#70d6ff', spot: '#ffffff', pattern: 'waves', aura: 'rgba(112,214,255,0.38)',
     boost: 'Production x4, Golden Finns x2 as often and offline earnings +30%.', mission: { fk: 1.8, rp: 1.2, egg: 1.2 }, missionNote: 'Finn Kumar rewards x80%.',
     hint: 'Earn 100 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e8, prog: () => [Math.min(S.lifeEarned, 1e8), 1e8] },
-  { id: 'custom', icon: '🌟', name: 'Custom Kumar', egg: 'Custom Kumar Egg', title: 'Your Best', shell: '#8d7bff', spot: '#fff3a6', pattern: 'rays', aura: 'rgba(141,123,255,0.4)',
-    boost: 'Free! Automatically copies the strongest boost from your best unlocked Kumar.', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Your custom Kumar mirrors your best Kumar.',
-    hint: 'Free — unlocked automatically.', unlock: () => true, prog: () => [1, 1] }
+  { id: 'custom', icon: '🌟', get name() { return (S && S.customName) || 'Custom Kumar'; }, get egg() { return ((S && S.customName) || 'Custom Kumar') + ' Egg'; }, title: 'Your Best', shell: '#8d7bff', spot: '#fff3a6', pattern: 'rays', aura: 'rgba(141,123,255,0.4)',
+    boost: 'Copies your best unlocked Kumar and makes it 150% as strong (x1.5). You can rename it!', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Your custom Kumar mirrors your best Kumar.',
+    hint: 'Do your first Mega Evolution.', unlock: () => S.megaCount >= 1, prog: () => [Math.min(1, S.megaCount), 1] }
 ];
 
 const KASI = {
@@ -5693,7 +6155,6 @@ step('kumars', () => {
     delete S.kumarsUnlocked.adamzander;
     if (S.kumar === 'adamzander') S.kumar = 'adam';
   }
-  if (!S.kumarsUnlocked.custom) unlockKumar('custom');
 
   wrap('eggPattern', orig => (kind, col) => (hasOwn(PATTERNS, kind) ? PATTERNS[kind](col) : orig(kind, col)));
   wrap('eggAccessory', orig => (kid, shell) => (hasOwn(ACC, kid) ? ACC[kid](shell) : orig(kid, shell)));
@@ -5724,6 +6185,7 @@ step('kumars', () => {
         const score = p => (p.prod || 1) * (p.click || 1) * (p.goldFreq || 1) * (p.goldVal || 1) * (p.rp || 1) * (p.pet || 1);
         const bestId = Object.keys(S.kumarsUnlocked || {}).filter(id => id !== 'custom' && profiles[id]).sort((a,b) => score(profiles[b]) - score(profiles[a]))[0];
         if (bestId) Object.assign(e, profiles[bestId]);
+        applyCustomPower(e);
         break;
       }
       case 'kasi':
@@ -5735,6 +6197,8 @@ step('kumars', () => {
     const t = titleFx();
     e.prod *= t.prod; e.click *= t.click; e.goldFreq *= t.gold; e.pet *= t.pet; e.rp *= t.rp;
     applyKumarStars(e);
+    applyKumarEvo(e);
+    applyMegaTree(e);
     return e;
   });
 
@@ -5958,7 +6422,7 @@ function online() { return !!DB; }
 
 function myRecord() {
   const rec = { name: cleanName(S.playerName) || 'You', title: currentTitle(), kumar: S.kumar, t: Date.now() };
-  const cap = x => Math.min(1e300, safeNum(x));
+  const cap = x => Math.min(LIMIT, safeNum(+x));
   rec.life = cap(S.lifeEarned);
   rec.cps = cap(S.stats.bestCps);
   rec.clicks = cap(S.counters.clicks);
@@ -6226,6 +6690,7 @@ step('profile', () => {
 const AUTH_KEY = 'fk-auth-session-v1';
 const USER_EMAIL_DOMAIN = '@kumar.game';
 let authUser = null;
+let IMP = null;   /* admin "login as": {uid, username, backup} */
 let authBusy = false;
 let authMessage = '';
 let authMode = 'login';
@@ -6295,6 +6760,22 @@ async function dbRequest(path, options) {
   if (!res.ok) throw new Error('Database request failed (' + res.status + '). Check Firebase Realtime Database rules.');
   return res.status === 204 ? null : res.json().catch(() => null);
 }
+function cloudUid() { return IMP ? IMP.uid : authUser.uid; }
+/* Banned accounts (written by the admin panel to /bans/<uid>) are logged out. Admins are exempt. */
+async function enforceBan() {
+  if (!authUser || IMP) return false;
+  try {
+    if (typeof fullAutoUnlocked === 'function' && S && fullAutoUnlocked()) return false;
+    const b = await dbRequest('/bans/' + encodeURIComponent(authUser.uid) + '.json', { method: 'GET' });
+    if (b && b.banned !== false) {
+      authUser = null;
+      try { localStorage.removeItem(AUTH_KEY); } catch (e) {}
+      showAuthGate('This account has been banned.' + (b.reason ? ' Reason: ' + b.reason : ''));
+      return true;
+    }
+  } catch (e) { /* rules not set up or offline: do not lock anyone out */ }
+  return false;
+}
 function profileFrameIndex() { return Math.max(0, Math.min(FRAME_STYLES.length - 1, Number(S.profileFrame || 0) | 0)); }
 function profileAvatar() { const k = KUMAR_BY_ID[S.kumar] || KUMARS[0]; return k.icon || '🥚'; }
 function profileName() { return authUser ? authUser.username : 'Guest'; }
@@ -6346,7 +6827,7 @@ function showAuthGate(message) {
   renderAuthUI();
 }
 async function loadCloudSave() {
-  const cloud = await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/save.json', { method: 'GET' });
+  const cloud = await dbRequest('/users/' + encodeURIComponent(cloudUid()) + '/save.json', { method: 'GET' });
   if (cloud && typeof cloud === 'object' && cloud.v) {
     S = stateFromSaved(cloud);
     recalc(); updateRank(); updateStage(); ui.dirty = true;
@@ -6364,7 +6845,7 @@ async function cloudSave(force) {
   cloudSaveBusy = true;
   try {
     const snapshot = JSON.parse(JSON.stringify(S));
-    await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/save.json', { method: 'PUT', body: JSON.stringify(snapshot) });
+    await dbRequest('/users/' + encodeURIComponent(cloudUid()) + '/save.json', { method: 'PUT', body: JSON.stringify(snapshot) });
     lastCloudSave = Date.now();
     await submitScore();
   } catch (e) { console.warn('[account] cloud save failed', e); }
@@ -6376,6 +6857,7 @@ async function doAuth(mode, username, password) {
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new Error('Username must be 3–16 letters, numbers or underscores.');
   const data = await authRequest(mode === 'signup' ? 'signUp' : 'signInWithPassword', { email: authEmail(name), password: password, returnSecureToken: true });
   persistAuth(data, name);
+  if (await enforceBan()) return;
   await loadCloudSave();
   authMessage = '';
   ensureAuthUI();
@@ -6391,6 +6873,7 @@ async function restoreSession() {
   authUser = { uid: saved.uid, username: saved.username, refreshToken: saved.refreshToken, idToken: '', expiresAt: 0 };
   try {
     await refreshAuth();
+    if (await enforceBan()) return;
     await loadCloudSave();
     ensureAuthUI();
     renderAuthUI();
@@ -6448,7 +6931,7 @@ TAB_BY_ID.board.sig = () => [ui.board, net.at, net.loaded, authUser ? authUser.u
 
 /* Replace unauthenticated public writes with account-owned records. */
 submitScore = async function () {
-  if (!authUser) return;
+  if (!authUser || IMP) return;
   const rec = myRecord();
   rec.name = authUser.username;
   rec.uid = authUser.uid;
@@ -6505,10 +6988,238 @@ step('account-ui', () => {
     if (ev.target.id === 'fkFrameSelect' || ev.target.id === 'fkFrameSelectProfile') { S.profileFrame = Number(ev.target.value) || 0; saveGame(); renderAuthUI(); ui.dirty = true; }
   });
   const originalSaveGame = saveGame;
-  saveGame = function () { const ok = originalSaveGame(); if (authUser) cloudSave(false); return ok; };
+  saveGame = function () { if (IMP) { if (authUser) cloudSave(false); return true; } const ok = originalSaveGame(); if (authUser) cloudSave(false); return ok; };
   window.addEventListener('beforeunload', () => { if (authUser) cloudSave(true); });
   setInterval(() => { if (authUser) { cloudSave(false); refreshBoard(); } }, 15000);
   restoreSession();
+});
+
+
+/* ---------- admin panel ---------- */
+step('admin', () => {
+  const adm = { open: false, tab: 'players', rows: [], bans: {}, q: '', busy: false, msg: '', det: null };
+  window.__adm = adm;
+  const $a = id => document.getElementById(id);
+  const e2 = v => (typeof esc === 'function' ? esc(v) : String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])));
+  const allowed = () => !!authUser && (IMP ? true : (typeof fullAutoUnlocked === 'function' && fullAutoUnlocked()));
+  const req = (path, method, body) => dbRequest(path, body === undefined ? { method: method || 'GET' } : { method: method, body: JSON.stringify(body) });
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'now' : m < 60 ? m + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago'; };
+
+  const css = document.createElement('style');
+  css.textContent = `
+  #admRoot .adm-back{position:fixed;inset:0;z-index:99990;background:rgba(8,6,30,.82);display:flex;align-items:center;justify-content:center;padding:14px}
+  #admRoot .adm-box{width:min(1020px,100%);max-height:94vh;display:flex;flex-direction:column;background:#17143f;color:#f3f1ff;border:3px solid #ffd43b;border-radius:18px;box-shadow:0 0 40px rgba(255,212,59,.25);font-family:var(--font-body,system-ui)}
+  #admRoot .adm-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid #2d2970;font-size:18px}
+  #admRoot .adm-head b{font-family:var(--font-display,inherit)}
+  #admRoot .adm-tabs{display:flex;gap:6px;flex:1;margin-left:10px}
+  #admRoot button{cursor:pointer;font:inherit;font-weight:800;border:2px solid #0b0930;border-radius:10px;padding:6px 12px;background:#ffd43b;color:#1b1747}
+  #admRoot button.alt{background:#4cc9ff} #admRoot button.ok{background:#25d9a2} #admRoot button.bad{background:#ff5c7a;color:#fff} #admRoot button.ghost{background:#2d2970;color:#fff;border-color:#4b44a8}
+  #admRoot button.on{outline:3px solid #fff}
+  #admRoot .adm-msg{padding:6px 16px;font-size:13px;font-weight:700;color:#9fe9ff;min-height:20px}
+  #admRoot .adm-body{padding:6px 16px 16px;overflow:auto}
+  #admRoot input,#admRoot textarea{background:#0e0c2b;color:#fff;border:2px solid #4b44a8;border-radius:10px;padding:7px 10px;font:inherit;width:100%;box-sizing:border-box}
+  #admRoot textarea{font-family:ui-monospace,Consolas,monospace;font-size:12px;min-height:260px}
+  #admRoot table{width:100%;border-collapse:collapse;font-size:14px} #admRoot th{text-align:left;color:#ffd43b;padding:6px;border-bottom:2px solid #2d2970}
+  #admRoot td{padding:6px;border-bottom:1px solid #26226a;vertical-align:middle} #admRoot tr.banned td{background:rgba(255,92,122,.14)}
+  #admRoot .tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:800;background:#ff5c7a;color:#fff}
+  #admRoot .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:10px 0}
+  #admRoot .grid label{font-size:12px;font-weight:800;color:#b9b4ff;display:block;margin-bottom:3px}
+  #admRoot .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  #admRoot pre{background:#0e0c2b;border:2px solid #4b44a8;border-radius:10px;padding:10px;overflow:auto;font-size:12px;max-height:300px}
+  #admBanner{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:99980;background:#ff5c7a;color:#fff;border:3px solid #1b1747;border-radius:14px;padding:8px 14px;font-weight:800;display:flex;gap:10px;align-items:center;box-shadow:4px 4px 0 #1b1747}
+  #admBanner button{background:#fff;color:#1b1747;border:2px solid #1b1747;border-radius:9px;padding:3px 10px;font-weight:800;cursor:pointer}`;
+  document.head.appendChild(css);
+  const root = document.createElement('div'); root.id = 'admRoot'; document.body.appendChild(root);
+
+  function say(m) { adm.msg = m; const el = $a('admMsg'); if (el) el.textContent = m; }
+
+  function rowsHtml() {
+    const q = adm.q.trim().toLowerCase();
+    const list = adm.rows.filter(r => !q || r.name.toLowerCase().includes(q) || r.uid.toLowerCase().includes(q));
+    if (!list.length) return '<tr><td colspan="5" style="opacity:.7">No players found.</td></tr>';
+    return list.map(r => '<tr class="' + (r.banned ? 'banned' : '') + '"><td><b>' + e2(r.name) + '</b> ' + (r.banned ? '<span class="tag">BANNED</span>' : '') + '<div style="font-size:11px;opacity:.6">' + e2(r.uid) + '</div></td>'
+      + '<td>' + e2(fmt(r.life)) + '</td><td>' + e2(fmt(r.cps)) + '/s</td><td>' + (r.at ? ago(r.at) : '-') + '</td>'
+      + '<td style="white-space:nowrap"><button class="alt" data-adm="open" data-uid="' + e2(r.uid) + '">Open</button> '
+      + '<button class="ok" data-adm="login" data-uid="' + e2(r.uid) + '" data-name="' + e2(r.name) + '">Login as</button> '
+      + (r.banned ? '<button class="ghost" data-adm="unban" data-uid="' + e2(r.uid) + '">Unban</button>' : '<button class="bad" data-adm="ban" data-uid="' + e2(r.uid) + '" data-name="' + e2(r.name) + '">Ban</button>') + '</td></tr>').join('');
+  }
+  function playersHtml() {
+    return '<div class="row"><input id="admQ" placeholder="Search name or ID" value="' + e2(adm.q) + '" style="max-width:320px"><button class="alt" data-adm="reload">' + (adm.busy ? 'Loading...' : 'Refresh') + '</button><span style="opacity:.7">' + adm.rows.length + ' players, ' + adm.rows.filter(r => r.banned).length + ' banned</span></div>'
+      + '<table><thead><tr><th>Player</th><th>Lifetime</th><th>Best/s</th><th>Seen</th><th>Actions</th></tr></thead><tbody id="admRows">' + rowsHtml() + '</tbody></table>';
+  }
+  const QUICK = ['fk', 'rt', 'rtTotal', 'shards', 'crowns', 'mp', 'megaCount', 'rebirths', 'transcends', 'ascensions', 'rp', 'crownRun'];
+  function detailHtml() {
+    const d = adm.det, sv = d.save || {};
+    const row = adm.rows.find(r => r.uid === d.uid) || { banned: false };
+    return '<div class="row"><button class="ghost" data-adm="back">&larr; Back</button><b style="font-size:20px">' + e2(d.name) + '</b>' + (row.banned ? '<span class="tag">BANNED</span>' : '') + '<span style="opacity:.6;font-size:12px">' + e2(d.uid) + '</span></div>'
+      + '<div class="row"><button class="ok" data-adm="login" data-uid="' + e2(d.uid) + '" data-name="' + e2(d.name) + '">Login as</button>'
+      + (row.banned ? '<button class="ghost" data-adm="unban" data-uid="' + e2(d.uid) + '">Unban</button>' : '<button class="bad" data-adm="ban" data-uid="' + e2(d.uid) + '" data-name="' + e2(d.name) + '">Ban</button>')
+      + '<button class="bad" data-adm="reset">Reset progress</button><button class="ghost" data-adm="delscore">Remove from leaderboard</button></div>'
+      + '<h4 style="margin:12px 0 0;color:#ffd43b">Quick edit</h4><div class="grid">'
+      + QUICK.map(k => '<div><label>' + k + '</label><input data-q="' + k + '" value="' + e2(sv[k] === undefined ? '' : sv[k]) + '"></div>').join('') + '</div>'
+      + '<h4 style="margin:12px 0 4px;color:#ffd43b">Full save (JSON)</h4><textarea id="admJson" spellcheck="false">' + e2(JSON.stringify(sv, null, 1)) + '</textarea>'
+      + '<div class="row"><button data-adm="save">Save changes</button><span style="opacity:.7;font-size:12px">Online players receive it within about 15 seconds.</span></div>';
+  }
+  function setupHtml() {
+    const uid = authUser ? authUser.uid : 'YOUR_ADMIN_UID';
+    const rules = JSON.stringify({ rules: {
+      scores: { '.read': true, '$uid': { '.write': "auth != null && (auth.uid === $uid || auth.uid === '" + uid + "')" } },
+      users: { '.read': "auth != null && auth.uid === '" + uid + "'", '$uid': { '.read': "auth != null && (auth.uid === $uid || auth.uid === '" + uid + "')", '.write': "auth != null && (auth.uid === $uid || auth.uid === '" + uid + "')" } },
+      bans: { '.read': "auth != null && auth.uid === '" + uid + "'", '$uid': { '.read': "auth != null && (auth.uid === $uid || auth.uid === '" + uid + "')", '.write': "auth != null && auth.uid === '" + uid + "'" } }
+    } }, null, 2);
+    return '<p>The panel only works if your Firebase Realtime Database rules let <b>your account</b> read and write other players. The buttons in this page are not security: <b>these rules are what actually stops other people</b>. Paste this into Firebase Console &rarr; Realtime Database &rarr; Rules:</p>'
+      + '<p>Your admin UID: <code>' + e2(uid) + '</code></p><pre id="admRules">' + e2(rules) + '</pre><div class="row"><button class="ok" data-adm="copyrules">Copy rules</button></div>'
+      + '<p style="opacity:.8;font-size:13px">Bans are checked when a player logs in and every 15 seconds while they play. They are enforced by these rules plus the game, so someone who edits the HTML could skip the game check, but cannot write to other accounts.</p>';
+  }
+  function draw() {
+    if (!adm.open) { root.innerHTML = ''; return; }
+    const body = adm.det ? detailHtml() : adm.tab === 'setup' ? setupHtml() : playersHtml();
+    root.innerHTML = '<div class="adm-back"><div class="adm-box"><div class="adm-head"><b>\ud83d\udee1\ufe0f Admin Panel</b><span class="adm-tabs">'
+      + '<button class="' + (adm.tab === 'players' && !adm.det ? 'on' : '') + '" data-adm="tab" data-tab="players">Players</button>'
+      + '<button class="alt ' + (adm.tab === 'setup' ? 'on' : '') + '" data-adm="tab" data-tab="setup">Setup rules</button></span>'
+      + '<button class="ghost" data-adm="close">Close</button></div><div class="adm-msg" id="admMsg">' + e2(adm.msg) + '</div><div class="adm-body">' + body + '</div></div></div>';
+  }
+
+  async function loadPlayers() {
+    adm.busy = true; draw();
+    try {
+      const out = await Promise.all([req('/scores.json'), req('/bans.json').catch(() => null), req('/users.json?shallow=true').catch(() => null)]);
+      const scores = out[0] || {}, bans = out[1] || {}, shallow = out[2] || {};
+      adm.bans = bans;
+      const ids = Array.from(new Set(Object.keys(scores).concat(Object.keys(shallow))));
+      adm.rows = ids.map(uid => { const r = scores[uid] || {}, b = bans[uid]; return { uid: uid, name: r.name || '(no score yet)', life: +r.life || 0, cps: +r.cps || 0, at: r.at || r.t || 0, banned: !!(b && b.banned !== false), reason: (b && b.reason) || '' }; })
+        .sort((a, b) => b.life - a.life);
+      say('Loaded ' + adm.rows.length + ' players.');
+    } catch (err) { say('Could not load players: ' + (err.message || err) + ' (see the Setup rules tab)'); }
+    adm.busy = false; draw();
+  }
+  async function openPlayer(uid) {
+    say('Loading save...');
+    try {
+      const save = await req('/users/' + encodeURIComponent(uid) + '/save.json');
+      const row = adm.rows.find(r => r.uid === uid);
+      adm.det = { uid: uid, name: row ? row.name : uid, save: save || {} };
+      say(save ? '' : 'This player has no cloud save yet.');
+    } catch (err) { say('Could not open: ' + err.message); }
+    draw();
+  }
+  function parseVal(v) {
+    v = String(v).trim();
+    if (/^-?\d+(\.\d+)?[eE]\+?\d+$/.test(v) && parseInt(v.split(/[eE]/)[1], 10) > 300) return v.replace('+', '');
+    const n = Number(v);
+    return isFinite(n) ? n : v;
+  }
+  async function pushSave(uid, obj, note) {
+    await req('/users/' + encodeURIComponent(uid) + '/save.json', 'PUT', obj);
+    await req('/users/' + encodeURIComponent(uid) + '/adminPatch.json', 'PUT', { at: Date.now(), by: authUser.username, save: obj });
+    say(note);
+  }
+  async function setBan(uid, name, on) {
+    try {
+      if (on) {
+        const reason = window.prompt('Ban reason for ' + name + ' (optional):', '');
+        if (reason === null) return;
+        await req('/bans/' + encodeURIComponent(uid) + '.json', 'PUT', { banned: true, reason: reason, at: Date.now(), by: authUser.username });
+        say(name + ' banned.');
+      } else {
+        await req('/bans/' + encodeURIComponent(uid) + '.json', 'DELETE');
+        say('Unbanned.');
+      }
+      await loadPlayers();
+    } catch (err) { say('Failed: ' + err.message); }
+  }
+  async function loginAs(uid, name) {
+    try {
+      const save = await req('/users/' + encodeURIComponent(uid) + '/save.json');
+      if (!save || !save.v) { say('That player has no save to load.'); return; }
+      if (!IMP) { IMP = { uid: uid, username: name, backup: JSON.parse(JSON.stringify(S)) }; } else { IMP.uid = uid; IMP.username = name; }
+      S = stateFromSaved(save);
+      recalc(); updateRank(); updateStage(); ui.dirty = true;
+      adm.open = false; adm.det = null; draw(); banner();
+      toast('Logged in as ' + name, 'Changes you make are saved to their account.', 'gold');
+    } catch (err) { say('Login as failed: ' + err.message); }
+  }
+  function exitImp() {
+    if (!IMP) return;
+    const b = IMP.backup; IMP = null;
+    S = stateFromSaved(b);
+    recalc(); updateRank(); updateStage(); ui.dirty = true; banner();
+    toast('Back to your account', '', 'good');
+  }
+  function banner() {
+    let el = $a('admBanner');
+    if (!IMP) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement('div'); el.id = 'admBanner'; document.body.appendChild(el); }
+    el.innerHTML = '\ud83d\udc41 Playing as <b>' + e2(IMP.username) + '</b> (saves to their account) <button type="button" id="admExit">Return to my account</button>';
+    $a('admExit').onclick = exitImp;
+  }
+
+  root.addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-adm]'); if (!b) return;
+    const a = b.dataset.adm, uid = b.dataset.uid, name = b.dataset.name;
+    if (a === 'close') { adm.open = false; adm.det = null; draw(); }
+    else if (a === 'tab') { adm.tab = b.dataset.tab; adm.det = null; draw(); if (adm.tab === 'players' && !adm.rows.length) loadPlayers(); }
+    else if (a === 'reload') loadPlayers();
+    else if (a === 'back') { adm.det = null; draw(); }
+    else if (a === 'open') openPlayer(uid);
+    else if (a === 'login') loginAs(uid, name);
+    else if (a === 'ban') setBan(uid, name, true);
+    else if (a === 'unban') setBan(uid, name, false);
+    else if (a === 'copyrules') { try { await navigator.clipboard.writeText($a('admRules').textContent); say('Rules copied.'); } catch (e) { say('Select the text and copy it manually.'); } }
+    else if (a === 'save') {
+      try {
+        const obj = JSON.parse($a('admJson').value);
+        root.querySelectorAll('[data-q]').forEach(inp => {
+          const k = inp.dataset.q, orig = adm.det.save[k] === undefined ? '' : String(adm.det.save[k]);
+          if (inp.value.trim() !== '' && inp.value !== orig) obj[k] = parseVal(inp.value);
+        });
+        if (!obj.v) { say('The save needs a "v" field.'); return; }
+        await pushSave(adm.det.uid, obj, 'Saved. Online players get it within about 15 seconds.');
+        adm.det.save = obj; draw();
+      } catch (err) { say('Not saved: ' + (err.message || err)); }
+    }
+    else if (a === 'reset') {
+      if (!window.confirm('Reset ALL progress for ' + adm.det.name + '? This cannot be undone.')) return;
+      try {
+        const old = adm.det.save || {};
+        const fresh = JSON.parse(JSON.stringify(defaultState()));
+        if (old.pid) fresh.pid = old.pid;
+        if (old.playerName) fresh.playerName = old.playerName;
+        await pushSave(adm.det.uid, fresh, 'Progress reset.');
+        adm.det.save = fresh; draw();
+      } catch (err) { say('Failed: ' + err.message); }
+    }
+    else if (a === 'delscore') {
+      try { await req('/scores/' + encodeURIComponent(adm.det.uid) + '.json', 'DELETE'); say('Removed from the leaderboard (they reappear when they play).'); } catch (err) { say('Failed: ' + err.message); }
+    }
+  });
+  root.addEventListener('input', ev => {
+    if (ev.target.id === 'admQ') { adm.q = ev.target.value; const t = $a('admRows'); if (t) t.innerHTML = rowsHtml(); }
+  });
+
+  function openPanel() { if (!allowed()) return; adm.open = true; adm.det = null; draw(); if (!adm.rows.length) loadPlayers(); }
+  window.openAdminPanel = openPanel;
+  const btn = $a('btnAdmin');
+  if (btn) btn.addEventListener('click', openPanel);
+  setInterval(() => { if (btn) btn.style.display = allowed() ? '' : 'none'; }, 1000);
+
+  /* player side: apply admin edits and check bans while playing */
+  async function pollPlayer() {
+    if (!authUser || IMP) return;
+    try {
+      if (await enforceBan()) return;
+      const patch = await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/adminPatch.json', { method: 'GET' });
+      if (patch && patch.save && patch.save.v) {
+        await dbRequest('/users/' + encodeURIComponent(authUser.uid) + '/adminPatch.json', { method: 'DELETE' });
+        S = stateFromSaved(patch.save);
+        recalc(); updateRank(); updateStage(); ui.dirty = true;
+        saveGame();
+        toast('Account updated', 'An admin changed your data.', 'gold');
+      }
+    } catch (e) { /* ignore */ }
+  }
+  setInterval(pollPlayer, 15000);
+  window.__fk = { get authUser() { return authUser; }, get IMP() { return IMP; }, cloudSave: f => cloudSave(f) };
 });
 
 /* ---------- finish ---------- */

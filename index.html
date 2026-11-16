@@ -161,6 +161,43 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .layer-body .mt-ic { font-size: 22px; } .layer-body .mt-fx { min-height: 22px; font-size: 10px; }
 @media (max-width: 700px) { .pl-grid { grid-template-columns: 1fr; } }
 
+.mt-badge { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 9px; letter-spacing: 1px; background: var(--ink); color: #ffd43b; padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.mt-badge.major { background: #ff5c9d; color: #fff; }
+.mt-node.major { border-color: #ff5c9d; }
+.mt-node.key { width: 128px !important; border-width: 4px; background: linear-gradient(160deg, #fff4c4, #ffe38a); }
+.mt-node.key .mt-ic { font-size: 32px; } .mt-node.key .mt-nm { font-size: 15px; } .mt-node.key .mt-fx { font-size: 11px; font-weight: 800; color: var(--ink); }
+.mt-node.key.locked { background: #e7e4f7; }
+.mt-node.key.owned { background: linear-gradient(160deg, var(--bc), #fff3a6); box-shadow: 3px 3px 0 var(--ink), 0 0 22px var(--bc); }
+.mt-node.key:not(.owned):not(.locked) { animation: mtKey 1.8s ease-in-out infinite; }
+@keyframes mtKey { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 rgba(255,150,40,0); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 20px rgba(255,150,40,.9); } }
+.layer-body .mt-node.key { width: 112px !important; }
+
+/* ---------- Kumar quests + World 2 ---------- */
+.kq-box { margin-top: 6px; padding: 8px; background: var(--paper-3); border: 2px solid var(--ink); border-radius: 12px; }
+.kq-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.kq-text { font-size: 12px; font-weight: 800; margin: 4px 0; color: var(--ink-soft); }
+.bt-hud { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; background: var(--paper); border: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 10px; }
+.bt-me { flex: 1 1 220px; min-width: 200px; display: flex; flex-direction: column; gap: 3px; }
+.bt-who { font-family: var(--font-display); font-size: 16px; }
+.bt-hpfill { background: linear-gradient(90deg, #ff5c7a, #25d9a2); }
+.bt-num { font-family: var(--font-mono); font-size: 12px; font-weight: 800; text-align: center; color: var(--ink-soft); }
+.bt-pill { padding: 6px 12px; background: var(--paper-3); border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; font-size: 13px; }
+.bt-pill.gold { background: #fff0a8; }
+.bt-arena { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px; background: linear-gradient(180deg, #e8e4ff, #fff); border: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.bt-arena.boss { background: linear-gradient(180deg, #ffd6e0, #fff); border-color: #ff5c7a; }
+.bt-mon { width: 140px; height: 140px; border-radius: 50%; border: var(--line); background: #fff; box-shadow: 5px 5px 0 var(--ink); cursor: pointer; transition: transform .08s; }
+.bt-mon:active { transform: scale(.92) rotate(-4deg); }
+.bt-mon-ic { font-size: 76px; line-height: 1; }
+.bt-arena.boss .bt-mon { width: 170px; height: 170px; } .bt-arena.boss .bt-mon-ic { font-size: 96px; }
+.bt-mon-name { font-family: var(--font-display); font-size: 22px; }
+.bt-monbar { width: min(420px, 100%); height: 22px; } .bt-monfill { background: linear-gradient(90deg, #ff5c7a, #ffd43b); }
+.bt-log { font-size: 13px; font-weight: 800; color: var(--ink-soft); min-height: 18px; }
+.bt-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+.bt-dots { display: grid; grid-template-columns: repeat(25, 1fr); gap: 4px; max-width: 560px; margin: 0 auto; }
+.bt-dot { height: 12px; border-radius: 4px; background: #d8d3f5; border: 2px solid var(--ink); } .bt-dot.done { background: #25d9a2; } .bt-dot.boss { border-color: #ff5c7a; }
+.bt-dot.cur { background: #ffd43b; transform: scale(1.25); }
+.bt-lock { text-align: center; } .bt-lock-ic { font-size: 48px; }
+
 /* ---------- App shell ---------- */
 .app {
   max-width: 1320px;
@@ -1216,6 +1253,8 @@ const T = {                   /* transient, never saved */
   autoClickAcc: 0,
   autoBuyAcc: 0,
   fullAutoAcc: 0,
+  kqAcc: 0,
+  bt: null,
   autoQuiet: false,
   autoSum: null,
   autoSumAt: 0,
@@ -1457,6 +1496,7 @@ function defaultState() {
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
     crownRun: 0, megaCount: 0, kumarStars: {},
     mp: 0, mpTotal: 0, mtree: {}, evo: {}, customName: '', autoSec: 1,
+    kq: {}, battle: { best: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
     achievements: {},
@@ -1722,6 +1762,7 @@ function recalc() {
   c.petGold = petGold;
   c.petDisc = petDisc;
   c.petAmp = petAmp * buffPet;
+  applyMegaCalc(c);
 }
 
 /* ---------- Earning ---------- */
@@ -2020,16 +2061,20 @@ function findPet(uid) {
 }
 
 function eggCostFor(egg) {
-  if (egg.currency === 'rt') return Math.max(1, Math.ceil(egg.cost * calc.eggCostMult));
+  if (egg.currency !== 'fk') return Math.max(1, Math.ceil(egg.cost * calc.eggCostMult));
   return egg.cost * calc.eggCostMult;
 }
 
 function eggVisible(egg) {
   if (egg.currency === 'rt') return S.rebirths >= 1;
+  if (egg.currency === 'shard') return S.transcends >= 1 || S.shardsTotal > 0;
+  if (egg.currency === 'crown') return S.ascensions >= 1;
+  if (egg.currency === 'mp') return S.megaCount >= 1;
   return S.lifeEarned >= egg.cost * 0.1 || S.runEarned >= egg.cost * 0.02;
 }
 
-function eggBalance(egg) { return egg.currency === 'rt' ? S.rt : S.fk; }
+const EGG_CUR = { rt: ['rt', ' Tokens'], shard: ['shards', ' Shards'], crown: ['crowns', ' Crowns'], mp: ['mp', ' Mega Points'] };
+function eggBalance(egg) { return EGG_CUR[egg.currency] ? S[EGG_CUR[egg.currency][0]] : S.fk; }
 
 function eggOdds(egg) {
   const pool = egg.pool.map(id => PET_BY_ID[id]);
@@ -2064,7 +2109,7 @@ function hatchEgg(eggId, count, free) {
     if (!free) {
       const cost = eggCostFor(egg);
       if (eggBalance(egg) < cost) break;
-      if (egg.currency === 'rt') S.rt -= cost; else spendFk(cost);
+      if (EGG_CUR[egg.currency]) S[EGG_CUR[egg.currency][0]] -= cost; else spendFk(cost);
     }
     const def = rollPet(egg);
     const pet = addPet(def);
@@ -2323,7 +2368,7 @@ function checkAchievements() {
 function rebirthGain() {
   const base = S.runEarned.div(REBIRTH_MIN).sqrt().num();
   if (!(base >= 1)) return 0;
-  return Math.min(LIMIT, Math.floor(base * calc.rtGainMult * mtFx().rtGain));
+  return Math.min(LIMIT, Math.floor(base * calc.rtGainMult * mtFx().rtGain * (1 + mtFx().rtPerMega * S.megaCount)));
 }
 
 function nextRebirthAt(gain) {
@@ -2566,69 +2611,118 @@ function fullAutoStep() {
    MEGA TREE (permanent, bought with Mega Points), EVOLUTION, CUSTOM NAME
    ===================================================================== */
 const UPGRADES_ENABLED = false;      /* the old upgrade list was replaced by Evolution + the Mega Tree */
-const MT_ADD = { crit: 1, combo: 1, offline: 1, evoXp: 1, evoPow: 1 };
+const MT_ADD = { crit: 1, combo: 1, offline: 1, evoXp: 1, evoPow: 1, prodPerNode: 1, prodPerTier: 1, prodPerMega: 1, prodPerStar: 1, clickPerStar: 1, clickPerTier: 1,
+  petPerStar: 1, clickFromCps: 1, critPow: 1, autoClick: 1, offlineCap: 1, rtPerMega: 1 };
 const MT_LABEL = { prod: 'production', click: 'click power', goldFreq: 'golden Finn rate', goldVal: 'golden Finn rewards', pet: 'pet power', rp: 'research speed',
   rtGain: 'Rebirth Tokens', shardGain: 'Shards', crownGain: 'Crowns', mpGain: 'Mega Points' };
+/* names: 9 normal nodes (the 5th is a bigger "major" node) then the keystone with a special mechanic */
 const MT_BRANCHES = [
-  { id: 'prod', name: 'Production', icon: '\u2699\ufe0f', color: '#ffb21e', desc: 'More Finn Kumar every second.',
-    lanes: [{ name: 'Gears', ic: '\u2699\ufe0f', fx: 'prod', v: 1.12 }, { name: 'Engines', ic: '\ud83c\udfed', fx: 'prod', v: 1.15 }, { name: 'Reactors', ic: '\u2622\ufe0f', fx: 'prod', v: 1.2 }] },
-  { id: 'click', name: 'Clicking', icon: '\ud83d\udc46', color: '#ff5c9d', desc: 'Stronger taps, more crits and bigger combos.',
-    lanes: [{ name: 'Power', ic: '\ud83d\udc46', fx: 'click', v: 1.15 }, { name: 'Crit', ic: '\ud83c\udfaf', fx: 'crit', v: 0.004 }, { name: 'Combo', ic: '\ud83d\udd25', fx: 'combo', v: 0.02 }] },
-  { id: 'luck', name: 'Fortune', icon: '\ud83c\udf40', color: '#25d9a2', desc: 'Golden Finns show up more and pay out more.',
-    lanes: [{ name: 'Clover', ic: '\ud83c\udf40', fx: 'goldFreq', v: 1.06 }, { name: 'Jackpot', ic: '\ud83d\udc8e', fx: 'goldVal', v: 1.1 }, { name: 'Fate', ic: '\ud83c\udfb0', fx: 'goldVal', v: 1.06 }] },
-  { id: 'pets', name: 'Pets', icon: '\ud83d\udc3e', color: '#b05cff', desc: 'Your pets hit much harder.',
-    lanes: [{ name: 'Bond', ic: '\ud83d\udc3e', fx: 'pet', v: 1.1 }, { name: 'Nest', ic: '\ud83e\udd5a', fx: 'pet', v: 1.08 }, { name: 'Wonder', ic: '\ud83e\udd84', fx: 'pet', v: 1.12 }] },
-  { id: 'eco', name: 'Economy', icon: '\ud83d\udcb0', color: '#4cc9ff', desc: 'Cheaper generators, faster research, better offline gains.',
-    lanes: [{ name: 'Discount', ic: '\ud83c\udff7\ufe0f', fx: 'cost', v: 0.985 }, { name: 'Lab', ic: '\ud83d\udd2c', fx: 'rp', v: 1.08 }, { name: 'Time', ic: '\u23f3', fx: 'offline', v: 0.03 }] },
-  { id: 'prestige', name: 'Prestige', icon: '\ud83d\udc51', color: '#ff9a3c', desc: 'Bigger Rebirth, Transcend and Ascend rewards.',
-    lanes: [{ name: 'Tokens', ic: '\ud83d\udd04', fx: 'rtGain', v: 1.08 }, { name: 'Shards', ic: '\ud83d\udca0', fx: 'shardGain', v: 1.06 }, { name: 'Crowns', ic: '\ud83d\udc51', fx: 'crownGain', v: 1.05 }] },
-  { id: 'mega', name: 'Mega', icon: '\u2728', color: '#8d7bff', desc: 'More Mega Points and raw power.',
-    lanes: [{ name: 'Points', ic: '\u2728', fx: 'mpGain', v: 1.06 }, { name: 'Surge', ic: '\u26a1', fx: 'prod', v: 1.1 }, { name: 'Strike', ic: '\ud83d\udca5', fx: 'click', v: 1.1 }] },
-  { id: 'evo', name: 'Evolution', icon: '\ud83e\uddec', color: '#3ccf7a', desc: 'Evolve faster and make every tier count more.',
-    lanes: [{ name: 'Growth', ic: '\ud83c\udf31', fx: 'evoXp', v: 0.25 }, { name: 'Mutation', ic: '\ud83e\uddec', fx: 'evoPow', v: 0.015 }, { name: 'Vigor', ic: '\ud83d\udcaa', fx: 'prod', v: 1.08 }] }
+  { id: 'prod', name: 'Production', icon: '\u2699\ufe0f', color: '#ffb21e', desc: 'More Finn Kumar every second.', lanes: [
+    { name: 'Gears', ic: '\u2699\ufe0f', fx: 'prod', v: 1.12, names: 'Cog,Axle,Piston,Flywheel,Gearbox,Turbine,Dynamo,Servo,Camshaft,Master Engine', key: { fx: 'prodPerNode', v: 0.01 } },
+    { name: 'Engines', ic: '\ud83c\udfed', fx: 'prod', v: 1.15, names: 'Spark,Boiler,Steam Core,V8,Jet,Supercharger,Nitro,Afterburner,Rocket,Overdrive', key: { fx: 'prodPerTier', v: 0.1 } },
+    { name: 'Reactors', ic: '\u2622\ufe0f', fx: 'prod', v: 1.2, names: 'Coil,Fission,Fusion,Plasma,Quantum,Antimatter,Pulsar,Neutron,Dark Matter,Singularity', key: { fx: 'prodPerMega', v: 0.05 } }] },
+  { id: 'click', name: 'Clicking', icon: '\ud83d\udc46', color: '#ff5c9d', desc: 'Stronger taps, big crits and auto tapping.', lanes: [
+    { name: 'Power', ic: '\ud83d\udc46', fx: 'click', v: 1.15, names: 'Poke,Tap,Smack,Punch,Slam,Haymaker,Thunder Fist,Quake,Meteor,Titan Fist', key: { fx: 'clickFromCps', v: 0.02 } },
+    { name: 'Crit', ic: '\ud83c\udfaf', fx: 'crit', v: 0.004, names: 'Aim,Focus,Sharp Eye,Bullseye,Precision,Snipe,Headshot,Ricochet,Perfect Shot,Deadeye', key: { fx: 'critPow', v: 2 } },
+    { name: 'Combo', ic: '\ud83d\udd25', fx: 'combo', v: 0.02, names: 'Tempo,Groove,Beat,Rhythm,Flow,Frenzy,Crescendo,Encore,Overdrive Beat,Rhythm God', key: { fx: 'autoClick', v: 3 } }] },
+  { id: 'luck', name: 'Fortune', icon: '\ud83c\udf40', color: '#25d9a2', desc: 'Golden Finns appear more, last longer and pay more.', lanes: [
+    { name: 'Clover', ic: '\ud83c\udf40', fx: 'goldFreq', v: 1.06, names: 'Penny,Horseshoe,Four-Leaf,Rabbit Foot,Wishbone,Star Dust,Rainbow,Pot of Gold,Fairy Dust,Golden Age', key: { fx: 'goldTime', v: 1.5 } },
+    { name: 'Jackpot', ic: '\ud83d\udc8e', fx: 'goldVal', v: 1.1, names: 'Coin,Gem,Ruby,Emerald,Sapphire,Diamond,Crown Jewel,Treasure,Hoard,Midas', key: { fx: 'goldVal', v: 2 } },
+    { name: 'Fate', ic: '\ud83c\udfb0', fx: 'goldFreq', v: 1.05, names: 'Dice,Cards,Roulette,Slots,Wheel,Omen,Tarot,Destiny,Cosmic Dice,Lucky Seven', key: { fx: 'goldFreq', v: 1.7 } }] },
+  { id: 'pets', name: 'Pets', icon: '\ud83d\udc3e', color: '#b05cff', desc: 'Your pets hit much harder and eggs get cheaper.', lanes: [
+    { name: 'Bond', ic: '\ud83d\udc3e', fx: 'pet', v: 1.1, names: 'Treat,Pat,Cuddle,Whistle,Collar,Trust,Loyalty,Soulmate,Spirit Link,Soulbound', key: { fx: 'petPerStar', v: 0.05 } },
+    { name: 'Nest', ic: '\ud83e\udd5a', fx: 'pet', v: 1.08, names: 'Straw,Nest,Basket,Den,Burrow,Kennel,Hatchling Hall,Nursery,Grand Nest,Hatchery', key: { fx: 'eggCost', v: 0.7 } },
+    { name: 'Wonder', ic: '\ud83e\udd84', fx: 'pet', v: 1.12, names: 'Sparkle,Charm,Aura,Blessing,Halo,Miracle,Legend,Myth,Eternal Spirit,Mythic Bond', key: { fx: 'pet', v: 2 } }] },
+  { id: 'eco', name: 'Economy', icon: '\ud83d\udcb0', color: '#4cc9ff', desc: 'Cheaper generators, faster research and longer offline gains.', lanes: [
+    { name: 'Discount', ic: '\ud83c\udff7\ufe0f', fx: 'cost', v: 0.985, names: 'Coupon,Haggle,Bulk Deal,Sale,Wholesale Club,Clearance,Bargain,Merchant Pact,Black Friday,Wholesale', key: { fx: 'cost', v: 0.7 } },
+    { name: 'Lab', ic: '\ud83d\udd2c', fx: 'rp', v: 1.08, names: 'Beaker,Notebook,Microscope,Grant,Prototype,Breakthrough,Supercomputer,Nobel,Think Tank,Eureka', key: { fx: 'rp', v: 2 } },
+    { name: 'Time', ic: '\u23f3', fx: 'offline', v: 0.03, names: 'Nap,Snooze,Hammock,Timer,Hourglass,Clockwork,Time Loop,Chrono,Stasis,Time Lord', key: { fx: 'offlineCap', v: 12 } }] },
+  { id: 'prestige', name: 'Prestige', icon: '\ud83d\udc51', color: '#ff9a3c', desc: 'Bigger Rebirth, Transcend and Ascend rewards.', lanes: [
+    { name: 'Tokens', ic: '\ud83d\udd04', fx: 'rtGain', v: 1.08, names: 'Spark,Echo,Cycle,Renewal,Phoenix,Rebirth Rite,Reincarnation,Samsara,Eternal Return,Rebirth Engine', key: { fx: 'rtPerMega', v: 0.05 } },
+    { name: 'Shards', ic: '\ud83d\udca0', fx: 'shardGain', v: 1.06, names: 'Chip,Splinter,Facet,Prism,Geode,Crystal,Lattice,Monolith,Star Shard,Shard Storm', key: { fx: 'shardGain', v: 2 } },
+    { name: 'Crowns', ic: '\ud83d\udc51', fx: 'crownGain', v: 1.05, names: 'Circlet,Tiara,Laurel,Diadem,Scepter,Throne,Empire,Dynasty,Sun Crown,Royal Decree', key: { fx: 'crownGain', v: 1.5 } }] },
+  { id: 'mega', name: 'Mega', icon: '\u2728', color: '#8d7bff', desc: 'More Mega Points and power that grows with your stars.', lanes: [
+    { name: 'Points', ic: '\u2728', fx: 'mpGain', v: 1.06, names: 'Glimmer,Glow,Radiance,Nova,Halo Burst,Aurora,Zenith,Apotheosis,Ascension,Mega Heart', key: { fx: 'mpGain', v: 1.5 } },
+    { name: 'Surge', ic: '\u26a1', fx: 'prod', v: 1.1, names: 'Jolt,Charge,Arc,Bolt,Storm,Tempest,Cyclone,Stormcaller,Tesla,Overcharge', key: { fx: 'prodPerStar', v: 0.02 } },
+    { name: 'Strike', ic: '\ud83d\udca5', fx: 'click', v: 1.1, names: 'Jab,Cross,Hook,Uppercut,Combo Strike,Shockwave,Rampage,Annihilate,Worldbreaker,Colossus', key: { fx: 'clickPerStar', v: 0.03 } }] },
+  { id: 'evo', name: 'Evolution', icon: '\ud83e\uddec', color: '#3ccf7a', desc: 'Evolve faster and make every tier count more.', lanes: [
+    { name: 'Growth', ic: '\ud83c\udf31', fx: 'evoXp', v: 0.25, names: 'Seed,Root,Sprout,Bud,Bloom,Vine,Canopy,Ancient Tree,World Tree,Rapid Evolution', key: { fx: 'evoXp', v: 2 } },
+    { name: 'Mutation', ic: '\ud83e\uddec', fx: 'evoPow', v: 0.015, names: 'Gene,Spliced Gene,Helix,Chromosome,Genome,Mutagen,Adaptation,Metamorphosis,Chimera,Perfect Form', key: { fx: 'evoPow', v: 0.1 } },
+    { name: 'Vigor', ic: '\ud83d\udcaa', fx: 'prod', v: 1.08, names: 'Stamina,Grit,Endurance,Iron Will,Hardened,Resolve,Titan Blood,Immortal,Primal Force,Apex', key: { fx: 'clickPerTier', v: 0.1 } }] }
 ];
 const MT_NODES = [];
 const MT_BY_ID = {};
 (function buildMegaTree() {
-  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   MT_BRANCHES.forEach(b => b.lanes.forEach((ln, li) => {
+    const names = ln.names.split(',');
     for (let i = 0; i < 10; i++) {
       const id = b.id + li + '_' + i;
-      const n = { id: id, branch: b.id, lane: li, i: i, name: ln.name + ' ' + roman[i], icon: ln.ic, fx: ln.fx, v: ln.v,
-        cost: Math.ceil(2 * Math.pow(1.32, i) * (1 + li * 0.45)),
+      const kind = i === 9 ? 'key' : i === 4 ? 'major' : 'stat';
+      let fx = ln.fx, v = ln.v;
+      if (kind === 'key') { fx = ln.key.fx; v = ln.key.v; }
+      else if (kind === 'major') { v = MT_ADD[fx] ? ln.v * 2.5 : Math.pow(ln.v, 2.5); }
+      let cost = Math.ceil(2 * Math.pow(1.32, i) * (1 + li * 0.45));
+      if (kind === 'key') cost = Math.ceil(cost * 2.5); else if (kind === 'major') cost = Math.ceil(cost * 1.4);
+      const n = { id: id, branch: b.id, lane: li, i: i, kind: kind, name: names[i], icon: kind === 'key' ? '\ud83d\udd37' : ln.ic, fx: fx, v: v, cost: cost,
         req: i > 0 ? b.id + li + '_' + (i - 1) : (li > 0 ? b.id + (li - 1) + '_2' : null) };
       MT_NODES.push(n); MT_BY_ID[id] = n;
     }
   }));
 })();
 
+function totalStars() { let t = kumarStar(S.kumar); for (let i = 0; i < S.pets.length; i++) t += S.pets[i].star | 0; return t; }
 function mtFx() {
-  const o = { prod: 1, click: 1, crit: 0, combo: 0, goldFreq: 1, goldVal: 1, pet: 1, rp: 1, cost: 1, offline: 0, rtGain: 1, shardGain: 1, crownGain: 1, mpGain: 1, evoXp: 0, evoPow: 0 };
+  const o = { prod: 1, click: 1, crit: 0, combo: 0, goldFreq: 1, goldVal: 1, pet: 1, rp: 1, cost: 1, offline: 0, rtGain: 1, shardGain: 1, crownGain: 1, mpGain: 1, evoXp: 0, evoPow: 0,
+    prodPerNode: 0, prodPerTier: 0, prodPerMega: 0, prodPerStar: 0, clickPerStar: 0, clickPerTier: 0, petPerStar: 0, clickFromCps: 0, critPow: 0, autoClick: 0, goldTime: 1, eggCost: 1, offlineCap: 0, rtPerMega: 0 };
   if (!S || !S.mtree) return o;
   for (const id in S.mtree) {
     const n = MT_BY_ID[id];
     if (!n) continue;
     if (MT_ADD[n.fx]) o[n.fx] += n.v; else o[n.fx] *= n.v;
   }
-  o.cost = Math.max(0.5, o.cost);
+  o.cost = Math.max(0.3, o.cost);
   return o;
 }
 function applyMegaTree(e) {
   const f = mtFx();
   e.prod *= f.prod; e.click *= f.click; e.crit += f.crit; e.combo += f.combo;
   e.goldFreq *= f.goldFreq; e.goldVal *= f.goldVal; e.pet *= f.pet; e.rp *= f.rp;
-  e.cost = Math.max(0.5, e.cost * f.cost); e.offline += f.offline;
+  e.cost = Math.max(0.3, e.cost * f.cost); e.offline += f.offline;
+  const owned = mtOwnedCount(), tier = evoTier(S.kumar), stars = totalStars();
+  e.prod *= (1 + f.prodPerNode * owned) * (1 + f.prodPerTier * tier) * (1 + f.prodPerMega * S.megaCount) * (1 + f.prodPerStar * stars);
+  e.click *= (1 + f.clickPerStar * stars) * (1 + f.clickPerTier * tier);
+  e.pet *= 1 + f.petPerStar * stars;
   return e;
 }
+function applyMegaCalc(c) {
+  const f = mtFx();
+  c.clickCpsPct += f.clickFromCps; c.critMult += f.critPow; c.goldDur *= f.goldTime;
+  c.offlineCapH += f.offlineCap; c.eggCostMult = Math.max(0.05, c.eggCostMult * f.eggCost);
+}
 function mtFxText(n) {
+  const pc = x => Math.round(x * 100);
   switch (n.fx) {
     case 'crit': return '+' + (n.v * 100).toFixed(1) + '% crit chance';
-    case 'combo': return '+' + Math.round(n.v * 100) + '% combo bonus';
-    case 'offline': return '+' + Math.round(n.v * 100) + '% offline gains';
-    case 'evoXp': return '+' + n.v + ' evolution XP per click';
+    case 'combo': return '+' + pc(n.v) + '% combo bonus';
+    case 'offline': return '+' + pc(n.v) + '% offline gains';
+    case 'evoXp': return '+' + n.v + ' evolution XP per tap';
     case 'evoPow': return '+' + n.v + ' power per evolution tier';
-    case 'cost': return '-' + ((1 - n.v) * 100).toFixed(1) + '% generator cost';
-    default: return '+' + Math.round((n.v - 1) * 100) + '% ' + (MT_LABEL[n.fx] || n.fx);
+    case 'cost': return '-' + ((1 - n.v) * 100).toFixed(1).replace(/\.0$/, '') + '% generator cost';
+    case 'prodPerNode': return '+' + pc(n.v) + '% production per Mega node owned';
+    case 'prodPerTier': return '+' + pc(n.v) + '% production per evolution tier';
+    case 'prodPerMega': return '+' + pc(n.v) + '% production per Mega Evolution';
+    case 'prodPerStar': return '+' + pc(n.v) + '% production per star';
+    case 'clickPerStar': return '+' + pc(n.v) + '% click power per star';
+    case 'clickPerTier': return '+' + pc(n.v) + '% click power per evolution tier';
+    case 'petPerStar': return '+' + pc(n.v) + '% pet power per star';
+    case 'clickFromCps': return 'Taps also earn +' + pc(n.v) + '% of your production';
+    case 'critPow': return 'Crits hit +' + n.v + 'x harder';
+    case 'autoClick': return '+' + n.v + ' automatic taps per second';
+    case 'goldTime': return 'Golden Finns stay ' + pc(n.v - 1) + '% longer';
+    case 'eggCost': return 'Eggs cost ' + pc(1 - n.v) + '% less';
+    case 'offlineCap': return '+' + n.v + ' hours of offline time';
+    case 'rtPerMega': return '+' + pc(n.v) + '% Rebirth Tokens per Mega Evolution';
+    default: return n.v >= 2 ? 'x' + n.v + ' ' + (MT_LABEL[n.fx] || n.fx) : '+' + pc(n.v - 1) + '% ' + (MT_LABEL[n.fx] || n.fx);
   }
 }
 function mtState(n) {
@@ -2712,6 +2806,152 @@ function validateKumarName(raw) {
   if (!/^[\p{L}\p{N} '._-]+$/u.test(n)) return { ok: false, name: '', msg: 'Use letters, numbers, spaces and . _ - only.' };
   if (isChrisLike(n)) return { ok: false, name: '', msg: 'That name is not allowed. Pick another one.' };
   return { ok: true, name: n, msg: '' };
+}
+
+
+/* =====================================================================
+   KUMAR EVOLUTION QUESTS: every Kumar has a long quest line. Each step makes that Kumar x1.35 stronger.
+   ===================================================================== */
+const KQ_STEPS = 12;
+const KQ_STEP_MULT = 1.35;
+const KQ_FINAL_MULT = 3;
+const KQ_TYPES = {
+  clicks:     { text: n => 'Click ' + fmtInt(n) + ' times', get: () => S.counters.clicks, base: 1500, g: 2.7 },
+  life:       { text: n => 'Earn 1e' + n + ' Finn Kumar in total', get: () => S.lifeEarned.log10(), base: 9, g: 1.0, step: 7 },
+  rebirths:   { text: n => 'Rebirth ' + fmtInt(n) + ' times', get: () => S.rebirths, base: 4, g: 2.3 },
+  transcends: { text: n => 'Transcend ' + fmtInt(n) + ' times', get: () => S.transcends, base: 2, g: 2.0 },
+  ascensions: { text: n => 'Ascend ' + fmtInt(n) + ' times', get: () => S.ascensions, base: 1, g: 1.9 },
+  goldens:    { text: n => 'Catch ' + fmtInt(n) + ' golden Finns', get: () => S.counters.goldens, base: 20, g: 2.4 },
+  hatches:    { text: n => 'Hatch ' + fmtInt(n) + ' eggs', get: () => S.counters.hatches, base: 12, g: 2.5 },
+  merges:     { text: n => 'Merge pets ' + fmtInt(n) + ' times', get: () => S.counters.merges, base: 4, g: 2.3 },
+  crits:      { text: n => 'Land ' + fmtInt(n) + ' critical hits', get: () => S.counters.crits, base: 150, g: 2.8 },
+  mega:       { text: n => 'Mega Evolve ' + fmtInt(n) + ' times', get: () => S.megaCount, base: 1, g: 1.8 },
+  evo:        { text: n => 'Reach ' + fmtInt(n) + ' total evolution tiers', get: () => KUMARS.reduce((a, k) => a + evoTier(k.id), 0), base: 3, g: 1.75 },
+  stage:      { text: n => 'Reach World 2 stage ' + fmtInt(n), get: () => S.battle.best, base: 3, g: 1.5, max: 50 }
+};
+const KQ_CHAINS = {
+  finn: ['clicks', 'rebirths', 'goldens', 'life'], julian: ['clicks', 'crits', 'hatches', 'rebirths'], leo: ['goldens', 'hatches', 'merges', 'life'],
+  madhav: ['rebirths', 'life', 'merges', 'transcends'], ralph: ['life', 'clicks', 'rebirths', 'evo'], mitch: ['hatches', 'goldens', 'transcends', 'life'],
+  hugh: ['rebirths', 'transcends', 'life', 'crits'], sam: ['clicks', 'crits', 'goldens', 'stage'], secret: ['life', 'ascensions', 'hatches', 'evo'],
+  adam: ['transcends', 'ascensions', 'life', 'merges'], zander: ['goldens', 'ascensions', 'rebirths', 'stage'], kasi: ['ascensions', 'mega', 'life', 'evo'],
+  custom: ['mega', 'evo', 'stage', 'life'], omega: ['mega', 'stage', 'life', 'ascensions']
+};
+function kqSteps(id) { return S.kq && S.kq[id] ? S.kq[id] | 0 : 0; }
+function kqMult(id) { const n = kqSteps(id); return Math.pow(KQ_STEP_MULT, n) * (n >= KQ_STEPS ? KQ_FINAL_MULT : 1); }
+function kqQuest(id, step) {
+  const chain = KQ_CHAINS[id] || ['clicks', 'rebirths', 'goldens', 'life'];
+  const tid = chain[step % chain.length], T0 = KQ_TYPES[tid], cyc = Math.floor(step / chain.length);
+  const ki = Math.max(0, KUMARS.findIndex(k => k.id === id));
+  let target;
+  if (tid === 'life') target = T0.base + step * T0.step;
+  else target = Math.ceil(T0.base * Math.pow(T0.g, cyc + (step % chain.length) * 0.35) * (1 + ki * 0.12));
+  if (T0.max) target = Math.min(T0.max, target);
+  return { type: tid, target: target, text: T0.text(target), get: T0.get };
+}
+function kqCurrent(id) { const n = kqSteps(id); return n >= KQ_STEPS ? null : kqQuest(id, n); }
+function applyKumarQuest(e) { const m = kqMult(S.kumar); e.prod *= m; e.click *= m; return e; }
+function kqTick(dt) {
+  T.kqAcc += dt;
+  if (T.kqAcc < 1) return;
+  T.kqAcc = 0;
+  KUMARS.forEach(k => {
+    if (!S.kumarsUnlocked[k.id]) return;
+    const q = kqCurrent(k.id);
+    if (q && q.get() >= q.target) {
+      S.kq[k.id] = kqSteps(k.id) + 1;
+      S.counters.upgrades++;
+      recalc();
+      bus.emit('toast', { title: k.name + ' evolved!', text: 'Quest ' + S.kq[k.id] + '/' + KQ_STEPS + ' done: x' + KQ_STEP_MULT + ' power' + (S.kq[k.id] >= KQ_STEPS ? ' and a x' + KQ_FINAL_MULT + ' final bonus!' : '.'), tone: 'gold' });
+      if (ui.tab === 'evolve') ui.dirty = true;
+    }
+  });
+}
+
+/* =====================================================================
+   WORLD 2: BATTLE WORLD (unlocks at 1e100 lifetime Finn Kumar)
+   ===================================================================== */
+const BT_MAX = 50;
+const BT_UNLOCK_LOG = 100;
+const BT_NAMES = 'Grumpy Snail,Sewer Rat,Cave Bat,Web Spider,Dune Snake,Sand Scorpion,Wild Boar,Dire Wolf,Rock Ape,Stone Ogre,Swamp Gator,Land Shark,Armored Rhino,Frost Bear,Thunder Bison,Storm Hawk,Shadow Tiger,Lava Lizard,Deep Kraken,Zombie King,Night Count,Dark Wizard,Rogue Ninja,Rust Robot,Haunted Ghost,Pumpkin Fiend,Bridge Troll,Baby T-Rex,Long Neck Titan,Emerald Dragon,Wish Genie,Siren Queen,Storm Jelly,Abyss Squid,Ember Drake,Magma Beast,Ice Warden,Thunder Spirit,Tornado Imp,Demon Lord,Void Alien,Star Raider,Comet Brute,Moon Eater,Ring Titan,Galaxy Wraith,Reaper,All-Seeing Eye,Sea God,Final Kumar Overlord'.split(',');
+const BT_ICONS = ['\ud83d\udc0c','\ud83d\udc00','\ud83e\udd87','\ud83d\udd77\ufe0f','\ud83d\udc0d','\ud83e\udd82','\ud83d\udc17','\ud83d\udc3a','\ud83e\udd8d','\ud83d\udc79','\ud83d\udc0a','\ud83e\udd88','\ud83e\udd8f','\ud83d\udc3b','\ud83e\udda7','\ud83e\udd85','\ud83d\udc05','\ud83e\udd8e','\ud83d\udc19','\ud83e\udddf','\ud83e\udddb','\ud83e\uddd9','\ud83e\udd77','\ud83e\udd16','\ud83d\udc7b','\ud83c\udf83','\ud83e\uddcc','\ud83e\udd96','\ud83e\udd95','\ud83d\udc09','\ud83e\uddde','\ud83e\udddc','\ud83e\udebc','\ud83e\udd91','\ud83d\udc32','\ud83c\udf0b','\u2744\ufe0f','\u26a1','\ud83c\udf2a\ufe0f','\ud83d\ude08','\ud83d\udc7d','\ud83d\udef8','\u2604\ufe0f','\ud83c\udf11','\ud83e\ude90','\ud83c\udf0c','\ud83d\udc80','\ud83d\udc41\ufe0f','\ud83d\udd31','\ud83c\udf1f'];
+const BT_BASE = { finn: 1, julian: 1.2, leo: 1.2, madhav: 1.2, ralph: 1.4, mitch: 1.3, hugh: 1.5, sam: 2.5, secret: 3, adam: 2.2, zander: 2, kasi: 6 };
+function btUnlocked() { return S.lifeEarned.log10() >= BT_UNLOCK_LOG || S.battle.best > 0; }
+function btBase(id) {
+  if (id === 'custom' || id === 'omega') {
+    let b = 1;
+    for (const k in BT_BASE) if (S.kumarsUnlocked[k]) b = Math.max(b, BT_BASE[k]);
+    return b * (id === 'omega' ? 100 : 1.5);
+  }
+  return BT_BASE[id] || 1;
+}
+function btMult() { const id = S.kumar; return btBase(id) * (1 + 0.15 * evoTier(id)) * (1 + 0.25 * kumarStar(id)) * (1 + 0.2 * kqSteps(id)); }
+function btDmg() { return 6 * Math.pow(1.13, S.battle.tD) * btMult(); }
+function btHp() { return 50 * Math.pow(1.13, S.battle.tH) * btMult(); }
+function btCost(l) { return 15 * Math.pow(1.17, l); }
+function btMon(st) {
+  const boss = st % 10 === 0;
+  return { icon: BT_ICONS[st - 1], name: BT_NAMES[st - 1], boss: boss, hp: 40 * Math.pow(1.27, st - 1) * (boss ? 3 : 1), atk: 3 * Math.pow(1.235, st - 1) * (boss ? 1.6 : 1),
+    coins: 20 * Math.pow(1.3, st - 1) * (boss ? 4 : 1), speed: boss ? 1.2 : 1.4 };
+}
+function btEnsure() {
+  let b = T.bt;
+  if (!b || b.stage !== S.battle.cur) {
+    const m = btMon(S.battle.cur);
+    b = T.bt = { stage: S.battle.cur, mon: m, mhp: m.hp, php: btHp(), atkT: 0, monT: 0, log: 'Tap the monster to strike!' };
+  }
+  return b;
+}
+function btReset() { T.bt = null; btEnsure(); }
+function btWin() {
+  const b = T.bt, m = b.mon, B = S.battle;
+  B.coins += m.coins; B.kills++;
+  b.log = 'Defeated ' + m.name + '! +' + fmt(m.coins) + ' coins';
+  if (b.stage === B.best + 1) B.best = b.stage;
+  if (b.stage === BT_MAX && !B.cleared) { B.cleared = true; battleRewards(); }
+  B.cur = (b.stage === B.best && B.best < BT_MAX) ? B.best + 1 : b.stage;
+  const log = b.log; T.bt = null; btEnsure(); T.bt.log = log;
+  ui.dirty = true;
+}
+function btLose() {
+  const b = T.bt;
+  b.mhp = b.mon.hp; b.php = btHp(); b.atkT = 0; b.monT = 0;
+  b.log = 'Your Kumar fainted! Train up and try again.';
+}
+function btHit(amount) { const b = btEnsure(); b.mhp -= amount; if (b.mhp <= 0) btWin(); }
+function battleTick(dt) {
+  if (S.battle.cleared && !S.battle.rewarded) battleRewards();
+  if (ui.tab !== 'battle' || !btUnlocked()) return;
+  const b = btEnsure(), m = b.mon;
+  dt = Math.min(dt, 0.5);
+  b.atkT += dt; b.monT += dt;
+  const maxHp = btHp();
+  if (b.php > maxHp) b.php = maxHp;
+  while (b.atkT >= 1 && b.mhp > 0) { b.atkT -= 1; b.mhp -= btDmg(); }
+  if (b.mhp <= 0) { btWin(); return; }
+  while (b.monT >= m.speed && b.php > 0) { b.monT -= m.speed; b.php -= m.atk; b.log = m.name + ' hits you for ' + fmt(m.atk); }
+  if (b.php <= 0) btLose();
+}
+function battleRewards() {
+  if (S.battle.rewarded) return;
+  S.battle.rewarded = true;
+  if (!S.petDex[BATTLE_PET.id]) {
+    const pet = { u: S.petUid++, id: BATTLE_PET.id, lvl: 0, star: 0 };
+    S.pets.push(pet); S.petDex[BATTLE_PET.id] = 1;
+    if (S.equipped.length < calc.slots) S.equipped.push(pet.u);
+  }
+  if (window.grantTitle) window.grantTitle('conqueror', false);
+  unlockKumar('custom');
+  recalc();
+  bus.emit('toast', { title: 'World 2 conquered!', text: 'Secret pet, title and Custom Kumar unlocked.', tone: 'gold' });
+}
+
+/* ---------- Omega Kumar: 100x your best Kumar ---------- */
+const OMEGA_POWER = 100;
+function applyOmegaPower(e) {
+  e.prod *= OMEGA_POWER; e.click *= OMEGA_POWER; e.pet *= OMEGA_POWER; e.rp *= OMEGA_POWER; e.goldVal *= OMEGA_POWER;
+  e.goldFreq *= 5; e.crit = Math.min(0.9, e.crit * 3 + 0.1); e.combo = e.combo * 3 + 1; e.offline += 1;
+  e.cost = Math.max(0.3, e.cost * 0.6);
+  return e;
 }
 
 function buyRtUpgrade(id) {
@@ -3143,8 +3383,13 @@ function stateFromSaved(obj) {
     if (!isPlainObject(e)) { delete st.evo[id]; return; }
     e.t = clamp(e.t | 0, 0, EVO_MAX); e.x = (typeof e.x === 'number' && isFinite(e.x) && e.x > 0) ? e.x : 0;
   });
+  if (!isPlainObject(st.kq)) st.kq = {};
+  Object.keys(st.kq).forEach(id => { st.kq[id] = clamp(st.kq[id] | 0, 0, KQ_STEPS); if (!st.kq[id]) delete st.kq[id]; });
+  { const b = isPlainObject(st.battle) ? st.battle : {}, d = defaultState().battle;
+    Object.keys(d).forEach(k => { if (typeof d[k] === 'number') b[k] = (typeof b[k] === 'number' && isFinite(b[k]) && b[k] >= 0) ? b[k] : d[k]; else b[k] = !!b[k]; });
+    b.best = clamp(b.best | 0, 0, BT_MAX); b.cur = clamp(b.cur | 0, 1, Math.min(BT_MAX, b.best + 1)); st.battle = b; }
   { const cn = validateKumarName(st.customName); st.customName = cn.ok ? cn.name : ''; }
-  if (isPlainObject(st.kumarsUnlocked) && st.megaCount < 1) {   /* Custom Kumar is not free: first Mega Evolution unlocks it */
+  if (isPlainObject(st.kumarsUnlocked) && !st.battle.cleared) {   /* Custom Kumar is not free: first Mega Evolution unlocks it */
     delete st.kumarsUnlocked.custom;
     if (st.kumar === 'custom') st.kumar = 'finn';
   }
@@ -3209,7 +3454,7 @@ function tick() {
   if (now - T.lastClick > 900 && T.combo > 0) T.combo = Math.max(0, T.combo - 25 * dt);
 
   /* auto clicker */
-  const ac = lv('autoclick');
+  const ac = lv('autoclick') + mtFx().autoClick;
   if (ac > 0) {
     T.autoClickAcc += ac * dt;
     let guard = 0;
@@ -3221,6 +3466,8 @@ function tick() {
   }
 
   /* auto buyer */
+  battleTick(dt);
+  kqTick(dt);
   if (fullAutoOn()) {
     T.fullAutoAcc += dt;
     if (T.fullAutoAcc >= 0.5) { T.fullAutoAcc = 0; fullAutoStep(); }
@@ -3596,7 +3843,33 @@ const PETS = [
   { id: 'cow',      name: 'Karma Cow',        emoji: '🐄', rarity: 'epic',      kind: 'cps',      power: 60 },
   { id: 'elephant', name: 'Sage Elephant',    emoji: '🐘', rarity: 'legendary', kind: 'cps',      power: 200 },
   { id: 'peacock',  name: 'Crown Peacock',    emoji: '🦚', rarity: 'mythic',    kind: 'cps',      power: 1500 },
-  { id: 'greatfinn',name: 'The Great Finn',   emoji: '👑', rarity: 'secret',    kind: 'cps',      power: 20000 }
+  { id: 'greatfinn',name: 'The Great Finn',   emoji: '👑', rarity: 'secret',    kind: 'cps',      power: 20000 },
+  /* World 1 expansion pets */
+  { id: 'chick',    name: 'Sunny Chick',      emoji: '\ud83d\udc25', rarity: 'common',    kind: 'cps',      power: 0.03 },
+  { id: 'hamster',  name: 'Wheel Hamster',    emoji: '\ud83d\udc39', rarity: 'common',    kind: 'click',    power: 0.10 },
+  { id: 'lamb',     name: 'Fluffy Lamb',      emoji: '\ud83d\udc11', rarity: 'uncommon',  kind: 'cps',      power: 0.15 },
+  { id: 'sloth',    name: 'Sleepy Sloth',     emoji: '\ud83e\uddA5', rarity: 'uncommon',  kind: 'discount', power: 0.02 },
+  { id: 'hedgehog', name: 'Lucky Hedgehog',   emoji: '\ud83e\udd94', rarity: 'rare',      kind: 'golden',   power: 0.5 },
+  { id: 'sunbird',  name: 'Sunbird',          emoji: '\ud83d\udc26', rarity: 'epic',      kind: 'cps',      power: 0.4 },
+  { id: 'angel',    name: 'Halo Cat',         emoji: '\ud83d\ude07', rarity: 'epic',      kind: 'cps',      power: 150 },
+  { id: 'goodboy',  name: 'Very Good Boy',    emoji: '\ud83d\udc15', rarity: 'epic',      kind: 'golden',   power: 3 },
+  { id: 'phoenix',  name: 'Phoenix Finn',     emoji: '\ud83d\udd25', rarity: 'legendary', kind: 'cps',      power: 900 },
+  { id: 'deer',     name: 'Celestial Deer',   emoji: '\ud83e\udd8c', rarity: 'legendary', kind: 'click',    power: 300 },
+  { id: 'guardian', name: 'Good Egg Guardian',emoji: '\ud83e\udd5a', rarity: 'mythic',    kind: 'cps',      power: 8000 },
+  { id: 'seraph',   name: 'Seraph Finn',      emoji: '\ud83d\udc7c', rarity: 'secret',    kind: 'cps',      power: 60000 },
+  { id: 'goldfish', name: 'Gilded Goldfish',  emoji: '\ud83d\udc1f', rarity: 'epic',      kind: 'cps',      power: 800 },
+  { id: 'retriever',name: 'Golden Retriever', emoji: '\ud83e\uddae', rarity: 'legendary', kind: 'click',    power: 800 },
+  { id: 'midaspup', name: 'Midas Pup',        emoji: '\ud83d\udc36', rarity: 'legendary', kind: 'cps',      power: 4000 },
+  { id: 'golddrag', name: 'Golden Dragon',    emoji: '\ud83d\udc32', rarity: 'mythic',    kind: 'cps',      power: 30000 },
+  { id: 'goldfinn', name: 'Gold Finn Kumar',  emoji: '\ud83e\udd47', rarity: 'secret',    kind: 'cps',      power: 250000 },
+  { id: 'royalcat', name: 'Royal Cat',        emoji: '\ud83d\ude3a', rarity: 'legendary', kind: 'cps',      power: 3000 },
+  { id: 'cobra',    name: 'King Cobra',       emoji: '\ud83d\udc0d', rarity: 'mythic',    kind: 'cps',      power: 25000 },
+  { id: 'queenbee', name: 'Queen Bee',        emoji: '\ud83d\udc1d', rarity: 'mythic',    kind: 'golden',   power: 8 },
+  { id: 'emperor',  name: 'Emperor Penguin',  emoji: '\ud83d\udc27', rarity: 'secret',    kind: 'cps',      power: 400000 },
+  { id: 'omegaowl', name: 'Omega Owl',        emoji: '\ud83e\udd89', rarity: 'mythic',    kind: 'cps',      power: 60000 },
+  { id: 'megafox',  name: 'Mega Fox',         emoji: '\ud83e\udd8a', rarity: 'mythic',    kind: 'click',    power: 5000 },
+  { id: 'starlord', name: 'Star Lord',        emoji: '\ud83d\ude80', rarity: 'secret',    kind: 'cps',      power: 1e6 },
+  { id: 'nova',     name: 'Nova Sprite',      emoji: '\ud83c\udf20', rarity: 'secret',    kind: 'golden',   power: 12 }
 ];
 const PET_BY_ID = {};
 PETS.forEach(p => { PET_BY_ID[p.id] = p; });
@@ -3604,6 +3877,9 @@ PETS.forEach(p => { PET_BY_ID[p.id] = p; });
 /* Code-only pet. It is not in any egg and not counted in the Pet Dex. */
 const CODE_PET = { id: 'superfinn', name: 'Super Finn Kumar', emoji: '😈', rarity: 'divine', kind: 'cps', power: 1e6 };
 PET_BY_ID[CODE_PET.id] = CODE_PET;
+/* World 2 reward pet: 150% of the best production pet. Not in any egg. */
+const BATTLE_PET = { id: 'overlordcub', name: 'Overlord Cub', emoji: '\ud83d\udc7e', rarity: 'divine', kind: 'cps', power: 1.5 * Math.max.apply(null, PETS.concat([CODE_PET]).filter(p => p.kind === 'cps').map(p => p.power)) };
+PET_BY_ID[BATTLE_PET.id] = BATTLE_PET;
 
 /* ---------- Redeem codes (each works once per save) ---------- */
 const CODES = {
@@ -3630,11 +3906,16 @@ const PET_MAX_LEVEL = 4;
 const PET_INVENTORY_CAP = 300;
 
 const EGGS = [
+  { id: 'sunny',  name: 'Sunny Egg',  emoji: '\u2600\ufe0f', cost: 2e4,   currency: 'fk', pool: ['chick', 'hamster', 'lamb', 'sloth', 'hedgehog', 'sunbird'] },
   { id: 'tiny',   name: 'Tiny Egg',   emoji: '🥚', cost: 2.5e5, currency: 'fk', pool: ['kitten', 'pup', 'frog', 'bunny', 'fox', 'owl', 'duck', 'unicorn'] },
   { id: 'shiny',  name: 'Shiny Egg',  emoji: '🪩', cost: 5e8,   currency: 'fk', pool: ['penguin', 'panda', 'tiger', 'wolf', 'raccoon', 'dragon', 'eagle'] },
   { id: 'void',   name: 'Void Egg',   emoji: '🔮', cost: 1e12,  currency: 'fk', pool: ['voidcat', 'octopus', 'whale', 'golem', 'turtle', 'galaxy', 'kraken', 'minifinn'] },
   { id: 'cosmic', name: 'Cosmic Egg', emoji: '🌌', cost: 5e16,  currency: 'fk', pool: ['bat', 'lion', 'koi', 'qcat', 'bee', 'cosfinn', 'ghost'] },
-  { id: 'karma',  name: 'Karma Egg',  emoji: '🪷', cost: 25,    currency: 'rt', pool: ['lemur', 'cow', 'elephant', 'peacock', 'greatfinn'] }
+  { id: 'karma',  name: 'Karma Egg',  emoji: '🪷', cost: 25,    currency: 'rt', pool: ['lemur', 'cow', 'elephant', 'peacock', 'greatfinn'] },
+  { id: 'good',   name: 'Good Egg',   emoji: '\ud83e\udd5a\u2728', cost: 3,   currency: 'shard', pool: ['angel', 'goodboy', 'phoenix', 'deer', 'guardian', 'seraph'] },
+  { id: 'golden', name: 'Golden Egg', emoji: '\ud83e\udd47', cost: 1e24, currency: 'fk', pool: ['goldfish', 'retriever', 'midaspup', 'golddrag', 'goldfinn'] },
+  { id: 'royal',  name: 'Royal Egg',  emoji: '\ud83d\udc51', cost: 2,    currency: 'crown', pool: ['royalcat', 'cobra', 'queenbee', 'emperor'] },
+  { id: 'megaegg',name: 'Mega Egg',   emoji: '\ud83c\udf20', cost: 15,   currency: 'mp', pool: ['omegaowl', 'megafox', 'starlord', 'nova'] }
 ];
 const EGG_BY_ID = {};
 EGGS.forEach(e => { EGG_BY_ID[e.id] = e; });
@@ -4385,7 +4666,7 @@ function liveText(key) {
     case 'ucost': return fmt(upgradeCost(UP_BY_ID[a]));
     case 'ecost': {
       const egg = EGG_BY_ID[a];
-      return fmt(eggCostFor(egg)) + (egg.currency === 'rt' ? ' Tokens' : '');
+      return fmt(eggCostFor(egg)) + (EGG_CUR[egg.currency] ? EGG_CUR[egg.currency][1] : '');
     }
     case 'ecost5': {
       const egg = EGG_BY_ID[a];
@@ -4419,6 +4700,16 @@ function liveText(key) {
       return 'Ascend now for ' + fmtInt(g) + ' Crown' + (g > 1 ? 's' : '') + '.';
     }
     case 'asmult': return 'Crown boost now x' + fmt(calc.crownMult);
+    case 'kqtxt': { const q = kqCurrent(a); if (!q) return 'Complete'; const v = q.get(); return (q.type === 'life' ? v.toFixed(1) : fmtInt(Math.floor(v))) + ' / ' + fmtInt(q.target); }
+    case 'btplhp': { const b = btEnsure(); return fmt(Math.max(0, b.php)) + ' / ' + fmt(btHp()); }
+    case 'btmonhp': { const b = btEnsure(); return fmt(Math.max(0, b.mhp)) + ' / ' + fmt(b.mon.hp); }
+    case 'btdmg': return fmt(btDmg());
+    case 'btmaxhp': return fmt(btHp());
+    case 'btcoins': return fmt(S.battle.coins);
+    case 'btlog': return btEnsure().log;
+    case 'btdcost': return 'Train damage: ' + fmt(btCost(S.battle.tD)) + ' coins (Lv ' + S.battle.tD + ')';
+    case 'bthcost': return 'Train health: ' + fmt(btCost(S.battle.tH)) + ' coins (Lv ' + S.battle.tH + ')';
+    case 'btunlock': return 'Earn 1e' + BT_UNLOCK_LOG + ' Finn Kumar in total. Now: 1e' + Math.max(0, S.lifeEarned.log10()).toFixed(1);
     case 'evotxt': {
       const t = evoTier(a);
       return t >= EVO_MAX ? 'MAX EVOLUTION' : fmtInt(evoXp(a)) + ' / ' + fmtInt(evoNeed(t)) + ' taps to Tier ' + (t + 1);
@@ -4501,6 +4792,10 @@ function liveBar(key) {
     case 'rb': return clamp(S.runEarned / REBIRTH_MIN, 0, 1);
     case 'tr': return clamp(S.rtRun / TRANSCEND_MIN_RT, 0, 1);
     case 'as': return clamp(S.shardRun / ASCEND_MIN_SHARDS, 0, 1);
+    case 'kq': { const q = kqCurrent(a); if (!q) return 1; return clamp(q.type === 'life' ? q.get() / q.target : q.get() / q.target, 0, 1); }
+    case 'btpl': { const b = btEnsure(); return clamp(b.php / btHp(), 0, 1); }
+    case 'btmon': { const b = btEnsure(); return clamp(b.mhp / b.mon.hp, 0, 1); }
+    case 'btunlock': return clamp(S.lifeEarned.log10() / BT_UNLOCK_LOG, 0, 1);
     case 'evo': { const t = evoTier(a); return t >= EVO_MAX ? 1 : clamp(evoXp(a) / evoNeed(t), 0, 1); }
     case 'mega': return clamp(Math.log10(Math.max(1, S.crownRun)) / Math.log10(MEGA_CROWNS), 0, 1);
     default: return 0;
@@ -4527,6 +4822,8 @@ function liveAff(key) {
     case 'transcend': return transcendGain() >= 1;
     case 'ascend': return ascendGain() >= 1;
     case 'mega': return megaReady();
+    case 'btD': return S.battle.coins >= btCost(S.battle.tD);
+    case 'btH': return S.battle.coins >= btCost(S.battle.tH);
     case 'wheel': return wheelReady() && !ui.wheelSpinning;
     case 'catch': return catcherReady() && !catcher.running;
     case 'slot': return !ui.slotBusy && Math.floor(S.fk * (+a)) >= 1;
@@ -5341,7 +5638,7 @@ function renderBoardTab() {
 /* =====================================================================
    TAB: EVOLVE
    ===================================================================== */
-function evoSig() { return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? evoTier(k.id) : '-')).join(',') + '|' + S.kumar + '|' + evoBase(); }
+function evoSig() { return KUMARS.map(k => (S.kumarsUnlocked[k.id] ? evoTier(k.id) + ':' + kqSteps(k.id) : '-')).join(',') + '|' + S.kumar + '|' + evoBase(); }
 
 function renderEvolve() {
   let h = '<div class="panel"><div class="row"><span class="panel-title" style="margin:0">Evolution</span><span class="grow"></span><span class="pill sun">Max tier ' + EVO_MAX + '</span></div>'
@@ -5357,7 +5654,10 @@ function renderEvolve() {
       + (lead ? '<span class="pill sun">Leading</span>' : '') + '</div>'
       + '<div class="progress"><div class="progress-fill evo-fill" data-bar="evo:' + k.id + '"></div></div>'
       + '<div class="progress-text" data-live="evotxt:' + k.id + '"></div>'
-      + '<div class="evo-card-boost">Boost: x' + fmt(evoMult(k.id)) + ' production and clicks</div></div>';
+      + '<div class="evo-card-boost">Boost: x' + fmt(evoMult(k.id)) + ' production and clicks</div>'
+      + '<div class="kq-box"><div class="kq-top"><b>Evolution Quest ' + kqSteps(k.id) + '/' + KQ_STEPS + '</b><span class="pill sun">x' + fmt(kqMult(k.id)) + '</span></div>'
+      + (kqCurrent(k.id) ? '<div class="kq-text">' + esc(kqCurrent(k.id).text) + '</div><div class="progress"><div class="progress-fill" data-bar="kq:' + k.id + '"></div></div><div class="progress-text" data-live="kqtxt:' + k.id + '"></div>'
+        : '<div class="kq-text">Fully evolved! x' + KQ_STEP_MULT + ' per step and a x' + KQ_FINAL_MULT + ' final bonus.</div>') + '</div></div>';
   });
   return h + '</div>';
 }
@@ -5389,7 +5689,8 @@ function renderMegaTree() {
     for (let i = 0; i < 10; i++) {
       const n = MT_BY_ID[br.id + li + '_' + i];
       const st = mtState(n);
-      h += '<button class="mt-node ' + st + '" type="button" data-act="mtbuy" data-id="' + n.id + '" title="' + esc(n.name + ': ' + mtFxText(n)) + '">'
+      h += '<button class="mt-node ' + st + ' ' + n.kind + '" type="button" data-act="mtbuy" data-id="' + n.id + '" title="' + esc(n.name + ': ' + mtFxText(n)) + '">'
+        + (n.kind === 'key' ? '<span class="mt-badge">KEYSTONE</span>' : n.kind === 'major' ? '<span class="mt-badge major">MAJOR</span>' : '')
         + '<span class="mt-ic">' + (st === 'locked' ? '\ud83d\udd12' : n.icon) + '</span>'
         + '<span class="mt-nm">' + esc(n.name) + '</span><span class="mt-fx">' + esc(mtFxText(n)) + '</span>'
         + '<span class="mt-cost">' + (st === 'owned' ? '\u2713 Owned' : n.cost + ' MP') + '</span></button>';
@@ -5406,6 +5707,14 @@ function renderMegaTree() {
   if (f.offline) rows.push(['Offline gains', '+' + Math.round(f.offline * 100) + '%']);
   if (f.evoXp) rows.push(['Evolution XP per click', '+' + f.evoXp]);
   if (f.evoPow) rows.push(['Evolution power per tier', '+' + f.evoPow.toFixed(3)]);
+  [['prodPerNode', 'Production per Mega node'], ['prodPerTier', 'Production per tier'], ['prodPerMega', 'Production per Mega Evolution'], ['prodPerStar', 'Production per star'],
+   ['clickPerStar', 'Click power per star'], ['clickPerTier', 'Click power per tier'], ['petPerStar', 'Pet power per star'], ['clickFromCps', 'Taps earn % of production'], ['rtPerMega', 'Tokens per Mega Evolution']]
+    .forEach(r => { if (f[r[0]]) rows.push([r[1], '+' + Math.round(f[r[0]] * 100) + '%']); });
+  if (f.critPow) rows.push(['Crit damage', '+' + f.critPow + 'x']);
+  if (f.autoClick) rows.push(['Auto taps per second', '+' + f.autoClick]);
+  if (f.goldTime > 1.0001) rows.push(['Golden Finn duration', 'x' + f.goldTime.toFixed(2)]);
+  if (f.eggCost < 0.9999) rows.push(['Egg cost', 'x' + f.eggCost.toFixed(2)]);
+  if (f.offlineCap) rows.push(['Offline time cap', '+' + f.offlineCap + 'h']);
   h += '<div class="panel"><h3 class="panel-title">Your Mega bonuses</h3>' + (rows.length
     ? '<div class="mt-totals">' + rows.map(r => '<div class="mt-total"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>').join('') + '</div>'
     : '<p class="panel-sub" style="margin:0">Nothing yet. Reach ' + fmt(MEGA_CROWNS) + ' Crowns and Mega Evolve to earn your first Mega Points.</p>') + '</div>';
@@ -5417,10 +5726,41 @@ function renameRow() {
     + '<button class="btn btn-sm btn-sun" type="button" data-act="renamecustom">Rename</button></div>';
 }
 
+
+/* =====================================================================
+   TAB: WORLD 2 (BATTLE)
+   ===================================================================== */
+function battleSig() { return S.battle.cur + '|' + S.battle.best + '|' + (S.battle.cleared ? 1 : 0) + '|' + S.kumar + '|' + (btUnlocked() ? 1 : 0); }
+function renderBattle() {
+  if (!btUnlocked()) {
+    return '<div class="panel bt-lock"><div class="bt-lock-ic">\ud83d\udd12</div><h3 class="panel-title">World 2: Battle World</h3>'
+      + '<p class="panel-sub">Fight a monster on each of 50 stages with your Kumar. Beat the last stage for a secret pet, a secret title and the Custom Kumar.</p>'
+      + '<div class="progress"><div class="progress-fill" data-bar="btunlock:x"></div></div><div class="progress-text" data-live="btunlock:x"></div></div>';
+  }
+  const B = S.battle, k = KUMAR_BY_ID[S.kumar] || KUMARS[0], m = btMon(B.cur);
+  let h = '<div class="bt-hud"><div class="bt-me"><span class="bt-who">' + (k.icon || '') + ' ' + esc(k.name) + (kumarStar(k.id) ? ' <span class="star-tag">' + starText(kumarStar(k.id)) + '</span>' : '') + '</span>'
+    + '<div class="progress"><div class="progress-fill bt-hpfill" data-bar="btpl:x"></div></div><span class="bt-num" data-live="btplhp:x"></span></div>'
+    + '<div class="bt-pill">\u2694 Damage <b data-live="btdmg:x"></b></div><div class="bt-pill">\u2764 Health <b data-live="btmaxhp:x"></b></div>'
+    + '<div class="bt-pill gold">\ud83e\ude99 <b data-live="btcoins:x"></b></div><div class="bt-pill">Stage <b>' + B.cur + ' / ' + BT_MAX + '</b></div></div>';
+  h += '<div class="bt-arena' + (m.boss ? ' boss' : '') + '"><button class="bt-mon" type="button" data-act="btstrike"><span class="bt-mon-ic">' + m.icon + '</span></button>'
+    + '<div class="bt-mon-name">' + esc(m.name) + (m.boss ? ' <span class="pill pink">BOSS</span>' : '') + '</div>'
+    + '<div class="progress bt-monbar"><div class="progress-fill bt-monfill" data-bar="btmon:x"></div></div><div class="bt-num" data-live="btmonhp:x"></div>'
+    + '<div class="bt-log" data-live="btlog:x"></div></div>';
+  h += '<div class="bt-controls"><button class="btn btn-sm" type="button" data-act="btprev"' + (B.cur <= 1 ? ' disabled' : '') + '>\u25c2 Stage</button>'
+    + '<button class="btn btn-sun" type="button" data-btn="1" data-act="btD" data-aff="btD:x"><span data-live="btdcost:x"></span></button>'
+    + '<button class="btn btn-mint" type="button" data-btn="1" data-act="btH" data-aff="btH:x"><span data-live="bthcost:x"></span></button>'
+    + '<button class="btn btn-sm" type="button" data-act="btnext"' + (B.cur >= Math.min(BT_MAX, B.best + 1) ? ' disabled' : '') + '>Stage \u25b8</button></div>';
+  h += '<div class="bt-dots">';
+  for (let i = 1; i <= BT_MAX; i++) h += '<span class="bt-dot' + (i <= B.best ? ' done' : '') + (i === B.cur ? ' cur' : '') + (i % 10 === 0 ? ' boss' : '') + '" title="Stage ' + i + '"></span>';
+  h += '</div><p class="pl-hint">' + (B.cleared ? 'World 2 conquered! Your secret pet, title and Custom Kumar are unlocked.' : 'Clear stage 50 for a secret pet, title and the Custom Kumar. Your Kumar\u2019s evolution, stars and quests make it stronger here.') + '</p>';
+  return h;
+}
+
 const TABS = [
   { id: 'shop', label: 'Shop', render: renderShop, sig: shopSig, badge: () => 0 },
   { id: 'evolve', label: 'Evolve', render: renderEvolve, sig: evoSig, badge: () => 0 },
   { id: 'kumars', label: 'Kumars', render: renderKumars, sig: kumarsSig, badge: () => 0 },
+  { id: 'battle', label: 'World 2', render: renderBattle, sig: battleSig, badge: () => 0 },
   { id: 'research', label: 'Research', render: renderResearch, sig: researchSig, badge: () => RP_UPGRADES.filter(d => rl(d.id) < d.max && S.rp >= rpCost(d, rl(d.id))).length },
   { id: 'missions', label: 'Missions', render: renderMissions, sig: missionsSig, badge: () => S.missions.filter(missionDone).length },
   { id: 'pets', label: 'Pets', render: renderPets, sig: petsSig, badge: () => 0 },
@@ -5629,6 +5969,11 @@ const ACTIONS = {
   ascend: () => prestigeConfirm('ascend'),
   megaevolve: () => megaConfirm(),
   playr: d => { ui.pLayer = d.id || null; ui.dirty = true; },
+  btstrike: () => { if (!btUnlocked()) return; btHit(btDmg() * 0.4); },
+  btprev: () => { S.battle.cur = Math.max(1, S.battle.cur - 1); btReset(); ui.dirty = true; },
+  btnext: () => { S.battle.cur = Math.min(BT_MAX, S.battle.best + 1, S.battle.cur + 1); btReset(); ui.dirty = true; },
+  btD: () => { const c = btCost(S.battle.tD); if (S.battle.coins >= c) { S.battle.coins -= c; S.battle.tD++; sfx.buy(); } else sfx.fail(); },
+  btH: () => { const c = btCost(S.battle.tH); if (S.battle.coins >= c) { S.battle.coins -= c; S.battle.tH++; const b = btEnsure(); b.php = btHp(); sfx.buy(); } else sfx.fail(); },
   mtbranch: d => { ui.mtBranch = d.id; ui.dirty = true; },
   mtbuy: d => { if (buyMt(d.id)) sfx.buy(); else sfx.fail(); ui.dirty = true; },
   mtbuyall: () => { const n = mtBuyAll(); if (n > 0) { sfx.buy(); toast('Mega Tree', n + ' upgrade' + (n > 1 ? 's' : '') + ' bought', 'good'); } else sfx.fail(); ui.dirty = true; },
@@ -5906,7 +6251,7 @@ function showOfflineModal(r) {
 </script>
 <script>
 /* FIREBASE CONFIGURATION: paste your Firebase Web API key and Realtime Database URL here. */
-window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'AIzaSyAyZEn3I5E3GPK_6VoPKb4GQNV4jYYrdwM', dbUrl: 'https://save-523f5-default-rtdb.firebaseio.com' };
+window.FK_CONFIG = window.FK_CONFIG || { apiKey: 'PASTE_FIREBASE_WEB_API_KEY_HERE', dbUrl: 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' };
 </script>
 <script>
 /* =====================================================================
@@ -6125,7 +6470,7 @@ const NEW_KUMARS = [
     boost: 'Production x2 and offline earnings +20%.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
     hint: 'Own 50 generators in total.', unlock: () => GENS.reduce((n, g) => n + (S.gens[g.id] || 0), 0) >= 50, prog: () => [Math.min(GENS.reduce((n, g) => n + (S.gens[g.id] || 0), 0), 50), 50] },
   { id: 'sam', icon: '⚡', name: 'Sam Kumar', egg: 'Sam Kumar Egg', title: 'The Swift', shell: '#b05cff', spot: '#ffd43b', pattern: 'bolts', aura: 'rgba(176,92,255,0.32)',
-    boost: 'Click power x4.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
+    boost: 'Click power x30, production x3, +8% crit and a bigger combo.', mission: { fk: 1.5, rp: 1, egg: 1 }, missionNote: 'Finn Kumar rewards +50%.',
     hint: 'Click Finn 5,000 times.', unlock: () => S.counters.clicks >= 5000, prog: () => [Math.min(S.counters.clicks, 5000), 5000] },
   { id: 'adam', icon: '👑', name: 'Adam Kumar', egg: 'Adam Kumar Egg', title: 'The Supreme', shell: '#ffd43b', spot: '#ff5c9d', pattern: 'rays', aura: 'rgba(255,212,59,0.4)',
     boost: 'Production x5, click power x3 and research x1.5.', mission: { fk: 2, rp: 1.5, egg: 1.5 }, missionNote: 'Finn Kumar rewards x2.',
@@ -6134,8 +6479,11 @@ const NEW_KUMARS = [
     boost: 'Production x4, Golden Finns x2 as often and offline earnings +30%.', mission: { fk: 1.8, rp: 1.2, egg: 1.2 }, missionNote: 'Finn Kumar rewards x80%.',
     hint: 'Earn 100 million Finn Kumar.', unlock: () => S.lifeEarned >= 1e8, prog: () => [Math.min(S.lifeEarned, 1e8), 1e8] },
   { id: 'custom', icon: '🌟', get name() { return (S && S.customName) || 'Custom Kumar'; }, get egg() { return ((S && S.customName) || 'Custom Kumar') + ' Egg'; }, title: 'Your Best', shell: '#8d7bff', spot: '#fff3a6', pattern: 'rays', aura: 'rgba(141,123,255,0.4)',
-    boost: 'Copies your best unlocked Kumar and makes it 150% as strong (x1.5). You can rename it!', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Your custom Kumar mirrors your best Kumar.',
-    hint: 'Do your first Mega Evolution.', unlock: () => S.megaCount >= 1, prog: () => [Math.min(1, S.megaCount), 1] }
+    boost: 'Copies your best unlocked Kumar at 150% strength (x1.5). You can rename it!', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Your custom Kumar mirrors your best Kumar.',
+    hint: 'Beat all 50 stages of World 2.', unlock: () => !!S.battle.cleared, prog: () => [S.battle.best, BT_MAX] },
+  { id: 'omega', icon: '\ud83c\udfc6', name: 'Omega Kumar', egg: 'Omega Kumar Egg', title: 'All Achievements', shell: '#ff5c9d', spot: '#ffe38a', pattern: 'rays', aura: 'rgba(255,92,157,0.5)',
+    boost: 'Copies your best Kumar and makes it 100x stronger.', mission: { fk: 1, rp: 1, egg: 1 }, missionNote: 'Omega Kumar needs no missions.',
+    hint: 'Unlock every achievement.', unlock: () => achievementCount() >= Object.keys(ACH_BY_ID).length, prog: () => [achievementCount(), Object.keys(ACH_BY_ID).length] }
 ];
 
 const KASI = {
@@ -6166,10 +6514,10 @@ step('kumars', () => {
       case 'ralph': e.prod = 3 * sc; break;
       case 'mitch': e.rp = 2 * sc; break;
       case 'hugh': e.prod = 2 * sc; e.offline += 0.2 * sc; break;
-      case 'sam': e.click = 4 * sc; break;
+      case 'sam': e.click = 30 * sc; e.prod = 3 * sc; e.crit = 0.08 * sc; e.combo = 0.4 * sc; break;
       case 'adam': e.prod = 5 * sc; e.click = 3 * sc; e.rp = 1.5 * sc; break;
       case 'zander': e.prod = 4 * sc; e.goldFreq = 2 * sc; e.offline += 0.3 * sc; break;
-      case 'custom': {
+      case 'custom': case 'omega': {
         const profiles = {
           finn: { prod: 1 + 0.25 * sc, click: 1 + 0.25 * sc },
           julian: { click: 3 * sc, crit: 0.08 * sc, combo: 0.5 * sc },
@@ -6178,14 +6526,14 @@ step('kumars', () => {
           secret: { prod: 10 * sc, click: 10 * sc, goldFreq: 2 * sc, rp: 2 * sc, pet: 2 * sc },
           ralph: { prod: 3 * sc },
           mitch: { rp: 2 * sc }, hugh: { prod: 2 * sc, offline: 0.2 * sc },
-          sam: { click: 4 * sc }, adam: { prod: 5 * sc, click: 3 * sc, rp: 1.5 * sc },
+          sam: { click: 30 * sc, prod: 3 * sc, crit: 0.08 * sc, combo: 0.4 * sc }, adam: { prod: 5 * sc, click: 3 * sc, rp: 1.5 * sc },
           zander: { prod: 4 * sc, goldFreq: 2 * sc, offline: 0.3 * sc },
           kasi: { prod: 1000 * sc, click: 1000 * sc, goldFreq: 3 * sc, goldVal: 3 * sc, rp: 5 * sc, pet: 5 * sc, cost: 0.5, crit: 0.25, combo: 2, offline: 0.5 }
         };
         const score = p => (p.prod || 1) * (p.click || 1) * (p.goldFreq || 1) * (p.goldVal || 1) * (p.rp || 1) * (p.pet || 1);
-        const bestId = Object.keys(S.kumarsUnlocked || {}).filter(id => id !== 'custom' && profiles[id]).sort((a,b) => score(profiles[b]) - score(profiles[a]))[0];
+        const bestId = Object.keys(S.kumarsUnlocked || {}).filter(id => id !== 'custom' && id !== 'omega' && profiles[id]).sort((a,b) => score(profiles[b]) - score(profiles[a]))[0];
         if (bestId) Object.assign(e, profiles[bestId]);
-        applyCustomPower(e);
+        if (S.kumar === 'omega') applyOmegaPower(e); else applyCustomPower(e);
         break;
       }
       case 'kasi':
@@ -6198,6 +6546,7 @@ step('kumars', () => {
     e.prod *= t.prod; e.click *= t.click; e.goldFreq *= t.gold; e.pet *= t.pet; e.rp *= t.rp;
     applyKumarStars(e);
     applyKumarEvo(e);
+    applyKumarQuest(e);
     applyMegaTree(e);
     return e;
   });
@@ -6250,6 +6599,13 @@ const MY_TITLES = [
 ];
 const TITLE_BY_ID = {};
 MY_TITLES.forEach(t => { TITLE_BY_ID[t.id] = t; });
+{ /* World 2 title: 150% of the strongest title in each stat */
+  const bestB = {};
+  MY_TITLES.forEach(t => { for (const key in t.boost) bestB[key] = Math.max(bestB[key] || 1, t.boost[key]); });
+  const cb = {}; for (const key in bestB) cb[key] = bestB[key] * 1.5;
+  const conq = { id: 'conqueror', name: 'Overlord Slayer', hint: 'Beat all 50 stages of World 2.', boost: cb, check: () => !!S.battle.cleared };
+  MY_TITLES.push(conq); TITLE_BY_ID[conq.id] = conq;
+}
 
 function boostText(b) {
   const parts = [];
@@ -6280,6 +6636,7 @@ function grantTitle(id, equip) {
 }
 
 let titleFirst = true;
+window.grantTitle = grantTitle;
 function checkTitles() {
   const fresh = [];
   MY_TITLES.forEach(t => {
@@ -6994,6 +7351,17 @@ step('account-ui', () => {
   restoreSession();
 });
 
+
+/* ---------- more achievements ---------- */
+step('more-ach', () => {
+  [[10, 'Egg Starter'], [100, 'Egg Hunter'], [1000, 'Egg Master'], [10000, 'Egg Legend']].forEach(e => addAch('w1hatch_' + e[0], e[1], 'Hatch ' + e[0].toLocaleString() + ' eggs.', '\ud83e\udd5a', () => S.counters.hatches >= e[0]));
+  [[1e6, 'Million Taps'], [1e7, 'Ten Million Taps'], [1e8, 'Hundred Million Taps']].forEach(e => addAch('clk_' + e[0], e[1], 'Click ' + e[0].toLocaleString() + ' times.', '\ud83d\udc46', () => S.counters.clicks >= e[0]));
+  [[1, 'Mega!'], [5, 'Mega Habit'], [10, 'Mega Addict'], [25, 'Mega Master']].forEach(e => addAch('mega_' + e[0], e[1], 'Mega Evolve ' + e[0] + ' time' + (e[0] > 1 ? 's' : '') + '.', '\u2728', () => S.megaCount >= e[0]));
+  [[24, 'Tree Sprout'], [60, 'Tree Grower'], [120, 'Tree Climber']].forEach(e => addAch('mt_' + e[0], e[1], 'Own ' + e[0] + ' Mega Tree nodes.', '\ud83c\udf33', () => mtOwnedCount() >= e[0]));
+  [[10, 'Fighter'], [25, 'Warrior'], [50, 'World Conqueror']].forEach(e => addAch('bt_' + e[0], e[1], 'Reach World 2 stage ' + e[0] + '.', '\u2694\ufe0f', () => S.battle.best >= e[0]));
+  [[1, 'First Quest'], [6, 'Quest Runner'], [12, 'Quest Master']].forEach(e => addAch('kq_' + e[0], e[1], 'Finish ' + e[0] + ' Kumar quest' + (e[0] > 1 ? 's' : '') + '.', '\ud83d\udcdc', () => Object.keys(S.kq).reduce((a, id) => a + S.kq[id], 0) >= e[0]));
+  addAch('kq_full', 'Fully Evolved', 'Finish every step of one Kumar quest.', '\ud83e\uddec', () => Object.keys(S.kq).some(id => S.kq[id] >= KQ_STEPS));
+});
 
 /* ---------- admin panel ---------- */
 step('admin', () => {

@@ -1250,6 +1250,86 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .ws-dmg.coin { font-size: 40px; color: #ffd43b; } .ws-dmg.big { font-size: clamp(44px, 10vmin, 80px); color: #ff5c7a; }
 .ws-bit { position: absolute; pointer-events: none; will-change: transform, opacity; }
 @media (max-width: 560px) { .ws-chip { font-size: 15px; padding: 5px 10px; } .ws-dmg.n { font-size: 30px; } .ws-dmg.c { font-size: 50px; } }
+
+/* ---------- World 2: stats, fighters, panels ---------- */
+.ws-stats { display: flex; flex-wrap: wrap; gap: 6px; }
+.ws-stats .bt-pill, .ws-top .bt-pill { padding: 4px 10px; font-size: 12px; }
+.bt-pill.soul { background: #e7d4ff; }
+.ws-menu .btn { position: relative; font-size: 15px; padding: 7px 14px; }
+.ws-menu small { font-family: var(--font-mono); font-size: 11px; opacity: .8; }
+.ws-badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: #ff3d5e; color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; border: 2px solid var(--ink); animation: wsPillPop .9s ease-in-out infinite alternate; }
+.ws-player { position: absolute; z-index: 2; left: 10px; bottom: 10px; width: clamp(120px, 21vmin, 190px); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ws-pl-egg { width: clamp(64px, 13vmin, 110px); filter: drop-shadow(0 6px 0 rgba(0, 0, 0, .3)); animation: wsBob 1.6s ease-in-out infinite; }
+.ws-pl-egg svg { width: 100%; display: block; }
+.ws-pl-egg.atk { animation: wsPlAtk .22s ease-out; }
+@keyframes wsPlAtk { 0% { transform: none; } 40% { transform: translate(clamp(40px, 12vw, 160px), -14px) rotate(14deg) scale(1.15); } 100% { transform: none; } }
+.ws-player.hurt .ws-pl-egg { animation: wsWiggle .3s; filter: drop-shadow(0 6px 0 rgba(0,0,0,.3)) brightness(1.6) hue-rotate(-30deg); }
+.ws-pl-name { font-family: var(--font-display); font-size: 13px; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.ws-player .ws-bar { width: 100%; height: 16px; border-width: 2px; }
+.ws-player .bt-num { font-size: 10px; }
+
+.ws-panelhost { position: absolute; inset: 0; z-index: 30; display: none; }
+.ws-panelhost.on { display: block; }
+.wp-back { position: absolute; inset: 0; background: rgba(10, 6, 40, .8); display: flex; align-items: center; justify-content: center; padding: 10px; animation: wpFade .2s; }
+@keyframes wpFade { from { opacity: 0; } }
+.wp-card { width: min(760px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--paper); border: var(--line); border-radius: 20px; box-shadow: 6px 6px 0 var(--ink); padding: 12px; box-sizing: border-box; animation: wpPop .28s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes wpPop { from { transform: scale(.85) translateY(20px); opacity: 0; } }
+.wp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.wp-title { font-family: var(--font-display); font-size: 26px; }
+.wp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.wp-tab { font-family: var(--font-display); font-size: 15px; padding: 5px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper-3); cursor: pointer; color: var(--ink); }
+.wp-tab.on { background: var(--sun); box-shadow: 2px 2px 0 var(--ink); }
+.wp-cur { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 10px; margin-bottom: 8px; background: #fff0a8; border: 2px solid var(--ink); border-radius: 12px; font-weight: 800; }
+.wp-cur .btn { margin-left: auto; }
+.wp-note { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.wp-body { overflow-y: auto; flex: 1; min-height: 0; padding-right: 4px; }
+.up-list { display: grid; gap: 8px; }
+.up-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: #fff; border: 2px solid var(--ink); border-radius: 14px; }
+.up-row.afford { background: #eafff6; border-color: #12a678; box-shadow: 0 0 0 2px rgba(37, 217, 162, .35); }
+.up-row.maxed { background: #fff6c8; }
+.up-ic { font-size: 30px; width: 40px; text-align: center; }
+.up-main { flex: 1; min-width: 0; }
+.up-name { font-family: var(--font-display); font-size: 17px; }
+.up-lv { font-family: var(--font-mono); font-size: 11px; background: var(--paper-3); border-radius: 999px; padding: 1px 8px; margin-left: 4px; }
+.up-desc { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.up-next { color: #0e8f67; }
+.up-bar { height: 6px; margin-top: 4px; background: var(--paper-3); border-radius: 999px; overflow: hidden; border: 1px solid var(--ink); }
+.up-bar div { height: 100%; background: linear-gradient(90deg, #4cc9ff, #25d9a2); }
+.up-buy { min-width: 96px; font-size: 14px; }
+
+.eq-totals { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.eq-sub { font-family: var(--font-display); font-size: 15px; margin: 8px 0 4px; color: var(--ink-soft); }
+.eq-slots { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.eq-slot { text-align: center; } .eq-slot-name { font-size: 10px; font-weight: 800; color: var(--muted); }
+.eq-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.eq-cell { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 3.4vw, 24px); border: 2px solid var(--ink); border-radius: 10px; background: #fff; cursor: pointer; padding: 0; width: 100%; color: var(--ink); }
+.eq-cell small { position: absolute; right: 2px; bottom: 0; font-size: 9px; font-family: var(--font-mono); font-weight: 800; }
+.eq-cell.empty { background: transparent; border-style: dashed; border-color: var(--paper-3); cursor: default; }
+.eq-cell.sel { outline: 3px solid #25d9a2; outline-offset: 1px; transform: scale(1.08); z-index: 1; }
+.rar-0 { background: #f4f4fb; color: #17133b; } .rar-1 { background: #c58bff; color: #17133b; box-shadow: 0 0 8px rgba(176, 92, 255, .8); }
+.rar-2 { background: #ffd43b; color: #17133b; box-shadow: 0 0 10px rgba(255, 190, 0, .9); } .rar-3 { background: #ff4d5e; color: #fff; box-shadow: 0 0 12px rgba(255, 60, 80, .95); }
+.rar-4 { background: #2a2540; color: #fff; border-color: #ffd43b; box-shadow: 0 0 14px rgba(255, 212, 59, .9), inset 0 0 8px rgba(255, 255, 255, .25); animation: wsBlack 1.6s ease-in-out infinite alternate; }
+@keyframes wsBlack { to { box-shadow: 0 0 22px rgba(176, 92, 255, .95), inset 0 0 12px rgba(255, 255, 255, .4); } }
+.eq-detail { padding: 8px 10px; border: 2px solid var(--ink); border-radius: 12px; margin-top: 8px; }
+.eq-detail.empty { background: var(--paper-2); color: var(--muted); font-weight: 700; font-size: 13px; text-align: center; }
+.eq-d-name { font-family: var(--font-display); font-size: 18px; } .eq-d-rar { font-size: 12px; font-family: var(--font-body); font-weight: 800; opacity: .85; }
+.eq-d-stats { display: flex; gap: 12px; flex-wrap: wrap; font-weight: 800; font-size: 13px; margin: 4px 0; } .eq-d-stats .up { color: #0e8f67; } .eq-d-stats .down { color: #c0213a; }
+.rar-0 .eq-d-stats .up, .rar-1 .eq-d-stats .up, .rar-2 .eq-d-stats .up { color: #0b6e4f; }
+.rar-3 .eq-d-stats .up, .rar-4 .eq-d-stats .up { color: #7dffd0; } .rar-3 .eq-d-stats .down, .rar-4 .eq-d-stats .down { color: #ffd0d6; }
+.eq-d-btns, .eq-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.eq-tools { margin-bottom: 6px; }
+.eq-rates { display: flex; flex-wrap: wrap; gap: 6px; }
+.eq-rates span { padding: 2px 9px; border: 2px solid var(--ink); border-radius: 999px; font-size: 12px; font-weight: 800; }
+.eq-d-stats + .eq-d-btns { margin-top: 4px; }
+.rb-hero { text-align: center; padding: 10px; background: linear-gradient(135deg, #e7d4ff, #ffe6f3); border: 2px solid var(--ink); border-radius: 16px; margin-bottom: 8px; }
+.rb-big { font-family: var(--font-display); font-size: 52px; color: #8a3dff; text-shadow: 0 3px 0 rgba(23, 19, 59, .35); } .rb-sub { font-weight: 800; color: var(--ink-soft); }
+.rb-list { display: grid; gap: 6px; margin: 8px 0; font-size: 13px; font-weight: 700; } .rb-list div { padding: 6px 10px; background: #fff; border: 2px solid var(--ink); border-radius: 10px; }
+.rb-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; } .rb-go { font-size: 20px; padding: 10px 22px; }
+.ws-itemfly { position: absolute; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 3px solid var(--ink); border-radius: 14px; will-change: transform, opacity; }
+.ws-dmg.item { font-size: 24px; } .ws-dmg.item small { display: block; font-size: 17px; letter-spacing: 2px; }
+@media (max-width: 560px) { .eq-grid { grid-template-columns: repeat(8, 1fr); } .eq-slots { gap: 4px; } .up-buy { min-width: 78px; } .ws-player { width: 110px; } }
+.pl-ic { font-size: 14px; line-height: 1; display: inline-block; vertical-align: -1px; }
+.ws-top .bt-pill { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -1586,7 +1666,8 @@ function defaultState() {
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
     crownRun: 0, megaCount: 0, kumarStars: {},
     mp: 0, mpTotal: 0, mtree: {}, evo: {}, customName: '', autoSec: 1,
-    kq: {}, battle: { best: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
+    kq: {}, battle: { best: 0, rb: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
+    bt2: { items: [], eq: [0, 0, 0, 0, 0, 0], uid: 1, ups: {}, sups: {}, souls: 0, soulsTotal: 0, rebirths: 0, drops: 0 },
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
     achievements: {},
@@ -1760,6 +1841,7 @@ function recalc() {
   eggCost *= Math.max(0.5, 1 - 0.04 * rl('regg'));
   offline += ke.offline + 0.06 * rl('roff');
   global *= ke.prod * c.kumarCollect * (T.rankMult || 1) * (1 + 0.12 * rl('rprod'));
+  global *= btWorldProd(); clickMult *= btWorldClick();
   c.rpInterval = Math.max(8, (60 - 4 * rl('rinterval')) / ke.rp);
   c.rpPerCycle = 1 + rl('rpoints');
   c.cooldownMult = Math.max(0.2, 1 - 0.08 * rl('rcooldown'));
@@ -1889,9 +1971,9 @@ function doClick(auto) {
     if (!auto) S.counters.crits++;
   }
   addFk(v);
+  evoClick();     /* auto clicks evolve your Kumar too */
   if (!auto) {
     S.counters.clicks++;
-    evoClick();
     T.combo = Math.min(100, T.combo + 5);
     T.lastClick = Date.now();
     if (T.combo > S.counters.maxCombo) S.counters.maxCombo = Math.floor(T.combo);
@@ -2858,7 +2940,7 @@ function evoClick() {
   const id = S.kumar;
   const e = S.evo[id] || (S.evo[id] = { t: 0, x: 0 });
   if (e.t >= EVO_MAX) return;
-  e.x += 1 + mtFx().evoXp;
+  e.x += (1 + mtFx().evoXp) * btWorldEvo();
   let up = false;
   while (e.t < EVO_MAX && e.x >= evoNeed(e.t)) { e.x -= evoNeed(e.t); e.t++; S.counters.upgrades++; up = true; }
   if (e.t >= EVO_MAX) e.x = 0;
@@ -2975,14 +3057,6 @@ function btBase(id) {
   return BT_BASE[id] || 1;
 }
 function btMult() { const id = S.kumar; return btBase(id) * (1 + 0.15 * evoTier(id)) * (1 + 0.25 * kumarStar(id)) * (1 + 0.2 * kqSteps(id)); }
-function btDmg() { return 6 * Math.pow(1.13, S.battle.tD) * btMult(); }
-function btHp() { return 50 * Math.pow(1.13, S.battle.tH) * btMult(); }
-function btCost(l) { return 15 * Math.pow(1.17, l); }
-function btMon(st) {
-  const boss = st % 10 === 0;
-  return { icon: BT_ICONS[st - 1], name: BT_NAMES[st - 1], boss: boss, hp: 40 * Math.pow(1.27, st - 1) * (boss ? 3 : 1), atk: 3 * Math.pow(1.235, st - 1) * (boss ? 1.6 : 1),
-    coins: 20 * Math.pow(1.3, st - 1) * (boss ? 4 : 1), speed: boss ? 1.2 : 1.4 };
-}
 function btEnsure() {
   let b = T.bt;
   if (!b || b.stage !== S.battle.cur) {
@@ -2994,12 +3068,19 @@ function btEnsure() {
 function btReset() { T.bt = null; btEnsure(); }
 function btWin() {
   const b = T.bt, m = b.mon, B = S.battle;
-  try { wsKill(m); } catch (e) { console.error(e); }
-  B.coins += m.coins; B.kills++;
-  b.log = 'Defeated ' + m.name + '! +' + fmt(m.coins) + ' coins';
-  if (b.stage === B.best + 1) B.best = b.stage;
+  let earn = m.coins * btCoinMult();
+  const jp = Math.random() < 0.01 * btUpLv('jackpot');
+  if (jp) earn *= 5;
+  const item = btRollDrop(b.stage);
+  let res = null;
+  if (item) { res = btAddItem(item); S.bt2.drops++; }
+  try { wsKill(m, earn, jp, item, res); } catch (e) { console.error(e); }
+  B.coins += earn; B.kills++;
+  b.log = 'Defeated ' + m.name + '! +' + fmt(earn) + ' coins' + (item ? ' + ' + BT_RAR[item.rar].name + ' ' + item.n : '');
+  if (b.stage === B.rb + 1) B.rb = b.stage;
+  if (B.rb > B.best) B.best = B.rb;
   if (b.stage === BT_MAX && !B.cleared) { B.cleared = true; battleRewards(); }
-  B.cur = (b.stage === B.best && B.best < BT_MAX) ? B.best + 1 : b.stage;
+  B.cur = (b.stage === B.rb && B.rb < BT_MAX) ? B.rb + 1 : b.stage;
   const log = b.log; T.bt = null; btEnsure(); T.bt.log = log;
   T.btWait = m.boss ? 0.85 : 0.6; ui.btDirty = true;
   ui.dirty = true;
@@ -3021,7 +3102,8 @@ function battleTick(dt) {
   b.atkT += dt; b.monT += dt;
   const maxHp = btHp();
   if (b.php > maxHp) b.php = maxHp;
-  while (b.atkT >= 1 && b.mhp > 0) { b.atkT -= 1; const ad = btDmg(); b.mhp -= ad; wsAutoHit(ad); }
+  const iv = btAtkInterval();
+  while (b.atkT >= iv && b.mhp > 0) { b.atkT -= iv; const ad = btDmg(); b.mhp -= ad; wsAutoHit(ad); }
   if (b.mhp <= 0) { btWin(); return; }
   while (b.monT >= m.speed && b.php > 0) { b.monT -= m.speed; b.php -= m.atk; b.log = m.name + ' hits you for ' + fmt(m.atk); wsHurt(m.atk); }
   if (b.php <= 0) btLose();
@@ -3482,7 +3564,20 @@ function stateFromSaved(obj) {
   Object.keys(st.kq).forEach(id => { st.kq[id] = clamp(st.kq[id] | 0, 0, KQ_STEPS); if (!st.kq[id]) delete st.kq[id]; });
   { const b = isPlainObject(st.battle) ? st.battle : {}, d = defaultState().battle;
     Object.keys(d).forEach(k => { if (typeof d[k] === 'number') b[k] = (typeof b[k] === 'number' && isFinite(b[k]) && b[k] >= 0) ? b[k] : d[k]; else b[k] = !!b[k]; });
-    b.best = clamp(b.best | 0, 0, BT_MAX); b.cur = clamp(b.cur | 0, 1, Math.min(BT_MAX, b.best + 1)); st.battle = b; }
+    b.best = clamp(b.best | 0, 0, BT_MAX);
+    if (!(isPlainObject(obj.battle) && typeof obj.battle.rb === 'number')) b.rb = b.best;   /* old saves: run progress = best */
+    b.rb = clamp(b.rb | 0, 0, b.best);
+    b.cur = clamp(b.cur | 0, 1, Math.min(BT_MAX, b.rb + 1)); st.battle = b; }
+  { const o = isPlainObject(st.bt2) ? st.bt2 : {};
+    const num = (v, dflt) => (typeof v === 'number' && isFinite(v) && v >= 0) ? v : dflt;
+    const b2 = { items: [], eq: [0, 0, 0, 0, 0, 0], uid: Math.max(1, num(o.uid, 1) | 0), ups: {}, sups: {}, souls: num(o.souls, 0), soulsTotal: num(o.soulsTotal, 0), rebirths: num(o.rebirths, 0) | 0, drops: num(o.drops, 0) };
+    (Array.isArray(o.items) ? o.items : []).slice(0, 60).forEach(it => {
+      if (isPlainObject(it) && isFinite(it.a) && isFinite(it.h) && it.rar >= 0 && it.rar <= 4 && it.slot >= 0 && it.slot <= 5)
+        b2.items.push({ id: it.id | 0, slot: it.slot | 0, rar: it.rar | 0, st: clamp(it.st | 0, 1, BT_MAX), a: Math.max(0, it.a), h: Math.max(0, it.h), n: String(it.n || 'Gear').slice(0, 30) });
+    });
+    if (Array.isArray(o.eq)) for (let i = 0; i < 6; i++) { const id = o.eq[i] | 0, it = b2.items.find(x => x.id === id); if (it && it.slot === i) b2.eq[i] = id; }
+    [['ups', BT_UP_BY_ID], ['sups', BT_SUP_BY_ID]].forEach(p => { if (isPlainObject(o[p[0]])) Object.keys(o[p[0]]).forEach(id => { const def = p[1][id]; if (def) b2[p[0]][id] = clamp(o[p[0]][id] | 0, 0, def.max); }); });
+    st.bt2 = b2; }
   { const cn = validateKumarName(st.customName); st.customName = cn.ok ? cn.name : ''; }
   if (isPlainObject(st.kumarsUnlocked) && !st.battle.cleared) {   /* Custom Kumar is not free: first Mega Evolution unlocks it */
     delete st.kumarsUnlocked.custom;
@@ -5852,16 +5947,219 @@ function renderBattle() {
 }
 
 /* =====================================================================
+   WORLD 2 ECONOMY: monsters x10 HP per stage, equipment, upgrades, souls
+   ===================================================================== */
+const BT_BAG = 50;
+const BT_REBIRTH_MIN = 10;
+const BT_TRAIN_D = 1.3;          /* power gained per training level */
+const BT_TRAIN_R = 1.56;       /* cost growth per training level */
+const BT_ITEM_BASE = 0.1;
+const BT_ITEM_G = 1.9;           /* item power growth per stage */
+const BT_RAR = [
+  { id: 'white',  name: 'White',  pre: 'Plain',    col: '#f4f4fb', ink: '#17133b', mult: 1,   w: 90 },
+  { id: 'purple', name: 'Purple', pre: 'Mystic',   col: '#c58bff', ink: '#17133b', mult: 5,   w: 9 },
+  { id: 'gold',   name: 'Gold',   pre: 'Royal',    col: '#ffd43b', ink: '#17133b', mult: 25,  w: 0.9 },
+  { id: 'red',    name: 'Red',    pre: 'Infernal', col: '#ff4d5e', ink: '#fff',    mult: 125, w: 0.09 },
+  { id: 'black',  name: 'Black',  pre: 'Void',     col: '#2a2540', ink: '#fff',    mult: 625, w: 0.01 }
+];
+const BT_SLOTS = [
+  { name: 'Weapon', ic: '\u2694\ufe0f', a: 1.6, h: 0.4, nouns: ['Sword', 'Axe', 'Spear', 'Blade'] },
+  { name: 'Helmet', ic: '\u26d1\ufe0f', a: 0.8, h: 1.0, nouns: ['Helm', 'Crown', 'Hood'] },
+  { name: 'Armor',  ic: '\ud83d\udee1\ufe0f', a: 0.5, h: 1.6, nouns: ['Plate', 'Mail', 'Shield'] },
+  { name: 'Boots',  ic: '\ud83d\udc62', a: 1.0, h: 1.0, nouns: ['Boots', 'Greaves', 'Sandals'] },
+  { name: 'Ring',   ic: '\ud83d\udc8d', a: 1.2, h: 0.8, nouns: ['Ring', 'Signet', 'Band'] },
+  { name: 'Amulet', ic: '\ud83d\udcff', a: 0.9, h: 1.1, nouns: ['Amulet', 'Charm', 'Talisman'] }
+];
+
+/* coin upgrades: tab battle (reset on rebirth), luck + world (permanent) */
+const BT_UPS = [
+  { id: 'atk',    tab: 'battle', ic: '\ud83d\udde1\ufe0f', name: 'Whetstone',     max: 100, base: 40,   grow: 1.45, fx: l => '+' + (20 * l) + '% damage' },
+  { id: 'hp',     tab: 'battle', ic: '\u2764\ufe0f',       name: 'Thick Hide',    max: 100, base: 40,   grow: 1.45, fx: l => '+' + (20 * l) + '% health' },
+  { id: 'coin',   tab: 'battle', ic: '\ud83e\ude99',       name: 'Greed',         max: 100, base: 60,   grow: 1.5,  fx: l => '+' + (12 * l) + '% coins' },
+  { id: 'aspd',   tab: 'battle', ic: '\u26a1',             name: 'Quick Claws',   max: 20,  base: 200,  grow: 2.0,  fx: l => '+' + (5 * l) + '% auto attack speed' },
+  { id: 'crit',   tab: 'battle', ic: '\ud83c\udfaf',       name: 'Keen Eye',      max: 35,  base: 100,  grow: 1.7,  fx: l => '+' + l + '% crit chance' },
+  { id: 'critd',  tab: 'battle', ic: '\ud83d\udca5',       name: 'Deadly Edge',   max: 40,  base: 150,  grow: 1.6,  fx: l => 'Crit x' + (2.5 + 0.15 * l).toFixed(2) },
+  { id: 'drop',   tab: 'luck',   ic: '\ud83c\udf92',       name: 'Scavenger',     max: 60,  base: 500,  grow: 1.5,  fx: l => 'Drop chance ' + (10 + 0.5 * l).toFixed(1) + '%' },
+  { id: 'rarity', tab: 'luck',   ic: '\ud83c\udf40',       name: 'Fortune',       max: 40,  base: 1000, grow: 1.55, fx: l => 'Rarity luck x' + (1 + 0.06 * l).toFixed(2) },
+  { id: 'jackpot',tab: 'luck',   ic: '\ud83c\udfb0',       name: 'Jackpot',       max: 30,  base: 800,  grow: 1.55, fx: l => l + '% chance for x5 coins' },
+  { id: 'wprod',  tab: 'world',  ic: '\ud83c\udf00',       name: 'Portal Engine', max: 100, base: 300,  grow: 1.6,  fx: l => 'World 1 production x' + fmt(Math.pow(1.12, l)) },
+  { id: 'wclick', tab: 'world',  ic: '\ud83d\udc4a',       name: 'Titan Fist',    max: 100, base: 300,  grow: 1.6,  fx: l => 'World 1 click power x' + fmt(Math.pow(1.10, l)) },
+  { id: 'wevo',   tab: 'world',  ic: '\ud83c\udf31',       name: 'Growth Serum',  max: 40,  base: 800,  grow: 1.7,  fx: l => 'Evolution XP +' + (25 * l) + '%' }
+];
+/* soul upgrades: permanent, bought with souls */
+const BT_SUPS = [
+  { id: 'sdmg',   ic: '\ud83d\udd25',       name: 'Soul Might',   max: 50, base: 3, grow: 1.3,  fx: l => '+' + (25 * l) + '% battle damage' },
+  { id: 'shp',    ic: '\ud83d\udee1\ufe0f', name: 'Soul Armor',   max: 50, base: 3, grow: 1.3,  fx: l => '+' + (25 * l) + '% battle health' },
+  { id: 'scoin',  ic: '\ud83d\udcb0',       name: 'Soul Gold',    max: 50, base: 3, grow: 1.3,  fx: l => '+' + (20 * l) + '% battle coins' },
+  { id: 'sluck',  ic: '\ud83c\udf40',       name: 'Soul Clover',  max: 30, base: 5, grow: 1.35, fx: l => '+' + (5 * l) + '% rarity luck' },
+  { id: 'sdrop',  ic: '\ud83c\udf92',       name: 'Soul Hunter',  max: 30, base: 5, grow: 1.35, fx: l => '+' + (0.5 * l).toFixed(1) + '% drop chance' },
+  { id: 'swprod', ic: '\ud83c\udf00',       name: 'Soul Portal',  max: 60, base: 4, grow: 1.32, fx: l => 'World 1 production x' + fmt(Math.pow(1.25, l)) },
+  { id: 'swclick',ic: '\ud83d\udc4a',       name: 'Soul Fist',    max: 60, base: 4, grow: 1.32, fx: l => 'World 1 click power x' + fmt(Math.pow(1.2, l)) },
+  { id: 'swevo',  ic: '\ud83c\udf31',       name: 'Soul Growth',  max: 30, base: 5, grow: 1.35, fx: l => 'Evolution XP +' + (25 * l) + '%' }
+];
+/* each coin upgrade finishes around a target stage: its last level costs ~30 kills worth of coins there */
+const BT_UP_END = { atk: 45, hp: 45, coin: 40, aspd: 35, crit: 30, critd: 35, drop: 30, rarity: 40, jackpot: 35, wprod: 50, wclick: 50, wevo: 45 };
+BT_UPS.forEach(u => { u.grow = Math.pow(20 * Math.pow(10, BT_UP_END[u.id] - 1) * 30 / u.base, 1 / u.max); });
+const BT_UP_BY_ID = {}; BT_UPS.forEach(u => { BT_UP_BY_ID[u.id] = u; });
+const BT_SUP_BY_ID = {}; BT_SUPS.forEach(u => { BT_SUP_BY_ID[u.id] = u; });
+
+function btUpLv(id) { return (S.bt2 && S.bt2.ups[id]) | 0; }
+function btSupLv(id) { return (S.bt2 && S.bt2.sups[id]) | 0; }
+function btUpCost(def, lv) { return def.base * Math.pow(def.grow, lv); }
+function btSupCost(def, lv) { return Math.ceil(def.base * Math.pow(def.grow, lv)); }
+
+/* ---------- player stats ---------- */
+function btSoulMult() { return 1 + 0.01 * (S.bt2 ? S.bt2.soulsTotal : 0); }
+function btTrainLv(k) { return S.battle[k]; }
+function btEqSum(key) {
+  let s = 0; const eq = S.bt2.eq;
+  for (let i = 0; i < eq.length; i++) { if (!eq[i]) continue; const it = btItem(eq[i]); if (it) s += it[key]; }
+  return s;
+}
+function btKumar() { return Math.sqrt(btMult()); }
+function btTier() { return S.bt2 ? Math.min(S.bt2.rebirths, 60) : 0; }
+function btDiff() { return Math.pow(BT_TIER_STEP, btTier()); }   /* every Rebirth: monsters get tougher */
+function btDmg() { return 6 * Math.pow(BT_TRAIN_D, btTrainLv('tD')) * btKumar() * (1 + btEqSum('a')) * (1 + 0.2 * btUpLv('atk')) * (1 + 0.25 * btSupLv('sdmg')) * btSoulMult(); }
+function btHp()  { return 50 * Math.pow(BT_TRAIN_D, btTrainLv('tH')) * btKumar() * (1 + btEqSum('h')) * (1 + 0.2 * btUpLv('hp')) * (1 + 0.25 * btSupLv('shp')) * btSoulMult(); }
+function btCost(l) { return 15 * Math.pow(BT_TRAIN_R, l); }
+const BT_TIER_STEP = 4;
+function btCoinMult() { return (1 + 0.12 * btUpLv('coin')) * (1 + 0.2 * btSupLv('scoin')) * (1 + 0.01 * S.bt2.soulsTotal); }
+function btCritChance() { return Math.min(0.9, 0.15 + 0.01 * btUpLv('crit')); }
+function btCritMult() { return 2.5 + 0.15 * btUpLv('critd'); }
+function btAtkInterval() { return 1 / (1 + 0.05 * btUpLv('aspd')); }
+function btDropChance() { return 0.10 + 0.005 * btUpLv('drop') + 0.005 * btSupLv('sdrop'); }
+function btLuckF() { return 1 + 0.06 * btUpLv('rarity') + 0.05 * btSupLv('sluck'); }
+function btRarProbs() {
+  const F = btLuckF(), w = BT_RAR.map((r, i) => r.w * Math.pow(F, i)), s = w.reduce((a, b) => a + b, 0);
+  return w.map(x => x / s);
+}
+/* boosts for World 1 */
+function btWorldProd() { if (!S.bt2) return 1; return Math.pow(1.12, btUpLv('wprod')) * Math.pow(1.25, btSupLv('swprod')) * (1 + 0.05 * S.bt2.soulsTotal); }
+function btWorldClick() { if (!S.bt2) return 1; return Math.pow(1.10, btUpLv('wclick')) * Math.pow(1.2, btSupLv('swclick')) * (1 + 0.05 * S.bt2.soulsTotal); }
+function btWorldEvo() { if (!S.bt2) return 1; return 1 + 0.25 * btUpLv('wevo') + 0.25 * btSupLv('swevo'); }
+
+/* ---------- monsters: every stage has 10x the health of the one before ---------- */
+function btMon(st) {
+  const boss = st % 10 === 0;
+  return { icon: BT_ICONS[st - 1], name: BT_NAMES[st - 1], boss: boss,
+    hp: 40 * Math.pow(10, st - 1) * (boss ? 5 : 1) * btDiff(),
+    atk: 3 * Math.pow(6, st - 1) * (boss ? 1.6 : 1) * btDiff(),
+    coins: 20 * Math.pow(10, st - 1) * (boss ? 4 : 1) * Math.sqrt(btDiff()), speed: boss ? 1.2 : 1.4 };
+}
+
+/* ---------- equipment ---------- */
+function btItem(id) { const a = S.bt2.items; for (let i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
+function btIsEq(id) { return S.bt2.eq.indexOf(id) >= 0; }
+function btBagCount() { return S.bt2.items.length - S.bt2.eq.filter(x => x).length; }
+function btScore(it) { return it.a + it.h; }
+function btMakeItem(rar, st) {
+  const sl = randInt(0, BT_SLOTS.length - 1), sd = BT_SLOTS[sl];
+  const base = BT_ITEM_BASE * BT_RAR[rar].mult * Math.pow(BT_ITEM_G, st - 1);
+  return { id: S.bt2.uid++, slot: sl, rar: rar, st: st, a: base * sd.a * rand(0.9, 1.1), h: base * sd.h * rand(0.9, 1.1),
+    n: BT_RAR[rar].pre + ' ' + sd.nouns[randInt(0, sd.nouns.length - 1)] };
+}
+function btAddItem(it) {
+  const B2 = S.bt2;
+  if (btBagCount() < BT_BAG) { B2.items.push(it); if (!B2.eq[it.slot]) B2.eq[it.slot] = it.id; return 'added'; }
+  let worst = null;
+  B2.items.forEach(x => { if (!btIsEq(x.id) && (!worst || btScore(x) < btScore(worst))) worst = x; });
+  if (worst && btScore(it) > btScore(worst)) { B2.items.splice(B2.items.indexOf(worst), 1); B2.items.push(it); return 'replaced'; }
+  return 'lost';
+}
+function btRollDrop(stage) {
+  if (Math.random() >= btDropChance()) return null;
+  const p = btRarProbs(); let r = Math.random(), i = 0;
+  for (; i < p.length - 1; i++) { if (r < p[i]) break; r -= p[i]; }
+  return btMakeItem(i, stage);
+}
+function btEquip(id) { const it = btItem(id); if (!it || btIsEq(id)) return false; S.bt2.eq[it.slot] = id; return true; }
+function btUnequip(id) {
+  const i = S.bt2.eq.indexOf(id); if (i < 0) return false;
+  if (btBagCount() >= BT_BAG) return false;
+  S.bt2.eq[i] = 0; return true;
+}
+function btEquipBest() {
+  let n = 0;
+  for (let s = 0; s < BT_SLOTS.length; s++) {
+    let best = null;
+    S.bt2.items.forEach(it => { if (it.slot === s && (!best || btScore(it) > btScore(best))) best = it; });
+    if (best && S.bt2.eq[s] !== best.id) { S.bt2.eq[s] = best.id; n++; }
+  }
+  return n;
+}
+function btDeleteUnequipped(maxRar) {   /* maxRar null = every unequipped item, 0 = only whites */
+  const before = S.bt2.items.length;
+  S.bt2.items = S.bt2.items.filter(it => btIsEq(it.id) || (maxRar != null && it.rar > maxRar));
+  return before - S.bt2.items.length;
+}
+function btDeleteItem(id) {
+  if (btIsEq(id)) return false;
+  const i = S.bt2.items.findIndex(x => x.id === id); if (i < 0) return false;
+  S.bt2.items.splice(i, 1); return true;
+}
+
+/* ---------- upgrades ---------- */
+function btBuyUp(id, soul) {
+  const def = soul ? BT_SUP_BY_ID[id] : BT_UP_BY_ID[id]; if (!def) return false;
+  const lv = soul ? btSupLv(id) : btUpLv(id); if (lv >= def.max) return false;
+  if (soul) { const c = btSupCost(def, lv); if (S.bt2.souls < c) return false; S.bt2.souls -= c; S.bt2.sups[id] = lv + 1; }
+  else { const c = btUpCost(def, lv); if (S.battle.coins < c) return false; S.battle.coins -= c; S.bt2.ups[id] = lv + 1; }
+  recalc();
+  return true;
+}
+function btBuyMax(list, soul) {
+  let n = 0, guard = 0;
+  while (guard++ < 2000) {
+    let best = null, bc = Infinity;
+    list.forEach(def => {
+      const lv = soul ? btSupLv(def.id) : btUpLv(def.id); if (lv >= def.max) return;
+      const c = soul ? btSupCost(def, lv) : btUpCost(def, lv);
+      if (c <= (soul ? S.bt2.souls : S.battle.coins) && c < bc) { bc = c; best = def; }
+    });
+    if (!best || !btBuyUp(best.id, soul)) break;
+    n++;
+  }
+  return n;
+}
+function btAffordCount() {
+  let n = 0;
+  BT_UPS.forEach(d => { const l = btUpLv(d.id); if (l < d.max && S.battle.coins >= btUpCost(d, l)) n++; });
+  BT_SUPS.forEach(d => { const l = btSupLv(d.id); if (l < d.max && S.bt2.souls >= btSupCost(d, l)) n++; });
+  return n;
+}
+
+/* ---------- rebirth ---------- */
+function btSoulGain() {
+  const b = S.battle.rb;
+  if (b < BT_REBIRTH_MIN) return 0;
+  return Math.floor(2 * Math.pow(b - BT_REBIRTH_MIN + 1, 1.5) * (1 + 0.25 * S.bt2.rebirths));
+}
+function btGearSouls() { let n = 0; S.bt2.items.forEach(it => { n += [1, 2, 5, 15, 40][it.rar]; }); return n; }
+function btRebirth() {
+  const g = btSoulGain(); if (g < 1) return 0;
+  const B = S.battle, B2 = S.bt2;
+  const extra = btGearSouls();   /* all gear is melted into souls */
+  B2.items = []; B2.eq = [0, 0, 0, 0, 0, 0];
+  B2.souls += g + extra; B2.soulsTotal += g + extra; B2.rebirths++;
+  B.rb = 0; B.cur = 1; B.coins = 0; B.tD = 0; B.tH = 0;
+  BT_UPS.forEach(d => { if (d.tab === 'battle') delete B2.ups[d.id]; });
+  T.bt = null; btEnsure();
+  recalc();
+  ui.dirty = true; ui.btDirty = true;
+  return g + extra;
+}
+
+/* =====================================================================
    WORLDS TAB + WORLD 2 FULL SCREEN
    ===================================================================== */
-function worldsSig() { return (btUnlocked() ? 1 : 0) + '|' + S.battle.best + '|' + (S.battle.cleared ? 1 : 0); }
+function worldsSig() { return (btUnlocked() ? 1 : 0) + '|' + S.battle.best + '|' + (S.battle.cleared ? 1 : 0) + '|' + S.bt2.soulsTotal; }
 function renderWorlds() {
   const B = S.battle, un = btUnlocked();
   let h = '<div class="panel"><h3 class="panel-title">Worlds</h3><p class="panel-sub">You are in World 1. Pick a world to travel to.</p></div><div class="wl-list">';
   h += '<div class="wl-card w2"><div class="wl-ic">\u2694\ufe0f</div><div class="wl-body"><div class="wl-name">World 2: Battle World</div>'
     + '<div class="wl-desc">Fight a monster on each of 50 stages. Beat the last one for a secret pet, a title and the Custom Kumar.</div>';
   if (un) {
-    h += '<span class="wl-tag">' + (B.cleared ? '\ud83c\udfc6 Conquered' : 'Best stage ' + B.best + ' / ' + BT_MAX) + '</span></div>'
+    h += '<span class="wl-tag">' + (B.cleared ? '\ud83c\udfc6 Conquered' : 'Best stage ' + B.best + ' / ' + BT_MAX) + '</span>' + (S.bt2.rebirths ? ' <span class="wl-tag">\u2728 ' + fmt(S.bt2.soulsTotal) + ' souls</span>' : '') + '</div>'
       + '<button class="btn btn-pink" type="button" data-act="openworld" data-id="2">Enter \u25b8</button></div>';
   } else {
     h += '<div class="progress"><div class="progress-fill" data-bar="btunlock:x"></div></div><div class="progress-text" data-live="btunlock:x"></div></div>'
@@ -5883,7 +6181,7 @@ function wsRoot() {
   if (WS.root) return WS.root;
   const r = document.createElement('div');
   r.id = 'worldScreen'; r.className = 'ws';
-  r.innerHTML = '<div class="ws-inner" id="wsInner"></div><div class="ws-fx" id="wsFx"></div>';
+  r.innerHTML = '<div class="ws-inner" id="wsInner"></div><div class="ws-panelhost" id="wsPanelHost"></div><div class="ws-fx" id="wsFx"></div>';
   document.body.appendChild(r);
   WS.root = r; WS.inner = r.querySelector('#wsInner'); WS.fxl = r.querySelector('#wsFx');
   r.addEventListener('pointerdown', ev => {
@@ -5893,22 +6191,46 @@ function wsRoot() {
   r.addEventListener('click', ev => {
     const el = ev.target.closest('[data-wact]');
     if (!el || el.disabled) return;
+    if (el.classList.contains('wp-back') && ev.target !== el) return;
     const a = el.getAttribute('data-wact');
     if (a === 'strike') { if (ev.detail === 0) wsStrike(null, null); return; }   /* mouse/touch handled on pointerdown */
     const fn = WSA[a]; if (fn) fn(el);
   });
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && WS.open) wsClose(); });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && WS.open) { if (WP.open) wsPanelClose(); else wsClose(); } });
   return r;
 }
 
+const WP = { open: null, upTab: 'battle', sel: 0, sig: '' };
 const WSA = {
   world1: () => wsClose(),
-  world2: () => {},
+  world2: () => { wsPanelClose(); },
   world3: el => { wsSoon(el); },
   prev: () => { ACTIONS.btprev(); T.btWait = 0.3; wsPatch(); },
   next: () => { ACTIONS.btnext(); T.btWait = 0.3; wsPatch(); },
   btD: () => { ACTIONS.btD(); wsPatch(); wsPulse('wsCoins'); },
-  btH: () => { ACTIONS.btH(); wsPatch(); wsPulse('wsCoins'); }
+  btH: () => { ACTIONS.btH(); wsPatch(); wsPulse('wsCoins'); },
+  panel: el => { if (el.dataset.t) WP.upTab = el.dataset.t; wsPanelOpen(el.dataset.p); },
+  panelx: () => wsPanelClose(),
+  uptab: el => { WP.upTab = el.dataset.t; wsPanelRender(); },
+  buyup: el => { if (btBuyUp(el.dataset.id, el.dataset.soul === '1')) { sfx.buy(); wsPanelRender(); wsPatch(); } else sfx.fail(); },
+  buymax: el => { const soul = WP.upTab === 'soul'; const list = soul ? BT_SUPS : BT_UPS.filter(u => u.tab === WP.upTab); const n = btBuyMax(list, soul); if (n) { sfx.buy(); toast('Upgrades', n + ' level' + (n > 1 ? 's' : '') + ' bought', 'good'); } else sfx.fail(); wsPanelRender(); wsPatch(); },
+  eqsel: el => { WP.sel = +el.dataset.id; wsPanelRender(); },
+  eqequip: el => { const id = +el.dataset.id; if (btEquip(id)) sfx.buy(); wsPanelRender(); wsPatch(); },
+  equnequip: el => { const id = +el.dataset.id; if (btUnequip(id)) sfx.buy(); else { sfx.fail(); toast('Bag full', 'Make room first.', ''); } wsPanelRender(); wsPatch(); },
+  eqdel: el => { if (btDeleteItem(+el.dataset.id)) { WP.sel = 0; sfx.fail(); } wsPanelRender(); wsPatch(); },
+  eqbest: () => { const n = btEquipBest(); if (n) { sfx.achievement(); toast('Equip Best', n + ' slot' + (n > 1 ? 's' : '') + ' upgraded', 'good'); } else toast('Equip Best', 'Already wearing your best gear.', ''); wsPanelRender(); wsPatch(); },
+  eqdelall: () => {
+    const n = S.bt2.items.length - S.bt2.eq.filter(x => x).length;
+    if (!n) { toast('Nothing to delete', 'Your bag has no unequipped items.', ''); return; }
+    confirmModal('Delete unequipped?', 'This permanently deletes ' + n + ' unequipped item' + (n > 1 ? 's' : '') + '.', 'Delete', 'btn-danger', () => { btDeleteUnequipped(null); WP.sel = 0; wsPanelRender(); wsPatch(); });
+  },
+  eqdelwhite: () => { const n = btDeleteUnequipped(0); if (n) { sfx.fail(); toast('Deleted', n + ' white item' + (n > 1 ? 's' : ''), ''); } WP.sel = 0; wsPanelRender(); wsPatch(); },
+  rebirth: () => {
+    const g = btSoulGain(); if (g < 1) { sfx.fail(); return; }
+    confirmModal('Rebirth World 2?', 'Monsters get x' + BT_TIER_STEP + ' tougher. You gain ' + fmt(g) + ' souls. Your stage progress, coins, training and Battle upgrades reset, and ALL your gear melts into extra souls. You keep souls, soul upgrades, luck and World Boost upgrades.', 'Rebirth', 'btn-pink', () => {
+      const got = btRebirth(); wsPanelClose(); wsRebirthFx(got);
+    });
+  }
 };
 function wsPulse(id) { const e = $(id); if (!e) return; e.classList.remove('ws-pill-pop'); void e.offsetWidth; e.classList.add('ws-pill-pop'); }
 function wsSoon(el) {
@@ -5920,7 +6242,7 @@ function wsSoon(el) {
 function wsOpen() {
   if (!btUnlocked()) { sfx.fail(); toast('World 2 is locked', 'Earn 1e' + BT_UNLOCK_LOG + ' Finn Kumar in total to unlock it.', ''); return; }
   wsRoot();
-  WS.open = true; WS.sig = ''; T.btWait = 0; T.btStun = 0; T.btCombo = 0;
+  WS.open = true; WS.sig = ''; T.btWait = 0; T.btStun = 0; T.btCombo = 0; WP.open = null;
   btEnsure();
   WS.root.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -5929,28 +6251,39 @@ function wsOpen() {
 }
 function wsClose() {
   if (!WS.open) return;
-  WS.open = false;
+  WS.open = false; WP.open = null;
   WS.root.classList.remove('open');
-  WS.fxl.innerHTML = '';
+  WS.fxl.innerHTML = ''; $('wsPanelHost').innerHTML = ''; $('wsPanelHost').classList.remove('on');
   document.body.style.overflow = '';
   ui.dirty = true;
 }
+
+function wsPill(ic, label, id, key, cls) {
+  return '<div class="bt-pill ' + (cls || '') + '"' + (id ? ' id="' + id + '"' : '') + '><span class="pl-ic">' + ic + '</span> ' + label + ' <b data-wlive="' + key + '"></b></div>';
+}
+const WS_LIVE = {
+  dmg: () => fmt(btDmg()), hp: () => fmt(btHp()), crit: () => (btCritChance() * 100).toFixed(0) + '%',
+  drop: () => (btDropChance() * 100).toFixed(1) + '%', luck: () => 'x' + btLuckF().toFixed(2),
+  coins: () => fmt(S.battle.coins), souls: () => fmt(S.bt2.souls), bag: () => btBagCount() + '/' + BT_BAG
+};
 
 function wsRender() {
   const B = S.battle, k = KUMAR_BY_ID[S.kumar] || KUMARS[0], m = btMon(B.cur);
   const waiting = (T.btWait || 0) > 0;
   let h = '<div class="ws-top"><button class="ws-chip" type="button" data-wact="world1" title="Back to World 1">\ud83c\udf0d World 1</button>'
     + '<button class="ws-chip on" type="button" data-wact="world2">\u2694\ufe0f World 2</button>'
-    + '<button class="ws-chip soon" type="button" data-wact="world3">\ud83d\udea7 World 3</button></div>';
-  h += '<div class="ws-hud" id="wsHud"><div class="bt-me"><span class="bt-who">' + (k.icon || '') + ' ' + esc(k.name)
-    + (kumarStar(k.id) ? ' <span class="star-tag">' + starText(kumarStar(k.id)) + '</span>' : '') + '</span>'
-    + '<div class="ws-bar" id="wsPlBar"><div class="ws-ghost" data-bar="btpl:x" style="width:' + wsBw('btpl:x') + '"></div><div class="ws-fill pl" data-bar="btpl:x" style="width:' + wsBw('btpl:x') + '"></div></div>'
-    + '<span class="bt-num" data-live="btplhp:x"></span></div>'
-    + '<div class="bt-pill">\u2694 Damage <b data-live="btdmg:x"></b></div><div class="bt-pill">\u2764 Health <b data-live="btmaxhp:x"></b></div>'
-    + '<div class="bt-pill gold" id="wsCoins">\ud83e\ude99 <b data-live="btcoins:x"></b></div><div class="bt-pill">Stage <b>' + B.cur + ' / ' + BT_MAX + '</b></div></div>';
+    + '<button class="ws-chip soon" type="button" data-wact="world3">\ud83d\udea7 World 3</button><span style="flex:1"></span>'
+    + wsPill('\ud83e\ude99', '', 'wsCoins', 'coins', 'gold') + wsPill('\u2728', '', 'wsSouls', 'souls', 'soul') + '</div>';
+  h += '<div class="ws-stats">' + wsPill('\u2694', 'Damage', '', 'dmg') + wsPill('\u2764', 'Health', '', 'hp') + wsPill('\ud83c\udfaf', 'Crit', '', 'crit')
+    + wsPill('\ud83c\udf92', 'Drop', '', 'drop') + wsPill('\ud83c\udf40', 'Luck', '', 'luck')
+    + (S.bt2.rebirths ? '<div class="bt-pill soul">\u2620 Tier <b>' + btTier() + '</b></div>' : '') + '<div class="bt-pill">Stage <b>' + B.cur + ' / ' + BT_MAX + '</b></div></div>';
   h += '<div class="ws-arena' + (m.boss ? ' boss' : '') + (waiting ? ' waiting' : '') + '" id="wsArena" style="--h:' + ((B.cur * 29) % 360) + '">'
     + '<div class="ws-combo" id="wsCombo"></div>'
     + (m.boss ? '<div class="ws-banner' + (waiting ? '' : ' go') + '" id="wsBanner">\u26a0 BOSS \u26a0</div>' : '')
+    + '<div class="ws-player" id="wsPlayer"><div class="ws-pl-egg" id="wsPlEgg"><svg viewBox="0 0 300 300" aria-hidden="true">' + eggSvgMarkup(S.kumar, S.skin, 'happy', true, 'ws') + '</svg></div>'
+    + '<div class="ws-pl-name">' + esc(k.name) + (kumarStar(k.id) ? ' <span class="star-tag">' + starText(kumarStar(k.id)) + '</span>' : '') + '</div>'
+    + '<div class="ws-bar" id="wsPlBar"><div class="ws-ghost" data-bar="btpl:x" style="width:' + wsBw('btpl:x') + '"></div><div class="ws-fill pl" data-bar="btpl:x" style="width:' + wsBw('btpl:x') + '"></div></div>'
+    + '<div class="bt-num ws-num" data-live="btplhp:x"></div></div>'
     + '<div class="ws-stage" id="wsStage"><div class="ws-mon-name">' + esc(m.name) + (m.boss ? ' <span class="pill pink">BOSS</span>' : '') + '</div>'
     + '<div class="ws-bar ws-monbar' + (waiting ? '' : ' intro') + '" id="wsMonBar"' + (waiting ? ' data-hold="1"' : '') + '><div class="ws-ghost" data-bar="btmon:x"></div><div class="ws-fill" data-bar="btmon:x"></div></div>'
     + '<div class="bt-num ws-num" data-live="btmonhp:x"></div>'
@@ -5959,11 +6292,14 @@ function wsRender() {
     + '<div class="ws-flash" id="wsFlash"></div><div class="ws-vig" id="wsVig"></div></div>';
   h += '<div class="ws-bottom"><div class="ws-row"><button class="btn btn-sm" type="button" data-wact="prev"' + (B.cur <= 1 ? ' disabled' : '') + '>\u25c2 Stage</button>'
     + '<button class="ws-atk" type="button" data-wact="strike">\u2694 ATTACK!</button>'
-    + '<button class="btn btn-sm" type="button" data-wact="next"' + (B.cur >= Math.min(BT_MAX, B.best + 1) ? ' disabled' : '') + '>Stage \u25b8</button></div>'
+    + '<button class="btn btn-sm" type="button" data-wact="next"' + (B.cur >= Math.min(BT_MAX, B.rb + 1) ? ' disabled' : '') + '>Stage \u25b8</button></div>'
     + '<div class="ws-row"><button class="btn btn-sun" type="button" data-btn="1" data-wact="btD" data-aff="btD:x"><span data-live="btdcost:x"></span></button>'
-    + '<button class="btn btn-mint" type="button" data-btn="1" data-wact="btH" data-aff="btH:x"><span data-live="bthcost:x"></span></button></div>';
+    + '<button class="btn btn-mint" type="button" data-btn="1" data-wact="btH" data-aff="btH:x"><span data-live="bthcost:x"></span></button></div>'
+    + '<div class="ws-row ws-menu"><button class="btn btn-sky" type="button" id="wsEqBtn" data-wact="panel" data-p="eq">\ud83c\udf92 Equipment <small data-wlive="bag"></small></button>'
+    + '<button class="btn btn-sun" type="button" data-wact="panel" data-p="up">\u2b06 Upgrades <span class="ws-badge" id="wsUpBadge"></span></button>'
+    + '<button class="btn btn-pink" type="button" data-wact="panel" data-p="rb">\u2728 Rebirth <span class="ws-badge" id="wsRbBadge"></span></button></div>';
   h += '<div class="bt-dots">';
-  for (let i = 1; i <= BT_MAX; i++) h += '<span class="bt-dot' + (i <= B.best ? ' done' : '') + (i === B.cur ? ' cur' : '') + (i % 10 === 0 ? ' boss' : '') + '"></span>';
+  for (let i = 1; i <= BT_MAX; i++) h += '<span class="bt-dot' + (i <= B.rb ? ' done' : '') + (i === B.cur ? ' cur' : '') + (i % 10 === 0 ? ' boss' : '') + '" title="Stage ' + i + '"></span>';
   h += '</div></div>';
   WS.inner.innerHTML = h;
   if (!waiting) setTimeout(() => { const b = $('wsMonBar'); if (b) b.classList.remove('intro'); }, 800);
@@ -5973,9 +6309,10 @@ function wsRender() {
 
 function wsPatch() {
   if (!WS.open) return;
-  const sig = S.battle.cur + '|' + S.battle.best + '|' + S.kumar + '|' + (S.battle.cleared ? 1 : 0);
+  const sig = S.battle.cur + '|' + S.battle.rb + '|' + S.kumar + '|' + (S.battle.cleared ? 1 : 0) + '|' + S.skin;
   if (sig !== WS.sig || ui.btDirty) { WS.sig = sig; ui.btDirty = false; wsRender(); }
   patchLive(WS.inner);
+  WS.inner.querySelectorAll('[data-wlive]').forEach(el => { const t = WS_LIVE[el.getAttribute('data-wlive')](); if (el.textContent !== t) el.textContent = t; });
   const arena = $('wsArena'), bar = $('wsMonBar');
   if (!arena || !bar) return;
   const waiting = (T.btWait || 0) > 0;
@@ -5993,11 +6330,169 @@ function wsPatch() {
     patchLive(WS.inner);
   }
   const c = $('wsCombo');
-  if (c) {
-    const live = (T.btCombo || 0) >= 2 && performance.now() - (T.btComboAt || 0) < 1300;
-    c.classList.toggle('on', live);
-  }
+  if (c) c.classList.toggle('on', (T.btCombo || 0) >= 2 && performance.now() - (T.btComboAt || 0) < 1300);
+  const ub = $('wsUpBadge'), n = btAffordCount(); if (ub) ub.textContent = n > 0 ? n : '';
+  if (ub) ub.style.display = n > 0 ? '' : 'none';
+  const rb = $('wsRbBadge'), g = btSoulGain(); if (rb) { rb.textContent = g > 0 ? '+' + fmt(g) : ''; rb.style.display = g > 0 ? '' : 'none'; }
+  wsPanelPatch();
 }
+
+/* ---------- panels: Upgrades / Equipment / Rebirth ---------- */
+function wsPanelOpen(name) { WP.open = name; WP.sel = 0; wsPanelRender(); sfx.buy(); }
+function wsPanelClose() { if (!WP.open) return; WP.open = null; wsPanelRender(); }
+function wpHead(title) { return '<div class="wp-head"><div class="wp-title">' + title + '</div><button class="btn btn-sm btn-danger wp-close" type="button" data-wact="panelx">\u2715</button></div>'; }
+function wsPanelSig() {
+  if (WP.open === 'eq') return 'eq|' + S.bt2.items.length + '|' + S.bt2.eq.join(',') + '|' + WP.sel + '|' + btDropChance().toFixed(3) + '|' + btLuckF().toFixed(3);
+  if (WP.open === 'rb') return 'rb|' + btSoulGain() + '|' + S.battle.rb + '|' + S.bt2.soulsTotal;
+  return WP.open;
+}
+function wsPanelRender() {
+  const host = $('wsPanelHost'); if (!host) return;
+  if (!WP.open) { host.innerHTML = ''; host.classList.remove('on'); return; }
+  const old = host.querySelector('.wp-body'), st = old ? old.scrollTop : 0;
+  const body = WP.open === 'up' ? wpUp() : WP.open === 'eq' ? wpEq() : wpRb();
+  host.innerHTML = '<div class="wp-back" data-wact="panelx"><div class="wp-card">' + body + '</div></div>';
+  host.classList.add('on');
+  const nb = host.querySelector('.wp-body'); if (nb) nb.scrollTop = st;
+  WP.sig = wsPanelSig();
+}
+function wsPanelPatch() {
+  if (!WP.open) return;
+  if (WP.open !== 'up') { if (wsPanelSig() !== WP.sig) wsPanelRender(); return; }
+  const host = $('wsPanelHost'), soul = WP.upTab === 'soul';
+  const cur = soul ? S.bt2.souls : S.battle.coins;
+  const cn = host.querySelector('[data-pcur]'); if (cn) cn.textContent = fmt(cur);
+  host.querySelectorAll('[data-up]').forEach(r => {
+    const c = parseFloat(r.getAttribute('data-cost')), ok = c <= cur && r.getAttribute('data-max') !== '1';
+    r.classList.toggle('afford', ok);
+    const b = r.querySelector('button'); if (b) b.disabled = !ok;
+  });
+}
+
+function wpUp() {
+  const t = WP.upTab, soul = t === 'soul';
+  const tabs = [['battle', '\u2694 Battle'], ['luck', '\ud83c\udf40 Luck'], ['world', '\ud83c\udf0d World Boost'], ['soul', '\u2728 Souls']];
+  let h = wpHead('\u2b06 Upgrades') + '<div class="wp-tabs">';
+  tabs.forEach(x => { h += '<button class="wp-tab' + (t === x[0] ? ' on' : '') + '" type="button" data-wact="uptab" data-t="' + x[0] + '">' + x[1] + '</button>'; });
+  h += '</div><div class="wp-cur">' + (soul ? '\u2728 <b data-pcur="1">' + fmt(S.bt2.souls) + '</b> souls' : '\ud83e\ude99 <b data-pcur="1">' + fmt(S.battle.coins) + '</b> coins')
+    + '<span class="wp-note">' + (t === 'battle' ? 'Battle upgrades reset on Rebirth.' : t === 'soul' ? 'Soul upgrades are permanent.' : 'These stay after Rebirth.') + '</span>'
+    + '<button class="btn btn-sm btn-mint" type="button" data-wact="buymax">Buy max</button></div>';
+  const list = soul ? BT_SUPS : BT_UPS.filter(u => u.tab === t);
+  h += '<div class="wp-body"><div class="up-list">';
+  list.forEach(d => {
+    const lv = soul ? btSupLv(d.id) : btUpLv(d.id), mx = lv >= d.max;
+    const cost = mx ? 0 : soul ? btSupCost(d, lv) : btUpCost(d, lv), cur = soul ? S.bt2.souls : S.battle.coins;
+    h += '<div class="up-row' + (mx ? ' maxed' : '') + (!mx && cost <= cur ? ' afford' : '') + '" data-up="' + d.id + '" data-cost="' + cost + '" data-max="' + (mx ? 1 : 0) + '">'
+      + '<div class="up-ic">' + d.ic + '</div><div class="up-main"><div class="up-name">' + d.name + ' <span class="up-lv">Lv ' + lv + ' / ' + d.max + '</span></div>'
+      + '<div class="up-desc">' + esc(d.fx(lv)) + (mx ? '' : ' <span class="up-next">\u2192 ' + esc(d.fx(lv + 1)) + '</span>') + '</div>'
+      + '<div class="up-bar"><div style="width:' + (lv / d.max * 100).toFixed(1) + '%"></div></div></div>'
+      + '<button class="btn btn-sun up-buy" type="button" data-wact="buyup" data-id="' + d.id + '"' + (soul ? ' data-soul="1"' : '') + (mx || cost > cur ? ' disabled' : '') + '>' + (mx ? 'MAX' : (soul ? '\u2728 ' : '\ud83e\ude99 ') + fmt(cost)) + '</button></div>';
+  });
+  return h + '</div></div>';
+}
+
+function wpItemHtml(it, cls, extra) {
+  const r = BT_RAR[it.rar], sl = BT_SLOTS[it.slot];
+  return '<button type="button" class="eq-cell rar-' + it.rar + (cls || '') + '" data-wact="eqsel" data-id="' + it.id + '" title="' + esc(r.name + ' ' + it.n) + '">' + sl.ic + '<small>' + it.st + '</small></button>';
+}
+function wpEq() {
+  const B2 = S.bt2;
+  let h = wpHead('\ud83c\udf92 Equipment');
+  h += '<div class="eq-totals"><div class="bt-pill">\u2694 Attack <b>x' + fmt(1 + btEqSum('a')) + '</b></div><div class="bt-pill">\u2764 Health <b>x' + fmt(1 + btEqSum('h')) + '</b></div>'
+    + '<div class="bt-pill">\ud83c\udf92 Bag <b>' + btBagCount() + ' / ' + BT_BAG + '</b></div></div>';
+  h += '<div class="wp-body"><div class="eq-sub">Equipped</div><div class="eq-slots">';
+  BT_SLOTS.forEach((sl, i) => {
+    const it = B2.eq[i] ? btItem(B2.eq[i]) : null;
+    h += '<div class="eq-slot">' + (it ? wpItemHtml(it, WP.sel === it.id ? ' sel' : '') : '<div class="eq-cell empty">' + sl.ic + '</div>') + '<div class="eq-slot-name">' + sl.name + '</div></div>';
+  });
+  h += '</div>';
+  /* selected item card */
+  const sel = WP.sel ? btItem(WP.sel) : null;
+  if (sel) {
+    const r = BT_RAR[sel.rar], isEq = btIsEq(sel.id), cmp = !isEq && B2.eq[sel.slot] ? btItem(B2.eq[sel.slot]) : null;
+    const d = cmp ? btScore(sel) - btScore(cmp) : 0;
+    h += '<div class="eq-detail rar-' + sel.rar + '"><div class="eq-d-name">' + BT_SLOTS[sel.slot].ic + ' ' + esc(sel.n) + ' <span class="eq-d-rar">' + r.name + ' \u00b7 Stage ' + sel.st + '</span></div>'
+      + '<div class="eq-d-stats"><span>\u2694 +' + fmt(sel.a * 100) + '% attack</span><span>\u2764 +' + fmt(sel.h * 100) + '% health</span>'
+      + (cmp ? '<span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '\u25b2 better' : '\u25bc worse') + ' than equipped</span>' : '') + '</div>'
+      + '<div class="eq-d-btns">' + (isEq ? '<button class="btn btn-sm" type="button" data-wact="equnequip" data-id="' + sel.id + '">Unequip</button>'
+        : '<button class="btn btn-sm btn-mint" type="button" data-wact="eqequip" data-id="' + sel.id + '">Equip</button><button class="btn btn-sm btn-danger" type="button" data-wact="eqdel" data-id="' + sel.id + '">Delete</button>') + '</div></div>';
+  } else h += '<div class="eq-detail empty">Tap an item to see its stats.</div>';
+  h += '<div class="eq-sub">Bag</div><div class="eq-tools"><button class="btn btn-sm btn-mint" type="button" data-wact="eqbest">\u2b50 Equip best</button>'
+    + '<button class="btn btn-sm" type="button" data-wact="eqdelwhite">Delete whites</button>'
+    + '<button class="btn btn-sm btn-danger" type="button" data-wact="eqdelall">\ud83d\uddd1 Delete unequipped</button></div><div class="eq-grid">';
+  const bag = B2.items.filter(it => !btIsEq(it.id)).sort((a, b) => b.rar - a.rar || btScore(b) - btScore(a));
+  for (let i = 0; i < BT_BAG; i++) h += bag[i] ? wpItemHtml(bag[i], WP.sel === bag[i].id ? ' sel' : '') : '<div class="eq-cell empty"></div>';
+  h += '</div>';
+  const p = btRarProbs(), dc = btDropChance();
+  h += '<div class="eq-sub">Drop rates (per kill)</div><div class="eq-rates">';
+  BT_RAR.forEach((r, i) => { const v = dc * p[i] * 100; h += '<span class="rar-' + i + '">' + r.name + ' ' + (v >= 1 ? v.toFixed(1) : v >= 0.1 ? v.toFixed(2) : v.toFixed(3)) + '%</span>'; });
+  return h + '</div><div class="wp-note">Drop chance ' + (dc * 100).toFixed(1) + '% per kill. Gear dropped at higher stages is much stronger. A full bag replaces your worst item if the new one is better.</div></div>';
+}
+
+function wpRb() {
+  const g = btSoulGain(), B = S.battle, B2 = S.bt2;
+  let h = wpHead('\u2728 Rebirth');
+  h += '<div class="wp-body"><div class="rb-hero"><div class="rb-big">\u2728 ' + fmt(g) + '</div><div class="rb-sub">souls on Rebirth</div></div>'
+    + '<div class="eq-totals"><div class="bt-pill">Best stage this run <b>' + B.rb + '</b></div><div class="bt-pill">Rebirths <b>' + B2.rebirths + '</b></div><div class="bt-pill soul">Total souls <b>' + fmt(B2.soulsTotal) + '</b></div></div>'
+    + '<div class="rb-list"><div><b>Each soul gives</b> +1% battle damage, health and coins, and +5% World 1 production and click power.</div>'
+    + '<div><b>Current soul bonus</b> x' + btSoulMult().toFixed(2) + ' battle \u00b7 x' + (1 + 0.05 * B2.soulsTotal).toFixed(2) + ' World 1</div>'
+    + '<div><b>Resets</b> stage progress, coins, training levels, Battle upgrades. All gear melts into extra souls (white 1, purple 2, gold 5, red 15, black 40).</div>'
+    + '<div><b>Keeps</b> souls and Soul upgrades, Luck upgrades, World Boost upgrades, rewards and titles.</div>'
+    + '<div><b>Danger</b> every Rebirth makes monsters x' + BT_TIER_STEP + ' tougher (World Tier ' + btTier() + ' now). Souls gained grow +25% per Rebirth.</div>'
+    + '<div><b>Souls formula</b> reach stage ' + BT_REBIRTH_MIN + ' or higher. Stage 20 gives ' + fmt(Math.floor(2 * Math.pow(11, 1.5))) + ', stage 30 gives ' + fmt(Math.floor(2 * Math.pow(21, 1.5))) + ', stage 50 gives ' + fmt(Math.floor(2 * Math.pow(41, 1.5))) + '.</div></div>'
+    + '<div class="rb-btns"><button class="btn btn-pink rb-go" type="button" data-wact="rebirth"' + (g < 1 ? ' disabled' : '') + '>' + (g < 1 ? 'Reach stage ' + BT_REBIRTH_MIN + ' first' : '\u2728 Rebirth for ' + fmt(g) + ' souls') + '</button>'
+    + '<button class="btn btn-sun" type="button" data-wact="panel" data-p="up" data-t="soul">Spend souls \u25b8</button></div></div>';
+  return h;
+}
+
+function wsRebirthFx(got) {
+  wsFlash('wsFlash', 1, 900);
+  const r = WS.root.getBoundingClientRect(), cx = r.width / 2, cy = r.height * 0.4;
+  wsNum(cx, cy, '\u2728 +' + fmt(got) + ' SOULS \u2728', 'big');
+  wsBits(cx, cy, 36, { colors: ['#ffd43b', '#ff5c9d', '#b05cff', '#fff', '#4cc9ff'], dist: 320, grav: 120, min: 6, max: 14, round: false, t0: 800, t1: 1400 });
+  wsRing(cx, cy, '#fff', 300, 900); wsRing(cx, cy, '#b05cff', 200, 700);
+  sfx.achievement();
+  toast('Rebirth!', '+' + fmt(got) + ' souls. Spend them in Upgrades \u2192 Souls.', 'gold');
+  ui.btDirty = true; wsPatch();
+}
+
+/* a dropped item pops out of the monster and flies to the Equipment button */
+function wsDrop(it, res, cx, cy) {
+  if (!WS.open) return;
+  const L = WS.fxl, r = BT_RAR[it.rar], sl = BT_SLOTS[it.slot];
+  const big = it.rar >= 2;
+  const card = document.createElement('div');
+  card.className = 'ws-itemfly rar-' + it.rar;
+  card.innerHTML = sl.ic;
+  card.style.left = cx + 'px'; card.style.top = cy + 'px';
+  L.appendChild(card);
+  const tgt = $('wsEqBtn'), rt = tgt ? wsRect(tgt) : { x: cx, y: cy + 300, w: 0, h: 0 };
+  const tx = rt.x + rt.w / 2 - cx, ty = rt.y + rt.h / 2 - cy;
+  card.animate([
+    { transform: 'translate(-50%,-50%) scale(.2) rotate(-30deg)', opacity: 0 },
+    { transform: 'translate(-50%,-50%) translate(0,-60px) scale(' + (big ? 1.9 : 1.4) + ') rotate(0deg)', opacity: 1, offset: 0.25 },
+    { transform: 'translate(-50%,-50%) translate(0,-60px) scale(' + (big ? 1.9 : 1.4) + ') rotate(0deg)', opacity: 1, offset: 0.6 },
+    { transform: 'translate(-50%,-50%) translate(' + tx + 'px,' + ty + 'px) scale(.4) rotate(360deg)', opacity: 1 }
+  ], { duration: big ? 1500 : 1100, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' }).onfinish = () => { card.remove(); wsPulse('wsEqBtn'); };
+  const lbl = document.createElement('div');
+  lbl.className = 'ws-dmg item'; lbl.style.color = r.col === '#2a2540' ? '#fff' : r.col;
+  lbl.innerHTML = '<small>' + r.name.toUpperCase() + ' DROP!</small>' + esc(it.n);
+  lbl.style.left = cx + 'px'; lbl.style.top = (cy - 120) + 'px';
+  L.appendChild(lbl);
+  lbl.animate([{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.2)', opacity: 1, offset: 0.2 },
+    { transform: 'translate(-50%,-70%) scale(1)', opacity: 1, offset: 0.8 }, { transform: 'translate(-50%,-110%) scale(.9)', opacity: 0 }],
+    { duration: big ? 1900 : 1400, fill: 'forwards' }).onfinish = () => lbl.remove();
+  if (big) {
+    wsRing(cx, cy - 60, r.col, 220, 800);
+    wsBits(cx, cy - 60, it.rar >= 3 ? 34 : 20, { colors: [r.col, '#fff', '#ffd43b'], dist: 260, grav: 140, min: 6, max: 13, round: false, t0: 700, t1: 1200 });
+    wsFlash('wsFlash', it.rar >= 4 ? 0.8 : 0.4, it.rar >= 3 ? 600 : 350); wsShake(it.rar >= 3);
+    sfx.golden();
+  } else if (it.rar === 1) { wsBits(cx, cy - 40, 10, { colors: [r.col, '#fff'], dist: 120, min: 5, max: 9 }); sfx.buy(); }
+  if (res === 'lost') wsNum(cx, cy + 40, 'Bag full! Item lost', 'p');
+  else if (res === 'replaced') wsNum(cx, cy + 40, 'Bag full: replaced worst', 'a');
+}
+
+function wsPlayerAtk() { const e = $('wsPlEgg'); if (!e) return; e.classList.remove('atk'); void e.offsetWidth; e.classList.add('atk'); }
 
 /* ---------- little effect helpers ---------- */
 function wsNum(x, y, text, kind) {
@@ -6126,8 +6621,8 @@ function wsStrike(px, py) {
   const now = performance.now();
   T.btCombo = (now - (T.btComboAt || 0) < 900) ? (T.btCombo || 0) + 1 : 1; T.btComboAt = now;
   const combo = T.btCombo;
-  const crit = Math.random() < Math.min(0.5, 0.15 + combo * 0.01);
-  const dmg = btDmg() * 0.4 * rand(0.92, 1.08) * (crit ? 2.5 : 1);
+  const crit = Math.random() < Math.min(0.9, btCritChance() + combo * 0.005);
+  const dmg = btDmg() * 0.4 * rand(0.92, 1.08) * (crit ? btCritMult() : 1);
   const mon = $('wsMon'); if (!mon) return;
   const r = wsRect(mon);
   if (px == null) { px = r.x + r.w * rand(0.3, 0.7); py = r.y + r.h * rand(0.25, 0.6); }
@@ -6135,6 +6630,7 @@ function wsStrike(px, py) {
   /* monster reaction */
   mon.style.setProperty('--rot', rand(-9, 9).toFixed(1) + 'deg'); mon.style.setProperty('--kb', rand(-26, 26).toFixed(0) + 'px');
   mon.classList.remove('hit', 'hitc', 'lunge'); void mon.offsetWidth; mon.classList.add(crit ? 'hitc' : 'hit');
+  wsPlayerAtk();
   /* feedback */
   wsSlash(px, py, crit);
   wsBits(px, py, crit ? 14 : 7, { colors: crit ? ['#ffd43b', '#ff9a3c', '#fff'] : ['#fff', '#8be9ff', '#ffd43b'], dist: crit ? 150 : 90, min: 4, max: crit ? 11 : 8, grav: 40 });
@@ -6162,7 +6658,7 @@ function wsAutoHit(d) {
 
 function wsHurt(d) {
   if (!WS.open) return;
-  const hud = $('wsHud'), bar = $('wsPlBar'), mon = $('wsMon');
+  const hud = $('wsPlayer'), bar = $('wsPlBar'), mon = $('wsMon');
   if (mon) { mon.classList.remove('hit', 'hitc', 'lunge'); void mon.offsetWidth; mon.classList.add('lunge'); }
   if (hud) { hud.classList.remove('hurt'); void hud.offsetWidth; hud.classList.add('hurt'); }
   wsFlash('wsVig', 1, 380); wsShake(false);
@@ -6186,7 +6682,7 @@ function wsLose() {
   T.btStun = 1.1;
 }
 
-function wsKill(m) {
+function wsKill(m, earn, jp, item, res) {
   if (!WS.open) return;
   const mon = $('wsMon'), bar = $('wsMonBar'), L = WS.fxl;
   if (!mon || !bar || !L) return;
@@ -6219,7 +6715,8 @@ function wsKill(m) {
   /* rewards */
   const coinN = Math.min(12, 5 + Math.floor(S.battle.kills / 10) + (boss ? 5 : 0));
   setTimeout(() => {
-    wsNum(cx, cy - rm.h * 0.15, '+' + fmt(m.coins), 'coin');
+    wsNum(cx, cy - rm.h * 0.15, '+' + fmt(earn), 'coin');
+    if (jp) wsNum(cx, cy + rm.h * 0.25, '\ud83c\udfb0 JACKPOT x5!', 'big');
     wsNum(cx, cy - rm.h * 0.55, boss ? 'BOSS DOWN!' : 'DEFEATED!', 'big');
     const tgt = $('wsCoins'); if (!tgt || !wsParticles()) return;
     const rt = wsRect(tgt), tx = rt.x + rt.w / 2, ty = rt.y + rt.h / 2;
@@ -6236,6 +6733,7 @@ function wsKill(m) {
       ], { duration: 800 + i * 40, delay: i * 35, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'forwards' }).onfinish = () => { c.remove(); if (i === coinN - 1) wsPulse('wsCoins'); };
     }
   }, 220);
+  if (item) setTimeout(() => wsDrop(item, res, cx, cy), 450);
   sfx.win();
   T.btCombo = 0;
   try { if (navigator.vibrate) navigator.vibrate(boss ? [40, 30, 80] : 35); } catch (e) { }
@@ -6457,7 +6955,7 @@ const ACTIONS = {
   btstrike: () => { if (!btUnlocked()) return; btHit(btDmg() * 0.4); },
   openworld: d => { if (d.id === '2') wsOpen(); else wsSoon(null); },
   btprev: () => { S.battle.cur = Math.max(1, S.battle.cur - 1); btReset(); ui.dirty = true; },
-  btnext: () => { S.battle.cur = Math.min(BT_MAX, S.battle.best + 1, S.battle.cur + 1); btReset(); ui.dirty = true; },
+  btnext: () => { S.battle.cur = Math.min(BT_MAX, S.battle.rb + 1, S.battle.cur + 1); btReset(); ui.dirty = true; },
   btD: () => { const c = btCost(S.battle.tD); if (S.battle.coins >= c) { S.battle.coins -= c; S.battle.tD++; sfx.buy(); } else sfx.fail(); },
   btH: () => { const c = btCost(S.battle.tH); if (S.battle.coins >= c) { S.battle.coins -= c; S.battle.tH++; const b = btEnsure(); b.php = btHp(); sfx.buy(); } else sfx.fail(); },
   mtbranch: d => { ui.mtBranch = d.id; ui.dirty = true; },

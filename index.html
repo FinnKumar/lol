@@ -1666,7 +1666,7 @@ function defaultState() {
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
     crownRun: 0, megaCount: 0, kumarStars: {},
     mp: 0, mpTotal: 0, mtree: {}, evo: {}, customName: '', autoSec: 1,
-    kq: {}, battle: { best: 0, rb: 0, sk: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
+    kq: {}, btReset: 1, battle: { best: 0, rb: 0, sk: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
     bt2: { items: [], eq: [0, 0, 0, 0, 0, 0], uid: 1, ups: {}, sups: {}, souls: 0, soulsTotal: 0, rebirths: 0, drops: 0 },
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
@@ -3069,7 +3069,7 @@ function btReset() { T.bt = null; btEnsure(); }
 function btWin() {
   const b = T.bt, m = b.mon, B = S.battle;
   let earn = m.coins * btCoinMult();
-  const jp = Math.random() < 0.01 * btUpLv('jackpot');
+  const jp = Math.random() < btUpFx('jackpot');
   if (jp) earn *= 5;
   const item = btRollDrop(b.stage);
   let res = null;
@@ -3581,6 +3581,9 @@ function stateFromSaved(obj) {
     if (Array.isArray(o.eq)) for (let i = 0; i < 6; i++) { const id = o.eq[i] | 0, it = b2.items.find(x => x.id === id); if (it && it.slot === i) b2.eq[i] = id; }
     [['ups', BT_UP_BY_ID], ['sups', BT_SUP_BY_ID]].forEach(p => { if (isPlainObject(o[p[0]])) Object.keys(o[p[0]]).forEach(id => { const def = p[1][id]; if (def) b2[p[0]][id] = clamp(o[p[0]][id] | 0, 0, def.max); }); });
     st.bt2 = b2; }
+  /* one-time World 2 progress reset: bump BT_RESET_ID to reset everyone again */
+  if (!(obj.btReset >= BT_RESET_ID)) { const d0 = defaultState(); st.battle = d0.battle; st.bt2 = d0.bt2; }
+  st.btReset = BT_RESET_ID;
   { const cn = validateKumarName(st.customName); st.customName = cn.ok ? cn.name : ''; }
   if (isPlainObject(st.kumarsUnlocked) && !st.battle.cleared) {   /* Custom Kumar is not free: first Mega Evolution unlocks it */
     delete st.kumarsUnlocked.custom;
@@ -5953,10 +5956,11 @@ function renderBattle() {
    WORLD 2 ECONOMY: monsters x10 HP per stage, equipment, upgrades, souls
    ===================================================================== */
 const BT_BAG = 50;
+const BT_RESET_ID = 1;           /* bump this number to reset everyone's World 2 progress on their next load */
 const BT_REBIRTH_MIN = 10;
 const BT_KILLS_NEED = 10;        /* kill this many monsters on the newest stage to unlock the next one */
 const BT_TRAIN_D = 1.3;          /* power gained per training level */
-const BT_TRAIN_R = 1.56;       /* cost growth per training level */
+const BT_TRAIN_R = 1.63;       /* cost growth per training level */
 const BT_ITEM_BASE = 0.1;
 const BT_ITEM_G = 1.9;           /* item power growth per stage */
 const BT_RAR = [
@@ -5975,32 +5979,35 @@ const BT_SLOTS = [
   { name: 'Amulet', ic: '\ud83d\udcff', a: 0.9, h: 1.1, nouns: ['Amulet', 'Charm', 'Talisman'] }
 ];
 
-/* coin upgrades: tab battle (reset on rebirth), luck + world (permanent) */
+/* Every upgrade scales in growing steps: level 1 = pct, level 2 = 4x pct, level 3 = 10x pct, level 4 = 20x pct ...
+   (20% -> 80% -> 200% -> 400% -> 700% -> 1120% ...).  value(L) = pct * L(L+1)(L+2)/6 */
+function btTet(l) { return l * (l + 1) * (l + 2) / 6; }
 const BT_UPS = [
-  { id: 'atk',    tab: 'battle', ic: '\ud83d\udde1\ufe0f', name: 'Whetstone',     max: 100, base: 40,   grow: 1.45, fx: l => '+' + (20 * l) + '% damage' },
-  { id: 'hp',     tab: 'battle', ic: '\u2764\ufe0f',       name: 'Thick Hide',    max: 100, base: 40,   grow: 1.45, fx: l => '+' + (20 * l) + '% health' },
-  { id: 'coin',   tab: 'battle', ic: '\ud83e\ude99',       name: 'Greed',         max: 100, base: 60,   grow: 1.5,  fx: l => '+' + (12 * l) + '% coins' },
-  { id: 'aspd',   tab: 'battle', ic: '\u26a1',             name: 'Quick Claws',   max: 20,  base: 200,  grow: 2.0,  fx: l => '+' + (5 * l) + '% auto attack speed' },
-  { id: 'crit',   tab: 'battle', ic: '\ud83c\udfaf',       name: 'Keen Eye',      max: 35,  base: 100,  grow: 1.7,  fx: l => '+' + l + '% crit chance' },
-  { id: 'critd',  tab: 'battle', ic: '\ud83d\udca5',       name: 'Deadly Edge',   max: 40,  base: 150,  grow: 1.6,  fx: l => 'Crit x' + (2.5 + 0.15 * l).toFixed(2) },
-  { id: 'drop',   tab: 'luck',   ic: '\ud83c\udf92',       name: 'Scavenger',     max: 60,  base: 500,  grow: 1.5,  fx: l => 'Drop chance ' + (10 + 0.5 * l).toFixed(1) + '%' },
-  { id: 'rarity', tab: 'luck',   ic: '\ud83c\udf40',       name: 'Fortune',       max: 40,  base: 1000, grow: 1.55, fx: l => 'Rarity luck x' + (1 + 0.06 * l).toFixed(2) },
-  { id: 'jackpot',tab: 'luck',   ic: '\ud83c\udfb0',       name: 'Jackpot',       max: 30,  base: 800,  grow: 1.55, fx: l => l + '% chance for x5 coins' },
-  { id: 'wprod',  tab: 'world',  ic: '\ud83c\udf00',       name: 'Portal Engine', max: 100, base: 300,  grow: 1.6,  fx: l => 'World 1 production x' + fmt(Math.pow(1.12, l)) },
-  { id: 'wclick', tab: 'world',  ic: '\ud83d\udc4a',       name: 'Titan Fist',    max: 100, base: 300,  grow: 1.6,  fx: l => 'World 1 click power x' + fmt(Math.pow(1.10, l)) },
-  { id: 'wevo',   tab: 'world',  ic: '\ud83c\udf31',       name: 'Growth Serum',  max: 40,  base: 800,  grow: 1.7,  fx: l => 'Evolution XP +' + (25 * l) + '%' }
+  { id: 'atk',    tab: 'battle', ic: '\ud83d\udde1\ufe0f', name: 'Whetstone',     max: 20, base: 40,   pct: 20,  txt: v => '+' + fmt(v) + '% damage' },
+  { id: 'hp',     tab: 'battle', ic: '\u2764\ufe0f',       name: 'Thick Hide',    max: 20, base: 40,   pct: 20,  txt: v => '+' + fmt(v) + '% health' },
+  { id: 'coin',   tab: 'battle', ic: '\ud83e\ude99',       name: 'Greed',         max: 20, base: 60,   pct: 10,  txt: v => '+' + fmt(v) + '% coins' },
+  { id: 'aspd',   tab: 'battle', ic: '\u26a1',             name: 'Quick Claws',   max: 6,  base: 200,  pct: 5,   txt: v => '+' + fmt(v) + '% auto attack speed' },
+  { id: 'crit',   tab: 'battle', ic: '\ud83c\udfaf',       name: 'Keen Eye',      max: 7,  base: 100,  pct: 1,   txt: v => 'Crit chance ' + Math.min(90, 15 + v).toFixed(0) + '%' },
+  { id: 'critd',  tab: 'battle', ic: '\ud83d\udca5',       name: 'Deadly Edge',   max: 10, base: 150,  pct: 15,  txt: v => 'Crit damage x' + (2.5 + v / 100).toFixed(2) },
+  { id: 'drop',   tab: 'luck',   ic: '\ud83c\udf92',       name: 'Scavenger',     max: 8,  base: 500,  pct: 0.25,txt: v => 'Drop chance ' + Math.min(90, 10 + v).toFixed(1) + '%' },
+  { id: 'rarity', tab: 'luck',   ic: '\ud83c\udf40',       name: 'Fortune',       max: 8,  base: 1000, pct: 3,   txt: v => 'Rarity luck x' + (1 + v / 100).toFixed(2) },
+  { id: 'jackpot',tab: 'luck',   ic: '\ud83c\udfb0',       name: 'Jackpot',       max: 6,  base: 800,  pct: 0.5, txt: v => v.toFixed(1) + '% chance for x5 coins' },
+  { id: 'wprod',  tab: 'world',  ic: '\ud83c\udf00',       name: 'Portal Engine', max: 40, base: 300,  pct: 20,  txt: v => 'World 1 production +' + fmt(v) + '%' },
+  { id: 'wclick', tab: 'world',  ic: '\ud83d\udc4a',       name: 'Titan Fist',    max: 40, base: 300,  pct: 20,  txt: v => 'World 1 click power +' + fmt(v) + '%' },
+  { id: 'wevo',   tab: 'world',  ic: '\ud83c\udf31',       name: 'Growth Serum',  max: 12, base: 800,  pct: 25,  txt: v => 'Evolution XP +' + fmt(v) + '%' }
 ];
 /* soul upgrades: permanent, bought with souls */
 const BT_SUPS = [
-  { id: 'sdmg',   ic: '\ud83d\udd25',       name: 'Soul Might',   max: 50, base: 3, grow: 1.3,  fx: l => '+' + (25 * l) + '% battle damage' },
-  { id: 'shp',    ic: '\ud83d\udee1\ufe0f', name: 'Soul Armor',   max: 50, base: 3, grow: 1.3,  fx: l => '+' + (25 * l) + '% battle health' },
-  { id: 'scoin',  ic: '\ud83d\udcb0',       name: 'Soul Gold',    max: 50, base: 3, grow: 1.3,  fx: l => '+' + (20 * l) + '% battle coins' },
-  { id: 'sluck',  ic: '\ud83c\udf40',       name: 'Soul Clover',  max: 30, base: 5, grow: 1.35, fx: l => '+' + (5 * l) + '% rarity luck' },
-  { id: 'sdrop',  ic: '\ud83c\udf92',       name: 'Soul Hunter',  max: 30, base: 5, grow: 1.35, fx: l => '+' + (0.5 * l).toFixed(1) + '% drop chance' },
-  { id: 'swprod', ic: '\ud83c\udf00',       name: 'Soul Portal',  max: 60, base: 4, grow: 1.32, fx: l => 'World 1 production x' + fmt(Math.pow(1.25, l)) },
-  { id: 'swclick',ic: '\ud83d\udc4a',       name: 'Soul Fist',    max: 60, base: 4, grow: 1.32, fx: l => 'World 1 click power x' + fmt(Math.pow(1.2, l)) },
-  { id: 'swevo',  ic: '\ud83c\udf31',       name: 'Soul Growth',  max: 30, base: 5, grow: 1.35, fx: l => 'Evolution XP +' + (25 * l) + '%' }
+  { id: 'sdmg',   ic: '\ud83d\udd25',       name: 'Soul Might',   max: 15, base: 3, grow: 1.7,  pct: 25,  txt: v => '+' + fmt(v) + '% battle damage' },
+  { id: 'shp',    ic: '\ud83d\udee1\ufe0f', name: 'Soul Armor',   max: 15, base: 3, grow: 1.7,  pct: 25,  txt: v => '+' + fmt(v) + '% battle health' },
+  { id: 'scoin',  ic: '\ud83d\udcb0',       name: 'Soul Gold',    max: 15, base: 3, grow: 1.7,  pct: 20,  txt: v => '+' + fmt(v) + '% battle coins' },
+  { id: 'sluck',  ic: '\ud83c\udf40',       name: 'Soul Clover',  max: 10, base: 5, grow: 1.8,  pct: 2,   txt: v => '+' + v.toFixed(0) + '% rarity luck' },
+  { id: 'sdrop',  ic: '\ud83c\udf92',       name: 'Soul Hunter',  max: 10, base: 5, grow: 1.8,  pct: 0.1, txt: v => '+' + v.toFixed(1) + '% drop chance' },
+  { id: 'swprod', ic: '\ud83c\udf00',       name: 'Soul Portal',  max: 30, base: 4, grow: 1.45, pct: 25,  txt: v => 'World 1 production +' + fmt(v) + '%' },
+  { id: 'swclick',ic: '\ud83d\udc4a',       name: 'Soul Fist',    max: 30, base: 4, grow: 1.45, pct: 25,  txt: v => 'World 1 click power +' + fmt(v) + '%' },
+  { id: 'swevo',  ic: '\ud83c\udf31',       name: 'Soul Growth',  max: 10, base: 5, grow: 1.8,  pct: 25,  txt: v => 'Evolution XP +' + fmt(v) + '%' }
 ];
+BT_UPS.concat(BT_SUPS).forEach(d => { d.fx = l => d.txt(d.pct * btTet(l)); });
 /* each coin upgrade finishes around a target stage: its last level costs ~30 kills worth of coins there */
 const BT_UP_END = { atk: 45, hp: 45, coin: 40, aspd: 35, crit: 30, critd: 35, drop: 30, rarity: 40, jackpot: 35, wprod: 50, wclick: 50, wevo: 45 };
 BT_UPS.forEach(u => { u.grow = Math.pow(20 * Math.pow(10, BT_UP_END[u.id] - 1) * 30 / u.base, 1 / u.max); });
@@ -6009,6 +6016,8 @@ const BT_SUP_BY_ID = {}; BT_SUPS.forEach(u => { BT_SUP_BY_ID[u.id] = u; });
 
 function btUpLv(id) { return (S.bt2 && S.bt2.ups[id]) | 0; }
 function btSupLv(id) { return (S.bt2 && S.bt2.sups[id]) | 0; }
+function btUpFx(id) { const d = BT_UP_BY_ID[id]; return d ? d.pct / 100 * btTet(btUpLv(id)) : 0; }
+function btSupFx(id) { const d = BT_SUP_BY_ID[id]; return d ? d.pct / 100 * btTet(btSupLv(id)) : 0; }
 function btUpCost(def, lv) { return def.base * Math.pow(def.grow, lv); }
 function btSupCost(def, lv) { return Math.ceil(def.base * Math.pow(def.grow, lv)); }
 
@@ -6023,24 +6032,24 @@ function btEqSum(key) {
 function btKumar() { return Math.sqrt(btMult()); }
 function btTier() { return S.bt2 ? Math.min(S.bt2.rebirths, 60) : 0; }
 function btDiff() { return Math.pow(BT_TIER_STEP, btTier()); }   /* every Rebirth: monsters get tougher */
-function btDmg() { return 6 * Math.pow(BT_TRAIN_D, btTrainLv('tD')) * btKumar() * (1 + btEqSum('a')) * (1 + 0.2 * btUpLv('atk')) * (1 + 0.25 * btSupLv('sdmg')) * btSoulMult(); }
-function btHp()  { return 50 * Math.pow(BT_TRAIN_D, btTrainLv('tH')) * btKumar() * (1 + btEqSum('h')) * (1 + 0.2 * btUpLv('hp')) * (1 + 0.25 * btSupLv('shp')) * btSoulMult(); }
+function btDmg() { return 6 * Math.pow(BT_TRAIN_D, btTrainLv('tD')) * btKumar() * (1 + btEqSum('a')) * (1 + btUpFx('atk')) * (1 + btSupFx('sdmg')) * btSoulMult(); }
+function btHp()  { return 50 * Math.pow(BT_TRAIN_D, btTrainLv('tH')) * btKumar() * (1 + btEqSum('h')) * (1 + btUpFx('hp')) * (1 + btSupFx('shp')) * btSoulMult(); }
 function btCost(l) { return 15 * Math.pow(BT_TRAIN_R, l); }
 const BT_TIER_STEP = 4;
-function btCoinMult() { return (1 + 0.12 * btUpLv('coin')) * (1 + 0.2 * btSupLv('scoin')) * (1 + 0.01 * S.bt2.soulsTotal); }
-function btCritChance() { return Math.min(0.9, 0.15 + 0.01 * btUpLv('crit')); }
-function btCritMult() { return 2.5 + 0.15 * btUpLv('critd'); }
-function btAtkInterval() { return 1 / (1 + 0.05 * btUpLv('aspd')); }
-function btDropChance() { return 0.10 + 0.005 * btUpLv('drop') + 0.005 * btSupLv('sdrop'); }
-function btLuckF() { return 1 + 0.06 * btUpLv('rarity') + 0.05 * btSupLv('sluck'); }
+function btCoinMult() { return (1 + btUpFx('coin')) * (1 + btSupFx('scoin')) * (1 + 0.01 * S.bt2.soulsTotal); }
+function btCritChance() { return Math.min(0.9, 0.15 + btUpFx('crit')); }
+function btCritMult() { return 2.5 + btUpFx('critd'); }
+function btAtkInterval() { return 1 / (1 + btUpFx('aspd')); }
+function btDropChance() { return Math.min(0.9, 0.10 + btUpFx('drop') + btSupFx('sdrop')); }
+function btLuckF() { return 1 + btUpFx('rarity') + btSupFx('sluck'); }
 function btRarProbs() {
   const F = btLuckF(), w = BT_RAR.map((r, i) => r.w * Math.pow(F, i)), s = w.reduce((a, b) => a + b, 0);
   return w.map(x => x / s);
 }
 /* boosts for World 1 */
-function btWorldProd() { if (!S.bt2) return 1; return Math.pow(1.12, btUpLv('wprod')) * Math.pow(1.25, btSupLv('swprod')) * (1 + 0.05 * S.bt2.soulsTotal); }
-function btWorldClick() { if (!S.bt2) return 1; return Math.pow(1.10, btUpLv('wclick')) * Math.pow(1.2, btSupLv('swclick')) * (1 + 0.05 * S.bt2.soulsTotal); }
-function btWorldEvo() { if (!S.bt2) return 1; return 1 + 0.25 * btUpLv('wevo') + 0.25 * btSupLv('swevo'); }
+function btWorldProd() { if (!S.bt2) return 1; return (1 + btUpFx('wprod')) * (1 + btSupFx('swprod')) * (1 + 0.05 * S.bt2.soulsTotal); }
+function btWorldClick() { if (!S.bt2) return 1; return (1 + btUpFx('wclick')) * (1 + btSupFx('swclick')) * (1 + 0.05 * S.bt2.soulsTotal); }
+function btWorldEvo() { if (!S.bt2) return 1; return 1 + btUpFx('wevo') + btSupFx('swevo'); }
 
 /* ---------- monsters: every stage has 10x the health of the one before ---------- */
 function btMon(st) {

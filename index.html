@@ -1666,7 +1666,7 @@ function defaultState() {
     ascensions: 0, crowns: 0, crownsTotal: 0, crownPerks: {},
     crownRun: 0, megaCount: 0, kumarStars: {},
     mp: 0, mpTotal: 0, mtree: {}, evo: {}, customName: '', autoSec: 1,
-    kq: {}, battle: { best: 0, rb: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
+    kq: {}, battle: { best: 0, rb: 0, sk: 0, cur: 1, coins: 0, tD: 0, tH: 0, cleared: false, rewarded: false, kills: 0 },
     bt2: { items: [], eq: [0, 0, 0, 0, 0, 0], uid: 1, ups: {}, sups: {}, souls: 0, soulsTotal: 0, rebirths: 0, drops: 0 },
 
     pets: [], equipped: [], petDex: {}, petUid: 1,
@@ -3077,9 +3077,12 @@ function btWin() {
   try { wsKill(m, earn, jp, item, res); } catch (e) { console.error(e); }
   B.coins += earn; B.kills++;
   b.log = 'Defeated ' + m.name + '! +' + fmt(earn) + ' coins' + (item ? ' + ' + BT_RAR[item.rar].name + ' ' + item.n : '');
-  if (b.stage === B.rb + 1) B.rb = b.stage;
+  let unlocked = 0;
+  if (b.stage === B.rb + 1) { B.sk = (B.sk | 0) + 1; if (B.sk >= BT_KILLS_NEED) { B.rb = b.stage; B.sk = 0; unlocked = b.stage; } }
+  if (unlocked && unlocked < BT_MAX) b.log += ' Stage ' + (unlocked + 1) + ' unlocked!';
   if (B.rb > B.best) B.best = B.rb;
-  if (b.stage === BT_MAX && !B.cleared) { B.cleared = true; battleRewards(); }
+  if (unlocked) { try { wsUnlockFx(unlocked); } catch (e) { } }
+  if (B.rb >= BT_MAX && !B.cleared) { B.cleared = true; battleRewards(); }
   B.cur = (b.stage === B.rb && B.rb < BT_MAX) ? B.rb + 1 : b.stage;
   const log = b.log; T.bt = null; btEnsure(); T.bt.log = log;
   T.btWait = m.boss ? 0.85 : 0.6; ui.btDirty = true;
@@ -5951,6 +5954,7 @@ function renderBattle() {
    ===================================================================== */
 const BT_BAG = 50;
 const BT_REBIRTH_MIN = 10;
+const BT_KILLS_NEED = 10;        /* kill this many monsters on the newest stage to unlock the next one */
 const BT_TRAIN_D = 1.3;          /* power gained per training level */
 const BT_TRAIN_R = 1.56;       /* cost growth per training level */
 const BT_ITEM_BASE = 0.1;
@@ -6141,7 +6145,7 @@ function btRebirth() {
   const extra = btGearSouls();   /* all gear is melted into souls */
   B2.items = []; B2.eq = [0, 0, 0, 0, 0, 0];
   B2.souls += g + extra; B2.soulsTotal += g + extra; B2.rebirths++;
-  B.rb = 0; B.cur = 1; B.coins = 0; B.tD = 0; B.tH = 0;
+  B.rb = 0; B.sk = 0; B.cur = 1; B.coins = 0; B.tD = 0; B.tH = 0;
   BT_UPS.forEach(d => { if (d.tab === 'battle') delete B2.ups[d.id]; });
   T.bt = null; btEnsure();
   recalc();
@@ -6264,7 +6268,7 @@ function wsPill(ic, label, id, key, cls) {
 const WS_LIVE = {
   dmg: () => fmt(btDmg()), hp: () => fmt(btHp()), crit: () => (btCritChance() * 100).toFixed(0) + '%',
   drop: () => (btDropChance() * 100).toFixed(1) + '%', luck: () => 'x' + btLuckF().toFixed(2),
-  coins: () => fmt(S.battle.coins), souls: () => fmt(S.bt2.souls), bag: () => btBagCount() + '/' + BT_BAG
+  sk: () => (S.battle.rb >= BT_MAX ? 'cleared' : S.battle.cur === S.battle.rb + 1 ? S.battle.sk + ' / ' + BT_KILLS_NEED : 'unlocked'), coins: () => fmt(S.battle.coins), souls: () => fmt(S.bt2.souls), bag: () => btBagCount() + '/' + BT_BAG
 };
 
 function wsRender() {
@@ -6276,7 +6280,7 @@ function wsRender() {
     + wsPill('\ud83e\ude99', '', 'wsCoins', 'coins', 'gold') + wsPill('\u2728', '', 'wsSouls', 'souls', 'soul') + '</div>';
   h += '<div class="ws-stats">' + wsPill('\u2694', 'Damage', '', 'dmg') + wsPill('\u2764', 'Health', '', 'hp') + wsPill('\ud83c\udfaf', 'Crit', '', 'crit')
     + wsPill('\ud83c\udf92', 'Drop', '', 'drop') + wsPill('\ud83c\udf40', 'Luck', '', 'luck')
-    + (S.bt2.rebirths ? '<div class="bt-pill soul">\u2620 Tier <b>' + btTier() + '</b></div>' : '') + '<div class="bt-pill">Stage <b>' + B.cur + ' / ' + BT_MAX + '</b></div></div>';
+    + (S.bt2.rebirths ? '<div class="bt-pill soul">\u2620 Tier <b>' + btTier() + '</b></div>' : '') + '<div class="bt-pill">Stage <b>' + B.cur + ' / ' + BT_MAX + '</b></div>' + wsPill('\ud83d\udd13', 'Kills to unlock next', '', 'sk', 'gold') + '</div>';
   h += '<div class="ws-arena' + (m.boss ? ' boss' : '') + (waiting ? ' waiting' : '') + '" id="wsArena" style="--h:' + ((B.cur * 29) % 360) + '">'
     + '<div class="ws-combo" id="wsCombo"></div>'
     + (m.boss ? '<div class="ws-banner' + (waiting ? '' : ' go') + '" id="wsBanner">\u26a0 BOSS \u26a0</div>' : '')
@@ -6493,6 +6497,14 @@ function wsDrop(it, res, cx, cy) {
 }
 
 function wsPlayerAtk() { const e = $('wsPlEgg'); if (!e) return; e.classList.remove('atk'); void e.offsetWidth; e.classList.add('atk'); }
+
+function wsUnlockFx(st) {
+  if (!WS.open) return;
+  const a = $('wsArena'); if (!a) return;
+  const r = wsRect(a), cx = r.x + r.w / 2, cy = r.y + r.h * 0.3;
+  wsNum(cx, cy, st >= BT_MAX ? '\ud83c\udfc6 FINAL STAGE CLEARED!' : '\ud83d\udd13 STAGE ' + (st + 1) + ' UNLOCKED!', 'big');
+  wsBits(cx, cy, 24, { colors: ['#25d9a2', '#ffd43b', '#4cc9ff', '#fff'], dist: 220, grav: 100, min: 6, max: 12, round: false, t0: 700, t1: 1100 });
+}
 
 /* ---------- little effect helpers ---------- */
 function wsNum(x, y, text, kind) {

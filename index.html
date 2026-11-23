@@ -127,6 +127,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .mt-ic { font-size: 28px; line-height: 1; }
 .mt-nm { font-family: var(--font-display); font-size: 13px; }
 .mt-fx { font-size: 11px; font-weight: 700; line-height: 1.15; min-height: 26px; color: var(--ink-soft); }
+.mt-quip { font-size: 10px; line-height: 1.15; font-weight: 800; color: var(--muted); min-height: 22px; padding: 2px 3px 0; }
+.up-quip { font-size: 11px; line-height: 1.2; font-weight: 800; color: var(--muted); margin-top: 2px; font-style: italic; }
 .mt-cost { font-family: var(--font-mono); font-size: 12px; font-weight: 800; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 8px; }
 .mt-node.locked { opacity: .55; filter: grayscale(.8); cursor: not-allowed; }
 .mt-node.avail { background: #fff; }
@@ -5863,6 +5865,24 @@ function renderEvolve() {
    ===================================================================== */
 function mtSig() { return (ui.mtBranch || 'prod') + '|' + mtOwnedCount() + '|' + Math.floor(S.mp) + '|' + S.megaCount; }
 
+function mtQuip(n) {
+  const lines = {
+    prod: ["The numbers are doing cartwheels.", "More output. Fewer excuses.", "Your machines have discovered espresso.", "The factory is now legally a rocket.", "Somewhere, a calculator is sweating."],
+    click: ["Finger gym: absolutely shredded.", "The mouse has entered its villain era.", "Tap like the rent is due.", "Your fingertips have main-character energy.", "Warning: nearby screens may feel this."],
+    luck: ["The universe owes you one.", "Fortune is now your unpaid intern.", "The odds just blinked first.", "Suspiciously lucky. We love that.", "A four-leaf clover filed your paperwork."],
+    pets: ["Your pets demand a tiny medal.", "More treats. Bigger chaos.", "The cuddle economy is booming.", "A fluffy committee approved this.", "Your egg budget says thank you."],
+    eco: ["Frugality, but make it legendary.", "The spreadsheet is doing a happy dance.", "Time is money. You just bought both.", "A bargain so good it feels illegal.", "Your wallet just unclenched."],
+    prestige: ["A fresh start with extra sparkle.", "The reset button fears you.", "Your legacy just got a glow-up.", "The universe stamped this APPROVED.", "Royalty called. They want your notes."],
+    mega: ["Cosmic nonsense, premium edition.", "The stars are clapping politely.", "Reality has filed a support ticket.", "You are now overqualified for space.", "A tiny nova just fist-bumped you."],
+    evo: ["Evolution said: 'watch this'.", "New form, same excellent vibes.", "Your DNA has patch notes.", "Nature is speed-running.", "The glow-up is scientifically loud."]
+  };
+  const pool = lines[n.branch] || lines.mega;
+  const index = (n.i * 3 + n.lane * 2 + (n.kind === "key" ? 1 : 0)) % pool.length;
+  if (n.kind === "key") return "ULTIMATE MOVE: " + pool[(index + 2) % pool.length];
+  if (n.kind === "major") return "BIG UPGRADE ENERGY — " + pool[(index + 1) % pool.length];
+  return pool[index];
+}
+
 function renderMegaTree() {
   const bid = ui.mtBranch || (ui.mtBranch = 'prod');
   const br = MT_BRANCHES.find(b => b.id === bid) || MT_BRANCHES[0];
@@ -5888,8 +5908,8 @@ function renderMegaTree() {
       h += '<button class="mt-node ' + st + ' ' + n.kind + '" type="button" data-act="mtbuy" data-id="' + n.id + '" title="' + esc(n.name + ': ' + mtFxText(n)) + '">'
         + (n.kind === 'key' ? '<span class="mt-badge">KEYSTONE</span>' : n.kind === 'major' ? '<span class="mt-badge major">MAJOR</span>' : '')
         + '<span class="mt-ic">' + (st === 'locked' ? '\ud83d\udd12' : n.icon) + '</span>'
-        + '<span class="mt-nm">' + esc(n.name) + '</span><span class="mt-fx">' + esc(mtFxText(n)) + '</span>'
-        + '<span class="mt-cost">' + (st === 'owned' ? '\u2713 Owned' : n.cost + ' MP') + '</span></button>';
+         + '<span class="mt-nm">' + esc(n.name) + '</span><span class="mt-fx">' + esc(mtFxText(n)) + '</span>'
+        + '<span class="mt-quip">' + esc(mtQuip(n)) + '</span><span class="mt-cost">' + (st === 'owned' ? '\u2713 Owned' : n.cost + ' MP') + '</span></button>';
     }
     h += '</div></div>';
   });
@@ -6382,6 +6402,32 @@ function wsPanelPatch() {
   });
 }
 
+function btUpgradeQuip(d, soul) {
+  const quips = {
+    atk: "Make monsters reconsider their career choices.",
+    hp: "Built like a brick wall. A cute one.",
+    coin: "Because victory should come with pocket money.",
+    aspd: "So fast the animation needs a seatbelt.",
+    crit: "Spot the weak point. Boop the weak point.",
+    critd: "Big bonk. Bigger paperwork.",
+    drop: "One Kumar's trash is your treasure.",
+    rarity: "The loot goblin inside you is thriving.",
+    jackpot: "The slot machine has a favourite customer.",
+    wprod: "Your other world just got a turbo button.",
+    wclick: "World 1 called. It felt that punch.",
+    wevo: "Evolution, now with extra plot twists.",
+    sdmg: "Your soul hits the gym between dimensions.",
+    shp: "Spectral armour. Surprisingly breathable.",
+    scoin: "Haunted riches are still riches.",
+    sluck: "A ghost crossed its fingers for you.",
+    sdrop: "Even the afterlife has a loot table.",
+    swprod: "A spooky boost for the home dimension.",
+    swclick: "A soul-powered high five.",
+    swevo: "Your spirit animal is a science experiment."
+  };
+  return quips[d.id] || (soul ? "Permanent power with a supernatural side-eye." : "A little upgrade. A lot of monster trouble.");
+}
+
 function wpUp() {
   const t = WP.upTab, soul = t === 'soul';
   const tabs = [['battle', '\u2694 Battle'], ['luck', '\ud83c\udf40 Luck'], ['world', '\ud83c\udf0d World Boost'], ['soul', '\u2728 Souls']];
@@ -6398,6 +6444,7 @@ function wpUp() {
     h += '<div class="up-row' + (mx ? ' maxed' : '') + (!mx && cost <= cur ? ' afford' : '') + '" data-up="' + d.id + '" data-cost="' + cost + '" data-max="' + (mx ? 1 : 0) + '">'
       + '<div class="up-ic">' + d.ic + '</div><div class="up-main"><div class="up-name">' + d.name + ' <span class="up-lv">Lv ' + lv + ' / ' + d.max + '</span></div>'
       + '<div class="up-desc">' + esc(d.fx(lv)) + (mx ? '' : ' <span class="up-next">\u2192 ' + esc(d.fx(lv + 1)) + '</span>') + '</div>'
+       + '<div class="up-quip">' + esc(btUpgradeQuip(d, soul)) + '</div>'
       + '<div class="up-bar"><div style="width:' + (lv / d.max * 100).toFixed(1) + '%"></div></div></div>'
       + '<button class="btn btn-sun up-buy" type="button" data-wact="buyup" data-id="' + d.id + '"' + (soul ? ' data-soul="1"' : '') + (mx || cost > cur ? ' disabled' : '') + '>' + (mx ? 'MAX' : (soul ? '\u2728 ' : '\ud83e\ude99 ') + fmt(cost)) + '</button></div>';
   });
@@ -8128,7 +8175,6 @@ function cloudUid() { return IMP ? IMP.uid : authUser.uid; }
 async function enforceBan() {
   if (!authUser || IMP) return false;
   try {
-    if (typeof fullAutoUnlocked === 'function' && S && fullAutoUnlocked()) return false;
     const b = await dbRequest('/bans/' + encodeURIComponent(authUser.uid) + '.json', { method: 'GET' });
     if (b && b.banned !== false) {
       authUser = null;
@@ -8594,6 +8640,209 @@ step('admin', () => {
   }
   setInterval(pollPlayer, 15000);
   window.__fk = { get authUser() { return authUser; }, get IMP() { return IMP; }, cloudSave: f => cloudSave(f) };
+});
+
+
+/* =====================================================================
+   FINN KUMAR: EXPANSION PACK + ACCOUNT SECURITY HARDENING
+   ===================================================================== */
+step('expansion-security', () => {
+  const css = document.createElement('style');
+  css.textContent = `
+    #fkExpansionToggle{position:fixed;right:18px;bottom:18px;z-index:99970;border:1px solid #8f7cff;
+      border-radius:15px;padding:12px 16px;color:#fff;font-weight:1000;letter-spacing:.3px;cursor:pointer;
+      background:linear-gradient(135deg,#6c4cff,#bd42db);box-shadow:0 8px 30px #6c4cff55;transition:transform .2s,filter .2s}
+    #fkExpansionToggle:hover{transform:translateY(-3px) scale(1.03);filter:brightness(1.15)}
+    #fkExpansion{position:fixed;right:18px;bottom:76px;width:min(430px,calc(100vw - 28px));max-height:min(78vh,760px);
+      overflow:auto;z-index:99971;color:#fff;background:linear-gradient(160deg,#171b39f5,#090d20f7);
+      border:1px solid #7869ff88;border-radius:19px;box-shadow:0 20px 70px #000b;padding:16px;
+      font-family:inherit;backdrop-filter:blur(16px)}
+    #fkExpansion .fx-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    #fkExpansion .fx-head strong{font-size:19px} #fkExpansion .fx-head button{margin-left:auto}
+    #fkExpansion .fx-close,#fkExpansion button{cursor:pointer;border:1px solid #6e69b4;background:#29264e;color:white;border-radius:9px;padding:7px 10px;font-weight:800}
+    #fkExpansion .fx-close{padding:5px 10px}
+    #fkExpansion .fx-balance{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+    #fkExpansion .fx-stat{background:#ffffff0c;border:1px solid #ffffff18;border-radius:11px;padding:10px}
+    #fkExpansion .fx-stat small{display:block;color:#aeb7e0;font-size:11px}
+    #fkExpansion .fx-stat b{display:block;margin-top:3px;font-size:17px}
+    #fkExpansion .fx-up{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #ffffff16}
+    #fkExpansion .fx-up b{display:block;font-size:13px}
+    #fkExpansion .fx-up small{display:block;color:#aeb7e0;font-size:11px;line-height:1.45;margin-top:3px}
+    #fkExpansion .fx-up button{min-width:94px;background:linear-gradient(135deg,#6354d9,#974de0);border:0}
+    #fkExpansion button:disabled{opacity:.35;cursor:not-allowed}
+    #fkExpansion .fx-switch{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;background:#ffffff0c;margin:10px 0}
+    #fkExpansion .fx-switch button{background:#1f8069;border:0}
+    #fkExpansion .fx-switch button.off{background:#4c4d61}
+    #fkExpansion .fx-milestone{font-size:11px;color:#d9d4ff;padding:7px 9px;background:#7c62ff18;border-radius:8px;margin-top:6px}
+    .golden{filter:drop-shadow(0 0 10px #ffd43b);animation:fkGoldFloat 1.4s ease-in-out infinite, fkGoldGlow 1.8s ease-in-out infinite}
+    .golden.mini{animation:fkGoldFloat .9s ease-in-out infinite}
+    @keyframes fkGoldFloat{0%,100%{transform:translateY(0) rotate(-3deg) scale(1)}50%{transform:translateY(-9px) rotate(3deg) scale(1.08)}}
+    @keyframes fkGoldGlow{0%,100%{filter:drop-shadow(0 0 6px #ffd43b)}50%{filter:drop-shadow(0 0 19px #fff06a)}}
+    #fkExpansion .fx-progress{height:7px;border-radius:20px;background:#ffffff18;overflow:hidden;margin:7px 0}
+    #fkExpansion .fx-progress i{display:block;height:100%;background:linear-gradient(90deg,#47e5c0,#9b79ff);border-radius:20px}
+    @media(max-width:520px){#fkExpansionToggle{right:10px;bottom:10px}#fkExpansion{right:8px;bottom:66px}}
+  `;
+  document.head.appendChild(css);
+
+  if (!S.expansion) S.expansion = { autoGolden: 0, autoEnabled: true, goldenPower: 0, reactor: 0, rebirthCore: 0, capBreaks: 0 };
+  const X = () => {
+    if (!S.expansion || typeof S.expansion !== 'object') S.expansion = { autoGolden:0, autoEnabled:true, goldenPower:0, reactor:0, rebirthCore:0, capBreaks:0 };
+    const x = S.expansion;
+    ['autoGolden','goldenPower','reactor','rebirthCore','capBreaks'].forEach(k => x[k] = Math.max(0, Math.floor(Number(x[k]) || 0)));
+    if (typeof x.autoEnabled !== 'boolean') x.autoEnabled = true;
+    return x;
+  };
+  const COSTS = {
+    autoGolden: n => Math.ceil(8 * Math.pow(2.25, n)),
+    goldenPower: n => Math.ceil(5 * Math.pow(1.75, n)),
+    reactor: n => Math.ceil(10 * Math.pow(1.9, n)),
+    rebirthCore: n => Math.ceil(20 * Math.pow(2.15, n)),
+    capBreaks: n => Math.ceil(30 * Math.pow(2.4, n))
+  };
+  const MAX = { autoGolden: 5, goldenPower: 100, reactor: 100, rebirthCore: 50, capBreaks: 25 };
+  function buyExpansion(id) {
+    const x = X(), level = x[id], cost = COSTS[id](level);
+    if (!(id in MAX) || level >= MAX[id] || S.rt < cost) return;
+    S.rt -= cost;
+    x[id]++;
+    recalc(); updateRank(); ui.dirty = true; saveGame();
+    if (authUser && typeof cloudSave === 'function') cloudSave(true);
+    sfx.achievement();
+    toast('Upgrade purchased!', id === 'autoGolden' ? 'Auto Golden Finn level ' + x[id] : id + ' level ' + x[id], 'gold');
+    renderExpansion();
+  }
+  function expansionMultiplier() {
+    const x = X();
+    return Math.pow(1.12, x.reactor) * Math.pow(1.18, x.rebirthCore) * Math.pow(1.08, x.capBreaks);
+  }
+  const originalRecalcExpansion = recalc;
+  recalc = function () {
+    originalRecalcExpansion();
+    const x = X(), m = expansionMultiplier();
+    calc.cps = Math.min(LIMIT, calc.cps * m);
+    calc.cpsBig = calc.cpsBig.mul(m);
+    calc.clickBase = Math.min(LIMIT, calc.clickBase * m);
+    calc.goldVal = Math.min(LIMIT, calc.goldVal * Math.pow(1.22, x.goldenPower));
+    calc.goldFreq = Math.min(LIMIT, calc.goldFreq * (1 + 0.08 * x.goldenPower));
+  };
+
+  let panelOpen = false;
+  const toggle = document.createElement('button');
+  toggle.id = 'fkExpansionToggle'; toggle.type = 'button'; toggle.textContent = '✨ Finn Labs';
+  document.body.appendChild(toggle);
+  const panel = document.createElement('section'); panel.id = 'fkExpansion'; panel.hidden = true;
+  document.body.appendChild(panel);
+  function renderExpansion() {
+    const x = X(), rt = Math.max(0, Number(S.rt) || 0);
+    const items = [
+      ['autoGolden','🤖 Auto Golden Finn','Automatically catches Golden Finns before they disappear. Each level makes the collector faster.'],
+      ['goldenPower','🌟 Golden Jackpot','Golden Finn rewards become bigger and Golden Finns appear more often.'],
+      ['reactor','⚡ Quantum Reactor','Permanent production and click power boost. Stacks with your other upgrades.'],
+      ['rebirthCore','♻️ Rebirth Core','Every level strengthens your permanent multiplier. Built for long-term incremental progress.'],
+      ['capBreaks','🚀 Limit Breaker','Pushes your permanent power ceiling further. Each level adds another multiplier layer.']
+    ];
+    let h = '<div class="fx-head"><strong>✨ Finn Labs</strong><span style="color:#aeb7e0;font-size:11px">Expansion v2</span><button class="fx-close" data-fx="close">✕</button></div>';
+    h += '<div class="fx-balance"><div class="fx-stat"><small>REBIRTH TOKENS</small><b>🔁 ' + esc(fmtInt(rt)) + '</b></div><div class="fx-stat"><small>PERMANENT POWER</small><b>x' + fmt(expansionMultiplier()) + '</b></div></div>';
+    h += '<div class="fx-switch"><span><b>Auto Golden Finn</b><small style="display:block;color:#aeb7e0">Collector status: ' + (x.autoEnabled && x.autoGolden > 0 ? 'ACTIVE' : 'OFF') + '</small></span><button class="' + (x.autoEnabled ? '' : 'off') + '" data-fx="toggle">' + (x.autoEnabled ? 'ON' : 'OFF') + '</button></div>';
+    items.forEach(([id,name,desc]) => {
+      const cost = COSTS[id](x[id]), maxed = x[id] >= MAX[id], progress = x[id] / MAX[id] * 100;
+      h += '<div class="fx-up"><div><b>' + name + ' <span style="color:#b9a7ff">Lv.' + x[id] + '/' + MAX[id] + '</span></b><small>' + desc + '</small><div class="fx-progress"><i style="width:' + progress + '%"></i></div></div>'
+        + '<button data-fx="buy" data-id="' + id + '"' + (maxed || rt < cost ? ' disabled' : '') + '>' + (maxed ? 'MAXED' : '🔁 ' + fmtInt(cost)) + '</button></div>';
+    });
+    h += '<div class="fx-milestone">Milestones: 1 Auto level = automatic catching · 5 = rapid collector · 10 Reactor levels = major power spike · 25 Limit Breakers = maximum lab tier.</div>';
+    panel.innerHTML = h;
+  }
+  toggle.addEventListener('click', () => { panelOpen = !panelOpen; panel.hidden = !panelOpen; if (panelOpen) renderExpansion(); });
+  panel.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-fx]'); if (!b) return;
+    if (b.dataset.fx === 'close') { panelOpen = false; panel.hidden = true; }
+    if (b.dataset.fx === 'toggle') { X().autoEnabled = !X().autoEnabled; saveGame(); renderExpansion(); }
+    if (b.dataset.fx === 'buy') buyExpansion(b.dataset.id);
+  });
+
+  /* Auto collector uses the game's real Golden Finn reward function and event system. */
+  let autoAcc = 0;
+  setInterval(() => {
+    if (!S || !X().autoEnabled || X().autoGolden < 1 || !T || !Array.isArray(T.goldens) || !T.goldens.length) return;
+    autoAcc += 0.25;
+    const interval = Math.max(0.25, 1.35 / (1 + X().autoGolden * 0.8));
+    if (autoAcc < interval) return;
+    autoAcc = 0;
+    const g = T.goldens.slice().sort((a,b) => a.until - b.until)[0];
+    if (g) {
+      const result = clickGolden(g.uid);
+      if (result) {
+        if (typeof fx !== 'undefined' && fx.confetti) fx.confetti(g.x * innerWidth, g.y * innerHeight, 12);
+        if (panelOpen) renderExpansion();
+      }
+    }
+  }, 250);
+
+  /* Security: a ban always wins. No special unlock or client-side mode bypass. */
+  enforceBan = async function () {
+    if (!authUser || IMP) return false;
+    try {
+      const b = await dbRequest('/bans/' + encodeURIComponent(authUser.uid) + '.json', { method: 'GET' });
+      if (b && b.banned === true) {
+        const reason = String(b.reason || 'No reason supplied').slice(0, 240);
+        const bannedUid = authUser.uid;
+        authUser = null;
+        try { localStorage.removeItem(AUTH_KEY); } catch (e) {}
+        try { localStorage.removeItem('fk_session'); } catch (e) {}
+        showAuthGate('PERMANENT BAN — This account is blocked. Reason: ' + reason + ' (Account: ' + bannedUid.slice(0, 10) + '…)');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('[security] Ban status could not be verified:', e);
+      return false;
+    }
+  };
+
+  /* Faster ban checks, and immediately re-check after account restore/login. */
+  const oldRestoreSession = restoreSession;
+  if (typeof oldRestoreSession === 'function') {
+    restoreSession = async function () {
+      await oldRestoreSession();
+      if (authUser && await enforceBan()) return;
+    };
+  }
+  setInterval(() => { if (authUser && !IMP) enforceBan(); }, 5000);
+
+  /* Score sanity checks: reject malformed, impossible-format and stale leaderboard entries. */
+  const oldRefreshBoard = refreshBoard;
+  refreshBoard = async function () {
+    await oldRefreshBoard();
+    if (!net || !Array.isArray(net.rows)) return;
+    net.rows = net.rows.filter(r => r && typeof r.name === 'string' && r.name.length <= 16 &&
+      r.vals && Object.values(r.vals).every(v => Number.isFinite(v) && v >= 0 && v <= LIMIT));
+    net.cache = null;
+    if (ui && ui.tab === 'board') ui.dirty = true;
+  };
+
+  /* Save/score publishing is throttled and refreshes the visible board after a successful write. */
+  const oldSubmitScore = submitScore;
+  let lastScoreSubmit = 0, scoreSubmitBusy = false;
+  submitScore = async function () {
+    if (!authUser || IMP || scoreSubmitBusy || Date.now() - lastScoreSubmit < 8000) return;
+    scoreSubmitBusy = true;
+    try {
+      await oldSubmitScore();
+      lastScoreSubmit = Date.now();
+      await refreshBoard();
+    } finally { scoreSubmitBusy = false; }
+  };
+
+  /* Persist new expansion state immediately after a prestige or major reward. */
+  bus.on('prestige', () => { setTimeout(() => { recalc(); saveGame(); if (authUser) cloudSave(true); if (panelOpen) renderExpansion(); }, 100); });
+  setInterval(() => {
+    if (!S) return;
+    if (panelOpen) renderExpansion();
+  }, 5000);
+
+  /* New save data is merged safely for older save files. */
+  if (!S.expansion) S.expansion = { autoGolden:0, autoEnabled:true, goldenPower:0, reactor:0, rebirthCore:0, capBreaks:0 };
+  recalc();
 });
 
 /* ---------- finish ---------- */
